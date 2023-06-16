@@ -3,7 +3,6 @@ const Discord = require('discord.io');
 const GatewayIntentBits = require('discord.io');
 const Partials = require('discord.io');
 const Logger = require('winston');
-const PackageInfo = require('./package.json');
 const Auth = require('./auth.json');
 const Axios = require('axios');
 const Cheerio = require('cheerio');
@@ -11,6 +10,8 @@ const Cheerio = require('cheerio');
 const GamesUrl = 'https://hlockey.onrender.com/league/games';
 const StandingsUrl = 'https://hlockey.onrender.com/league/standings';
 const GamesPerSeason = 114;
+
+const teamEmoji = new Map([]);
 
 // Configure Logger settings
 Logger.remove(Logger.transports.Console);
@@ -36,6 +37,7 @@ var bot = new Discord.Client({
     ]
 });
 bot.on('ready', function (evt) {
+    setEmoji();
     Logger.info('Connected');
     Logger.info(bot.username + ' - (' + bot.id + ')');
 });
@@ -58,6 +60,29 @@ bot.on('message', function (user, userID, channelID, message, evt) {
     }
 });
 
+function setEmoji() {
+    teamEmoji.set('Baden Hallucinations', ':mushroom:');
+    teamEmoji.set('Lagos Soup', ':bowl_with_spoon:');
+    teamEmoji.set('Pica Acid', ':test_tube:');
+    teamEmoji.set('Antalya Pirates', ':ocean:');
+    teamEmoji.set('Kópavogur Seals', ':seal:');
+    teamEmoji.set('Erlangen Ohms', ':aquarius:');
+    teamEmoji.set('Wyrzysk Rockets', ':rocket:');
+    teamEmoji.set('Pompei Eruptions', ':volcano:');
+    teamEmoji.set('Dawson City Impostors', ':knife:');
+    teamEmoji.set('Rio de Janeiro Directors', ':cinema:');
+    teamEmoji.set('Orcadas Base Fog', ':foggy:');
+    teamEmoji.set('Nice Backflippers', ':arrows_counterclockwise:');
+    teamEmoji.set('Manbij Fish', ':tropical_fish:');
+    teamEmoji.set('Nagqu Paint', ':art:');
+    teamEmoji.set('Cape Town Transplants', ':seedling:');
+    teamEmoji.set('Kyoto Payphones', ':vibration_mode:');
+    teamEmoji.set('Stony Brook Reapers', ':skull:');
+    teamEmoji.set('Jakarta Architects', ':triangular_ruler:');
+    teamEmoji.set('Baghdad Abacuses', ':abacus:');
+    teamEmoji.set('Sydney Thinkers', ':thinking:');
+}
+
 async function getResults(channelID) {
     await Axios.get(GamesUrl).then((resolve) => {
         let results = '';
@@ -69,13 +94,16 @@ async function getResults(channelID) {
         const totalGames = games.length;        
 
         games.each((index, element) => {            
-            const result = $(element).find('.scoreboard').text();
+            const resultRaw = $(element).find('.scoreboard').text();
             const afterResults = $(element).text().substring($(element).text().indexOf('Weather:'));
-            const weather = afterResults.substring(0,afterResults.indexOf('\n'));
+            const weather = afterResults.substring(9,afterResults.indexOf('\n'));
             const afterWeather = afterResults.substring(afterResults.indexOf('\n') + 1);
             const status = afterWeather.substring(0,afterWeather.indexOf('\n')).trim();
 
-            results += result.replaceAll('\n','').replace(whitespaceRegex,'  ').trim() + '\n' + 'Status: ' + status + '    ' + weather + '\n\n';
+            const resultArray = resultRaw.trim().replaceAll('\n','').replace(whitespaceRegex,'|').split('|');
+            const result = `${teamEmoji.get(resultArray[0])} ${resultArray[0]}  **${resultArray[1]} - ${resultArray[3]}**  ${resultArray[2]} ${teamEmoji.get(resultArray[2])}`
+
+            results += result.replaceAll('\n','').replace(whitespaceRegex,'  ').trim() + '\n:white_sun_rain_cloud: ' + weather + '     ' + status + '\n\n';
             gamesProcessed ++;
 
             if (gamesProcessed == totalGames) {
@@ -109,11 +137,11 @@ async function getStandings(channelID) {
             if (index == 0) {
                 standings = `${element}`;
             } else if (element.includes('Wet') || element.includes('Dry')) {
-                standings += `\n\n${element}`;
+                standings += `\n\n**${element}:**`;
             } else if (element.includes('-')) {
                 standings += `  ${element}`;
             } else if (element != '') {
-                standings += `\n${element}`;
+                standings += `\n> ${teamEmoji.get(element)} ${element}`;
             } else {
                 // Final element of the split array is always blank
                 bot.sendMessage({
@@ -138,11 +166,14 @@ async function playoffPicture(channelID) {
     await Axios.get(StandingsUrl).then((resolve) => {
         let teams = [];
         let wins = [];
-        let losses = [];
+        let losses = [];        
+        let divisionResults = [];
+        let qualifiedTeamsMap = new Map([]);
+        let contentionTeamsMap = new Map([]);
+        let eliminatedTeamsMap = new Map([]);
         let qualifiedTeams = '';
         let contentionTeams = '';
         let eliminatedTeams = '';
-        let divisionResults = '';
         const $ = Cheerio.load(resolve.data);
         const whitespaceRegex = /\s\s+/g;
 
@@ -152,9 +183,9 @@ async function playoffPicture(channelID) {
             if (element.includes('Wet') || element.includes('Dry')) {
                 if (teams != []) {
                     divisionResults = playoffCalculator(teams, wins, losses); 
-                    qualifiedTeams += divisionResults[0];
-                    contentionTeams += divisionResults[1];
-                    eliminatedTeams += divisionResults[2];               
+                    qualifiedTeamsMap = new Map([...qualifiedTeamsMap,...divisionResults[0]]);
+                    contentionTeamsMap = new Map([...contentionTeamsMap,...divisionResults[1]]);
+                    eliminatedTeamsMap = new Map([...eliminatedTeamsMap,...divisionResults[2]]);               
                     teams = [];
                     wins = [];
                     losses = [];
@@ -167,16 +198,31 @@ async function playoffPicture(channelID) {
             } else if (index != 0) {
                 // Final element of the split array is always blank
                 divisionResults = playoffCalculator(teams, wins, losses); 
-                qualifiedTeams += divisionResults[0];
-                contentionTeams += divisionResults[1];
-                eliminatedTeams += divisionResults[2];
+                qualifiedTeamsMap = new Map([...qualifiedTeamsMap,...divisionResults[0]]);
+                contentionTeamsMap = new Map([...contentionTeamsMap,...divisionResults[1]]);
+                eliminatedTeamsMap = new Map([...eliminatedTeamsMap,...divisionResults[2]]);
+
+                // Sort each map by their key (wins)
+                qualifiedTeamsMap = new Map([...qualifiedTeamsMap.entries()].sort((a, b) => b[0] - a[0]));
+                contentionTeamsMap = new Map([...contentionTeamsMap.entries()].sort((a, b) => b[0] - a[0]));
+                eliminatedTeamsMap = new Map([...eliminatedTeamsMap.entries()].sort((a, b) => b[0] - a[0]));
+
+                qualifiedTeamsMap.forEach((value) => {
+                    qualifiedTeams += `> ${value}\n`;
+                });
+                contentionTeamsMap.forEach((value) => {
+                    contentionTeams += `> ${value}\n`;
+                });
+                eliminatedTeamsMap.forEach((value, key) => {
+                    eliminatedTeams += `> ${value}\n`;
+                });
 
                 bot.sendMessage({
                     to: channelID,
                     message: `The Playoff Picture:`
-                            + `${(qualifiedTeams != '') ? '\n\nQualified:\n\n' : ''}${qualifiedTeams.trim()}`
-                            + `${(contentionTeams != '') ? '\n\nIn Contention:\n\n' : ''}${contentionTeams.trim()}`
-                            + `${(eliminatedTeams != '') ? '\n\nEliminated:\n\n' : ''}${eliminatedTeams.trim()}`
+                            + `${(qualifiedTeams != '') ? '\n\n**Clinched:**\n\n' : ''}${qualifiedTeams.trim()}`
+                            + `${(contentionTeams != '') ? '\n\n**In Contention:**\n\n' : ''}${contentionTeams.trim()}`
+                            + `${(eliminatedTeams != '') ? '\n\n**Eliminated:**\n\n' : ''}${eliminatedTeams.trim()}`
                 });
 
                 Logger.debug('Playoff picture returned to channel ' + channelID);
@@ -194,27 +240,27 @@ async function playoffPicture(channelID) {
 
 function playoffCalculator(teams, wins, losses) {
     const gamesRemaining = GamesPerSeason - (parseInt(wins[0]) + parseInt(losses[0]));
-    let qualifiedTeams = '';
-    let contentionTeams = '';
-    let eliminatedTeams = '';
+    const qualifiedTeams = new Map([]);
+    const contentionTeams = new Map([]);
+    const eliminatedTeams = new Map([]);
 
     teams.forEach((element, index) => {
         if (index <= 1) {
             // 1st and 2nd places are qualified if 3rd can't catch them
             if (parseInt(wins[index]) > (gamesRemaining + parseInt(wins[2]))) {
-                qualifiedTeams += `${element}\n`;
+                qualifiedTeams.set(parseInt(wins[index]),`${teamEmoji.get(element)} ${element}`);
             } else {
-                contentionTeams += `${element}\n`;
+                contentionTeams.set(parseInt(wins[index]),`${teamEmoji.get(element)} ${element}`);
             }
         } else {
             // All others are eliminated if they can't catch 2nd
             if (parseInt(wins[1]) > (gamesRemaining + parseInt(wins[index]))) {
-                eliminatedTeams += `${element}\n`;
+                eliminatedTeams.set(parseInt(wins[index]),`${teamEmoji.get(element)} ${element}`);
             } else {
-                contentionTeams += `${element}\n`;
+                contentionTeams.set(parseInt(wins[index]),`${teamEmoji.get(element)} ${element}`);
             }
         }
     });
 
-    return [`${qualifiedTeams}`, `${contentionTeams}`, `${eliminatedTeams}`];
+    return [qualifiedTeams, contentionTeams, eliminatedTeams];
 };
