@@ -282,31 +282,33 @@ function playoffCalculator(teams, wins, losses) {
     const eliminatedTeams = new Map([]);
 
     teams.forEach((element, index) => {
+        let winCount = parseInt(wins[index]);
+        
         if (index <= 1) {
-            // 1st and 2nd places are qualified if 3rd can't catch them
-            if (parseInt(wins[index]) > (gamesRemaining + parseInt(wins[2]))) {
-                while (qualifiedTeams.get(wins[index])) {
-                    wins[index] += .01;
+            // 1st and 2nd places are qualified if 3rd can't catch them            
+            if (winCount > (gamesRemaining + parseInt(wins[2]))) {
+                while (qualifiedTeams.get(winCount)) {
+                    winCount += 0.01;
                 }
-                qualifiedTeams.set(parseFloat(wins[index]),`${teamEmoji.get(element)} ${element}`);
+                qualifiedTeams.set(winCount,`${teamEmoji.get(element)} ${element}`);
             } else {
-                while (contentionTeams.get(wins[index])) {
-                    wins[index] += .01;
+                while (contentionTeams.get(winCount)) {
+                    winCount += 0.01;
                 }
-                contentionTeams.set(parseFloat(wins[index]),`${teamEmoji.get(element)} ${element}`);
+                contentionTeams.set(winCount,`${teamEmoji.get(element)} ${element}`);
             }
         } else {
             // All others are eliminated if they can't catch 2nd
-            if (parseInt(wins[1]) > (gamesRemaining + parseInt(wins[index]))) {
-                while (eliminatedTeams.get(wins[index])) {
-                    wins[index] += 0.01;
-                }                
-                eliminatedTeams.set(parseFloat(wins[index]),`${teamEmoji.get(element)} ${element}`);
+            if (parseInt(wins[1]) > (gamesRemaining + winCount)) {
+                while (eliminatedTeams.get(winCount)) {
+                    winCount += 0.01;
+                }               
+                eliminatedTeams.set(winCount,`${teamEmoji.get(element)} ${element}`);
             } else {
-                while (contentionTeams.get(wins[index])) {
-                    wins[index] += .01;
+                while (contentionTeams.get(winCount)) {
+                    winCount += 0.01;
                 }
-                contentionTeams.set(parseFloat(wins[index]),`${teamEmoji.get(element)} ${element}`);
+                contentionTeams.set(winCount,`${teamEmoji.get(element)} ${element}`);
             }
         }
     });
