@@ -10,6 +10,7 @@ const Cheerio = require('cheerio');
 
 const GamesUrl = 'https://hlockey.onrender.com/league/games';
 const StandingsUrl = 'https://hlockey.onrender.com/league/standings';
+const GamesPerSeason = 114;
 
 // Configure Logger settings
 Logger.remove(Logger.transports.Console);
@@ -49,6 +50,9 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 break;
             case '!standings':
                 getStandings(channelID);
+                break;
+            case '!playoffs':
+                playoffPicture(channelID);
                 break;
         }
     }
@@ -128,4 +132,89 @@ async function getStandings(channelID) {
 
         Logger.error(`Error obtaining standings: ${reject}`);
     });
+};
+
+async function playoffPicture(channelID) {
+    await Axios.get(StandingsUrl).then((resolve) => {
+        let teams = [];
+        let wins = [];
+        let losses = [];
+        let qualifiedTeams = '';
+        let contentionTeams = '';
+        let eliminatedTeams = '';
+        let divisionResults = '';
+        const $ = Cheerio.load(resolve.data);
+        const whitespaceRegex = /\s\s+/g;
+
+        const divisionsArray = $('#content').find('.divisions').text().split(whitespaceRegex);
+        
+        divisionsArray.forEach((element, index) => {
+            if (element.includes('Wet') || element.includes('Dry')) {
+                if (teams != []) {
+                    divisionResults = playoffCalculator(teams, wins, losses); 
+                    qualifiedTeams += divisionResults[0];
+                    contentionTeams += divisionResults[1];
+                    eliminatedTeams += divisionResults[2];               
+                    teams = [];
+                    wins = [];
+                    losses = [];
+                }          
+            } else if (element.includes('-')) {
+                wins.push(`${element.substring(0,element.indexOf('-'))}`);
+                losses.push(`${element.substring(element.indexOf('-') + 1)}`);
+            } else if (element != '') {
+                teams.push(`${element}`);                
+            } else if (index != 0) {
+                // Final element of the split array is always blank
+                divisionResults = playoffCalculator(teams, wins, losses); 
+                qualifiedTeams += divisionResults[0];
+                contentionTeams += divisionResults[1];
+                eliminatedTeams += divisionResults[2];
+
+                bot.sendMessage({
+                    to: channelID,
+                    message: `The Playoff Picture:`
+                            + `${(qualifiedTeams != '') ? '\n\nQualified:\n\n' : ''}${qualifiedTeams.trim()}`
+                            + `${(contentionTeams != '') ? '\n\nIn Contention:\n\n' : ''}${contentionTeams.trim()}`
+                            + `${(eliminatedTeams != '') ? '\n\nEliminated:\n\n' : ''}${eliminatedTeams.trim()}`
+                });
+
+                Logger.debug('Playoff picture returned to channel ' + channelID);
+            }
+        })                
+    }).catch((reject) => {
+        bot.sendMessage({
+            to: channelID,
+            message: 'I\'m too tired to get the playoff picture right now'
+        });
+
+        Logger.error(`Error obtaining Playoff picture: ${reject}`);
+    });
+};
+
+function playoffCalculator(teams, wins, losses) {
+    const gamesRemaining = GamesPerSeason - (parseInt(wins[0]) + parseInt(losses[0]));
+    let qualifiedTeams = '';
+    let contentionTeams = '';
+    let eliminatedTeams = '';
+
+    teams.forEach((element, index) => {
+        if (index <= 1) {
+            // 1st and 2nd places are qualified if 3rd can't catch them
+            if (parseInt(wins[index]) > (gamesRemaining + parseInt(wins[2]))) {
+                qualifiedTeams += `${element}\n`;
+            } else {
+                contentionTeams += `${element}\n`;
+            }
+        } else {
+            // All others are eliminated if they can't catch 2nd
+            if (parseInt(wins[1]) > (gamesRemaining + parseInt(wins[index]))) {
+                eliminatedTeams += `${element}\n`;
+            } else {
+                contentionTeams += `${element}\n`;
+            }
+        }
+    });
+
+    return [`${qualifiedTeams}`, `${contentionTeams}`, `${eliminatedTeams}`];
 };
