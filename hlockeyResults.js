@@ -103,7 +103,7 @@ async function getResults(channelID) {
             const resultArray = resultRaw.trim().replaceAll('\n','').replace(whitespaceRegex,'|').split('|');
             const result = `${teamEmoji.get(resultArray[0])} ${resultArray[0]}  **${resultArray[1]} - ${resultArray[3]}**  ${resultArray[2]} ${teamEmoji.get(resultArray[2])}`
 
-            results += result.replaceAll('\n','').replace(whitespaceRegex,'  ').trim() + '\n:white_sun_rain_cloud: ' + weather + '     ' + status + '\n\n';
+            results += `> ${result.trim()}\n> :white_sun_rain_cloud: ${weather}     ${(status == 'in progress' ? '**In Progress**' : 'Game Over')}\n\n`;
             gamesProcessed ++;
 
             if (gamesProcessed == totalGames) {
@@ -220,9 +220,9 @@ async function playoffPicture(channelID) {
                 bot.sendMessage({
                     to: channelID,
                     message: `The Playoff Picture:`
-                            + `${(qualifiedTeams != '') ? '\n\n**Clinched:**\n\n' : ''}${qualifiedTeams.trim()}`
-                            + `${(contentionTeams != '') ? '\n\n**In Contention:**\n\n' : ''}${contentionTeams.trim()}`
-                            + `${(eliminatedTeams != '') ? '\n\n**Eliminated:**\n\n' : ''}${eliminatedTeams.trim()}`
+                            + `${(qualifiedTeams != '') ? '\n\n**Clinched:**\n' : ''}${qualifiedTeams.trim()}`
+                            + `${(contentionTeams != '') ? '\n\n**In Contention:**\n' : ''}${contentionTeams.trim()}`
+                            + `${(eliminatedTeams != '') ? '\n\n**Eliminated:**\n' : ''}${eliminatedTeams.trim()}`
                 });
 
                 Logger.debug('Playoff picture returned to channel ' + channelID);
