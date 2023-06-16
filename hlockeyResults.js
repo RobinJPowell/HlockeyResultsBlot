@@ -103,7 +103,7 @@ async function getResults(channelID) {
             const resultArray = resultRaw.trim().replaceAll('\n','').replace(whitespaceRegex,'|').split('|');
             const result = `${teamEmoji.get(resultArray[0])} ${resultArray[0]}  **${resultArray[1]} - ${resultArray[3]}**  ${resultArray[2]} ${teamEmoji.get(resultArray[2])}`
 
-            results += `> ${result.trim()}\n> :white_sun_rain_cloud: ${weather}     ${(status == 'in progress' ? '**In Progress**' : 'Game Over')}\n\n`;
+            results += `> ${result.trim()}\n> :white_sun_rain_cloud: ${weather}     ${(status == 'game in progress' ? '**Game In Progress**' : 'Game Over')}\n\n`;
             gamesProcessed ++;
 
             if (gamesProcessed == totalGames) {
@@ -183,9 +183,28 @@ async function playoffPicture(channelID) {
             if (element.includes('Wet') || element.includes('Dry')) {
                 if (teams != []) {
                     divisionResults = playoffCalculator(teams, wins, losses); 
-                    qualifiedTeamsMap = new Map([...qualifiedTeamsMap,...divisionResults[0]]);
-                    contentionTeamsMap = new Map([...contentionTeamsMap,...divisionResults[1]]);
-                    eliminatedTeamsMap = new Map([...eliminatedTeamsMap,...divisionResults[2]]);               
+
+                    for (let i = 0; i < 3; i++) {
+                        divisionResults[i].forEach((value, key) => {                            
+                            if (i == 0) {
+                                while (qualifiedTeamsMap.get(key)) {
+                                    key += .01;
+                                }
+                                qualifiedTeamsMap.set(parseFloat(key), `${value}`);
+                            } else if (i == 1) {
+                                while (contentionTeamsMap.get(key)) {
+                                    key += .01;
+                                }
+                                contentionTeamsMap.set(parseFloat(key), `${value}`);
+                            } else {
+                                while (eliminatedTeamsMap.get(key)) {
+                                    key += .01;
+                                }
+                                eliminatedTeamsMap.set(parseFloat(key), `${value}`);
+                            }
+                        });
+                    }
+
                     teams = [];
                     wins = [];
                     losses = [];
@@ -197,10 +216,28 @@ async function playoffPicture(channelID) {
                 teams.push(`${element}`);                
             } else if (index != 0) {
                 // Final element of the split array is always blank
-                divisionResults = playoffCalculator(teams, wins, losses); 
-                qualifiedTeamsMap = new Map([...qualifiedTeamsMap,...divisionResults[0]]);
-                contentionTeamsMap = new Map([...contentionTeamsMap,...divisionResults[1]]);
-                eliminatedTeamsMap = new Map([...eliminatedTeamsMap,...divisionResults[2]]);
+                divisionResults = playoffCalculator(teams, wins, losses);
+                
+                for (let i = 0; i < 3; i++) {
+                    divisionResults[i].forEach((value, key) => {
+                        if (i == 0) {
+                            while (qualifiedTeamsMap.get(key)) {
+                                key += .01;
+                            }
+                            qualifiedTeamsMap.set(parseFloat(key), `${value}`);
+                        } else if (i == 1) {
+                            while (contentionTeamsMap.get(key)) {
+                                key += .01;
+                            }
+                            contentionTeamsMap.set(parseFloat(key), `${value}`);
+                        } else {
+                            while (eliminatedTeamsMap.get(key)) {
+                                key += .01;
+                            }
+                            eliminatedTeamsMap.set(parseFloat(key), `${value}`);
+                        }
+                    });
+                }
 
                 // Sort each map by their key (wins)
                 qualifiedTeamsMap = new Map([...qualifiedTeamsMap.entries()].sort((a, b) => b[0] - a[0]));
@@ -213,7 +250,7 @@ async function playoffPicture(channelID) {
                 contentionTeamsMap.forEach((value) => {
                     contentionTeams += `> ${value}\n`;
                 });
-                eliminatedTeamsMap.forEach((value, key) => {
+                eliminatedTeamsMap.forEach((value) => {
                     eliminatedTeams += `> ${value}\n`;
                 });
 
@@ -248,16 +285,28 @@ function playoffCalculator(teams, wins, losses) {
         if (index <= 1) {
             // 1st and 2nd places are qualified if 3rd can't catch them
             if (parseInt(wins[index]) > (gamesRemaining + parseInt(wins[2]))) {
-                qualifiedTeams.set(parseInt(wins[index]),`${teamEmoji.get(element)} ${element}`);
+                while (qualifiedTeams.get(wins[index])) {
+                    wins[index] += .01;
+                }
+                qualifiedTeams.set(parseFloat(wins[index]),`${teamEmoji.get(element)} ${element}`);
             } else {
-                contentionTeams.set(parseInt(wins[index]),`${teamEmoji.get(element)} ${element}`);
+                while (contentionTeams.get(wins[index])) {
+                    wins[index] += .01;
+                }
+                contentionTeams.set(parseFloat(wins[index]),`${teamEmoji.get(element)} ${element}`);
             }
         } else {
             // All others are eliminated if they can't catch 2nd
             if (parseInt(wins[1]) > (gamesRemaining + parseInt(wins[index]))) {
-                eliminatedTeams.set(parseInt(wins[index]),`${teamEmoji.get(element)} ${element}`);
+                while (eliminatedTeams.get(wins[index])) {
+                    wins[index] += 0.01;
+                }                
+                eliminatedTeams.set(parseFloat(wins[index]),`${teamEmoji.get(element)} ${element}`);
             } else {
-                contentionTeams.set(parseInt(wins[index]),`${teamEmoji.get(element)} ${element}`);
+                while (contentionTeams.get(wins[index])) {
+                    wins[index] += .01;
+                }
+                contentionTeams.set(parseFloat(wins[index]),`${teamEmoji.get(element)} ${element}`);
             }
         }
     });
