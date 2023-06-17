@@ -21,7 +21,7 @@ Logger.add(new Logger.transports.Console, {
 Logger.level = 'debug';
 
 // Initialize Discord Bot
-var bot = new Discord.Client({
+const bot = new Discord.Client({
     token: Auth.token,
     autorun: true,
     intents: [
@@ -43,7 +43,7 @@ bot.on('ready', function (evt) {
 });
 bot.on('message', function (user, userID, channelID, message, evt) {
     // Bot listens for messages that start with `!`
-    if (message.substring(0, 1).toLowerCase() == '!') {
+    if (message.substring(0, 1) == '!') {
         Logger.debug('Command ' + message + ' from ' + userID + ' in channel ' + channelID);
 
         switch (message.toLowerCase()) {
@@ -51,7 +51,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 getResults(channelID);
                 break;
             case '!standings':
-                getStandings(channelID);
+                getStandings(channelID, false);
                 break;
             case '!playoffs':
                 playoffPicture(channelID);
@@ -125,7 +125,7 @@ async function getResults(channelID) {
     });
 };
 
-async function getStandings(channelID) {
+async function getStandings(channelID, playoffsOnly) {
     await Axios.get(StandingsUrl).then((resolve) => {
         let standings = '';
         const $ = Cheerio.load(resolve.data);
@@ -136,8 +136,21 @@ async function getStandings(channelID) {
         divisionsArray.forEach((element, index) => {
             if (index == 0) {
                 standings = `${element}`;
+            } else if (element.includes('Playoffs')) {
+                standings += `\n\n**${element}:**`; 
             } else if (element.includes('Wet') || element.includes('Dry')) {
-                standings += `\n\n**${element}:**`;
+                if (playoffsOnly) {
+                    divisionsArray.length = index + 1;
+
+                    bot.sendMessage({
+                        to: channelID,
+                        message: `${standings.trim()}`
+                    });
+    
+                    Logger.debug('Playoff standings returned to channel ' + channelID);
+                } else {
+                    standings += `\n\n**${element}:**`;
+                }
             } else if (element.includes('-')) {
                 standings += `  ${element}`;
             } else if (element != '') {
@@ -180,6 +193,10 @@ async function playoffPicture(channelID) {
         const divisionsArray = $('#content').find('.divisions').text().split(whitespaceRegex);
         
         divisionsArray.forEach((element, index) => {
+            if (element.includes('Playoffs')) {
+                getStandings(channelID, true);
+                divisionsArray.length = index + 1;    
+            }
             if (element.includes('Wet') || element.includes('Dry')) {
                 if (teams != []) {
                     divisionResults = playoffCalculator(teams, wins, losses); 
