@@ -127,17 +127,21 @@ async function getResults(channelID) {
 
 async function getStandings(channelID, playoffsOnly) {
     await Axios.get(StandingsUrl).then((resolve) => {
+        let divisionsArray = [];
+        let counter = 0;
         let standings = '';
         const $ = Cheerio.load(resolve.data);
         const whitespaceRegex = /\s\s+/g;
 
-        const divisionsArray = $('#content').find('.divisions').text().split(whitespaceRegex);
+        if (playoffsOnly) {
+            divisionsArray = $('#content').find('.teams').text().split(whitespaceRegex);
+        } else {
+            divisionsArray = $('#content').find('.divisions').text().split(whitespaceRegex);
+        }
         
         divisionsArray.forEach((element, index) => {
             if (index == 0) {
                 standings = `${element}`;
-            } else if (element.includes('Playoffs')) {
-                standings += `\n\n**${element}:**`; 
             } else if (element.includes('Wet') || element.includes('Dry')) {
                 if (playoffsOnly) {
                     divisionsArray.length = index + 1;
@@ -153,6 +157,14 @@ async function getStandings(channelID, playoffsOnly) {
                 }
             } else if (element.includes('-')) {
                 standings += `  ${element}`;
+                if (playoffsOnly) {
+                    // Playoff results are always in pairs, so put a line after every 2 scores
+                    // Crude, but it works
+                    counter ++
+                    if (counter % 2 == 0) {
+                        standings += '\n'
+                    }
+                }
             } else if (element != '') {
                 standings += `\n> ${teamEmoji.get(element)} ${element}`;
             } else {
@@ -190,19 +202,57 @@ async function playoffPicture(channelID) {
         const $ = Cheerio.load(resolve.data);
         const whitespaceRegex = /\s\s+/g;
 
-        const divisionsArray = $('#content').find('.divisions').text().split(whitespaceRegex);
-        
-        divisionsArray.forEach((element, index) => {
-            if (element.includes('Playoffs')) {
-                getStandings(channelID, true);
-                divisionsArray.length = index + 1;    
-            }
-            if (element.includes('Wet') || element.includes('Dry')) {
-                if (teams != []) {
-                    divisionResults = playoffCalculator(teams, wins, losses); 
+        // Playoffs in progress, don't work out the playoff picture, get standings instead
+        if ($('#content').text().includes('Playoffs')) {
+            getStandings(channelID, true);    
+        } else {
+            const divisionsArray = $('#content').find('.divisions').text().split(whitespaceRegex);
+            
+            divisionsArray.forEach((element, index) => {
+                if (element.includes('Playoffs')) {
+                    getStandings(channelID, true);
+                    divisionsArray.length = index + 1;    
+                }
+                if (element.includes('Wet') || element.includes('Dry')) {
+                    if (teams != []) {
+                        divisionResults = playoffCalculator(teams, wins, losses); 
 
+                        for (let i = 0; i < 3; i++) {
+                            divisionResults[i].forEach((value, key) => {                            
+                                if (i == 0) {
+                                    while (qualifiedTeamsMap.get(key)) {
+                                        key += .01;
+                                    }
+                                    qualifiedTeamsMap.set(parseFloat(key), `${value}`);
+                                } else if (i == 1) {
+                                    while (contentionTeamsMap.get(key)) {
+                                        key += .01;
+                                    }
+                                    contentionTeamsMap.set(parseFloat(key), `${value}`);
+                                } else {
+                                    while (eliminatedTeamsMap.get(key)) {
+                                        key += .01;
+                                    }
+                                    eliminatedTeamsMap.set(parseFloat(key), `${value}`);
+                                }
+                            });
+                        }
+
+                        teams = [];
+                        wins = [];
+                        losses = [];
+                    }          
+                } else if (element.includes('-')) {
+                    wins.push(`${element.substring(0,element.indexOf('-'))}`);
+                    losses.push(`${element.substring(element.indexOf('-') + 1)}`);
+                } else if (element != '') {
+                    teams.push(`${element}`);                
+                } else if (index != 0) {
+                    // Final element of the split array is always blank
+                    divisionResults = playoffCalculator(teams, wins, losses);
+                    
                     for (let i = 0; i < 3; i++) {
-                        divisionResults[i].forEach((value, key) => {                            
+                        divisionResults[i].forEach((value, key) => {
                             if (i == 0) {
                                 while (qualifiedTeamsMap.get(key)) {
                                     key += .01;
@@ -222,66 +272,33 @@ async function playoffPicture(channelID) {
                         });
                     }
 
-                    teams = [];
-                    wins = [];
-                    losses = [];
-                }          
-            } else if (element.includes('-')) {
-                wins.push(`${element.substring(0,element.indexOf('-'))}`);
-                losses.push(`${element.substring(element.indexOf('-') + 1)}`);
-            } else if (element != '') {
-                teams.push(`${element}`);                
-            } else if (index != 0) {
-                // Final element of the split array is always blank
-                divisionResults = playoffCalculator(teams, wins, losses);
-                
-                for (let i = 0; i < 3; i++) {
-                    divisionResults[i].forEach((value, key) => {
-                        if (i == 0) {
-                            while (qualifiedTeamsMap.get(key)) {
-                                key += .01;
-                            }
-                            qualifiedTeamsMap.set(parseFloat(key), `${value}`);
-                        } else if (i == 1) {
-                            while (contentionTeamsMap.get(key)) {
-                                key += .01;
-                            }
-                            contentionTeamsMap.set(parseFloat(key), `${value}`);
-                        } else {
-                            while (eliminatedTeamsMap.get(key)) {
-                                key += .01;
-                            }
-                            eliminatedTeamsMap.set(parseFloat(key), `${value}`);
-                        }
+                    // Sort each map by their key (wins)
+                    qualifiedTeamsMap = new Map([...qualifiedTeamsMap.entries()].sort((a, b) => b[0] - a[0]));
+                    contentionTeamsMap = new Map([...contentionTeamsMap.entries()].sort((a, b) => b[0] - a[0]));
+                    eliminatedTeamsMap = new Map([...eliminatedTeamsMap.entries()].sort((a, b) => b[0] - a[0]));
+
+                    qualifiedTeamsMap.forEach((value) => {
+                        qualifiedTeams += `> ${value}\n`;
                     });
+                    contentionTeamsMap.forEach((value) => {
+                        contentionTeams += `> ${value}\n`;
+                    });
+                    eliminatedTeamsMap.forEach((value) => {
+                        eliminatedTeams += `> ${value}\n`;
+                    });
+
+                    bot.sendMessage({
+                        to: channelID,
+                        message: `The Playoff Picture:`
+                                + `${(qualifiedTeams != '') ? '\n\n**Clinched:**\n' : ''}${qualifiedTeams.trim()}`
+                                + `${(contentionTeams != '') ? '\n\n**In Contention:**\n' : ''}${contentionTeams.trim()}`
+                                + `${(eliminatedTeams != '') ? '\n\n**Eliminated:**\n' : ''}${eliminatedTeams.trim()}`
+                    });
+
+                    Logger.debug('Playoff picture returned to channel ' + channelID);
                 }
-
-                // Sort each map by their key (wins)
-                qualifiedTeamsMap = new Map([...qualifiedTeamsMap.entries()].sort((a, b) => b[0] - a[0]));
-                contentionTeamsMap = new Map([...contentionTeamsMap.entries()].sort((a, b) => b[0] - a[0]));
-                eliminatedTeamsMap = new Map([...eliminatedTeamsMap.entries()].sort((a, b) => b[0] - a[0]));
-
-                qualifiedTeamsMap.forEach((value) => {
-                    qualifiedTeams += `> ${value}\n`;
-                });
-                contentionTeamsMap.forEach((value) => {
-                    contentionTeams += `> ${value}\n`;
-                });
-                eliminatedTeamsMap.forEach((value) => {
-                    eliminatedTeams += `> ${value}\n`;
-                });
-
-                bot.sendMessage({
-                    to: channelID,
-                    message: `The Playoff Picture:`
-                            + `${(qualifiedTeams != '') ? '\n\n**Clinched:**\n' : ''}${qualifiedTeams.trim()}`
-                            + `${(contentionTeams != '') ? '\n\n**In Contention:**\n' : ''}${contentionTeams.trim()}`
-                            + `${(eliminatedTeams != '') ? '\n\n**Eliminated:**\n' : ''}${eliminatedTeams.trim()}`
-                });
-
-                Logger.debug('Playoff picture returned to channel ' + channelID);
-            }
-        })                
+            })
+        }                
     }).catch((reject) => {
         bot.sendMessage({
             to: channelID,
@@ -293,12 +310,12 @@ async function playoffPicture(channelID) {
 };
 
 function playoffCalculator(teams, wins, losses) {
-    const gamesRemaining = GamesPerSeason - (parseInt(wins[0]) + parseInt(losses[0]));
     const qualifiedTeams = new Map([]);
     const contentionTeams = new Map([]);
     const eliminatedTeams = new Map([]);
 
     teams.forEach((element, index) => {
+        const gamesRemaining = GamesPerSeason - (parseInt(wins[index]) + parseInt(losses[index]));
         let winCount = parseInt(wins[index]);
         
         if (index <= 1) {
