@@ -3,6 +3,7 @@ const Discord = require('discord.io');
 const GatewayIntentBits = require('discord.io');
 const Partials = require('discord.io');
 const Logger = require('winston');
+const Fs = require("fs");
 const Auth = require('./auth.json');
 const Axios = require('axios');
 const Cheerio = require('cheerio');
@@ -10,6 +11,7 @@ const Cheerio = require('cheerio');
 const GamesUrl = 'https://hlockey.onrender.com/league/games';
 const StandingsUrl = 'https://hlockey.onrender.com/league/standings';
 const GamesPerSeason = 114;
+const SleepyGifs = Fs.readFileSync("./sleepyGifs.txt").toString().split(',');
 
 const teamEmoji = new Map([]);
 
@@ -48,13 +50,25 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 
         switch (message.toLowerCase()) {
             case '!results':
-                getResults(channelID);
+                if (isOffSeason()) {
+                    sleeping(channelID);
+                } else {
+                    getResults(channelID);
+                }
                 break;
             case '!standings':
-                getStandings(channelID, false);
+                if (isOffSeason()) {
+                    sleeping(channelID);
+                } else {
+                    getStandings(channelID, false);
+                }
                 break;
             case '!playoffs':
-                playoffPicture(channelID);
+                if (isOffSeason()) {
+                    sleeping(channelID);
+                } else {
+                    playoffPicture(channelID);
+                }
                 break;
         }
     }
@@ -81,6 +95,24 @@ function setEmoji() {
     teamEmoji.set('Jakarta Architects', ':triangular_ruler:');
     teamEmoji.set('Baghdad Abacuses', ':abacus:');
     teamEmoji.set('Sydney Thinkers', ':thinking:');
+}
+
+async function isOffSeason() {
+    await Axios.get(GamesUrl).then((resolve) => {
+        const $ = Cheerio.load(resolve.data);
+
+        return $('#content').text().includes('no games right now. it is the offseason.');         
+    }).catch((reject) => {
+        Logger.error(`Error checking for offseason: ${reject}`);
+        return false;
+    });
+}
+
+function sleeping(channelID) {
+    bot.sendMessage({
+        to: channelID,
+        message: `It\'s the offseason. Shhhhhh, James is getting some sleep\n${SleepyGifs[Math.floor(Math.random()*SleepyGifs.length)]}`
+    });    
 }
 
 async function getResults(channelID) {

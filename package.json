@@ -20,7 +20,7 @@
     "axios": "^1.4.0",
     "cheerio": "^1.0.0-rc.12",
     "discord.io": "https://github.com/woor/discord.io/tarball/gateway_v6",
-    "fs": "0.0.1-security",
+    "fs": "^0.0.1-security",
     "winston": "^3.2.1"
   }
 }
