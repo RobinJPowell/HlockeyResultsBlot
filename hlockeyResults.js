@@ -101,6 +101,7 @@ function setEmoji() {
     teamEmoji.set('Jakarta Architects', ':triangular_ruler:');
     teamEmoji.set('Baghdad Abacuses', ':abacus:');
     teamEmoji.set('Sydney Thinkers', ':thinking:');
+    teamEmoji.set('Sleepers', ':sleeping_accommodation:');
 }
 
 async function isOffSeason(result) {
@@ -253,7 +254,7 @@ async function playoffPicture(channelID) {
                     getStandings(channelID, true);
                     divisionsArray.length = index + 1;    
                 }
-                if (element.includes('Wet') || element.includes('Dry')) {
+                if (element.includes('Wet') || element.includes('Dry') || element.includes('Sleepy')) {
                     if (teams != []) {
                         divisionResults = divisionLeadersCalculator(teams, wins, losses);
 
@@ -376,21 +377,24 @@ function divisionLeadersCalculator(teams, wins, losses) {
 
     teams.forEach((element, index) => {
         let winCount = parseInt(wins[index]);
-        const gamesRemaining = GamesPerSeason - (winCount + parseInt(losses[index]));        
-                
-        if (index == 0) {
-            // The division leader has won if 2nd can't catch them          
-            if (winCount > (gamesRemaining + parseInt(wins[1]))) {
-                qualifiedLeaders.set(winCount,`${teamEmoji.get(element)} ${element} - Division Winner`);
+        const gamesRemaining = GamesPerSeason - (winCount + parseInt(losses[index]));
+        
+        // Ignore Sleepers, they have no playoff impact
+        if (element != 'Sleepers') {
+            if (index == 0) {
+                // The division leader has won if 2nd can't catch them          
+                if (winCount > (gamesRemaining + parseInt(wins[1]))) {
+                    qualifiedLeaders.set(winCount,`${teamEmoji.get(element)} ${element} - Division Winner`);
+                } else {
+                    contentionLeaders.set(winCount,`${teamEmoji.get(element)} ${element} - Division Leader`);
+                }
             } else {
-                contentionLeaders.set(winCount,`${teamEmoji.get(element)} ${element} - Division Leader`);
+                // Count all other teams as being in contention for now
+                while (contentionTeams.get(winCount)) {
+                    winCount -= .01;
+                }
+                contentionTeams.set(winCount,`${teamEmoji.get(element)} ${element}-${gamesRemaining}`);
             }
-        } else {
-            // Count all other teams as being in contention for now
-            while (contentionTeams.get(winCount)) {
-                winCount -= .01;
-            }
-            contentionTeams.set(winCount,`${teamEmoji.get(element)} ${element}-${gamesRemaining}`);
         }
     });
 
