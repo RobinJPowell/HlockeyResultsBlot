@@ -50,25 +50,31 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 
         switch (message.toLowerCase()) {
             case '!results':
-                if (isOffSeason()) {
-                    sleeping(channelID);
-                } else {
-                    getResults(channelID);
-                }
+                isOffSeason((result) => {
+                    if (result) {
+                        sleeping(channelID);
+                    } else {
+                        getResults(channelID);
+                    }
+                });
                 break;
             case '!standings':
-                if (isOffSeason()) {
-                    sleeping(channelID);
-                } else {
-                    getStandings(channelID, false);
-                }
+                isOffSeason((result) => {
+                    if (result) {
+                        sleeping(channelID);
+                    } else {
+                        getStandings(channelID, false);
+                    }
+                });
                 break;
             case '!playoffs':
-                if (isOffSeason()) {
-                    sleeping(channelID);
-                } else {
-                    playoffPicture(channelID);
-                }
+                isOffSeason((result) => {
+                    if (result) {
+                        sleeping(channelID);
+                    } else {
+                        playoffPicture(channelID);
+                    }
+                });
                 break;
         }
     }
@@ -97,14 +103,14 @@ function setEmoji() {
     teamEmoji.set('Sydney Thinkers', ':thinking:');
 }
 
-async function isOffSeason() {
+async function isOffSeason(result) {
     await Axios.get(GamesUrl).then((resolve) => {
         const $ = Cheerio.load(resolve.data);
 
-        return $('#content').text().includes('no games right now. it is the offseason.');         
+        result($('#content').text().includes('no games right now. it is the offseason.'));         
     }).catch((reject) => {
         Logger.error(`Error checking for offseason: ${reject}`);
-        return false;
+        result(false);
     });
 }
 
