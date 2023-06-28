@@ -231,7 +231,9 @@ async function playoffPicture(channelID) {
         let wins = [];
         let losses = [];        
         let divisionResults = [];
+        let qualifiedLeadersMap = new Map([]);
         let qualifiedTeamsMap = new Map([]);
+        let contentionLeadersMap = new Map([]);
         let contentionTeamsMap = new Map([]);
         let eliminatedTeamsMap = new Map([]);
         let qualifiedTeams = '';
@@ -253,25 +255,25 @@ async function playoffPicture(channelID) {
                 }
                 if (element.includes('Wet') || element.includes('Dry')) {
                     if (teams != []) {
-                        divisionResults = playoffCalculator(teams, wins, losses); 
+                        divisionResults = divisionLeadersCalculator(teams, wins, losses);
 
                         for (let i = 0; i < 3; i++) {
                             divisionResults[i].forEach((value, key) => {                            
                                 if (i == 0) {
-                                    while (qualifiedTeamsMap.get(key)) {
-                                        key += .01;
+                                    while (qualifiedLeadersMap.get(key)) {
+                                        key -= .01;
                                     }
-                                    qualifiedTeamsMap.set(parseFloat(key), `${value}`);
+                                    qualifiedLeadersMap.set(key, `${value}`);
                                 } else if (i == 1) {
-                                    while (contentionTeamsMap.get(key)) {
-                                        key += .01;
+                                    while (contentionLeadersMap.get(key)) {
+                                        key -= .01;
                                     }
-                                    contentionTeamsMap.set(parseFloat(key), `${value}`);
+                                    contentionLeadersMap.set(key, `${value}`);
                                 } else {
-                                    while (eliminatedTeamsMap.get(key)) {
-                                        key += .01;
+                                    while (contentionTeamsMap.get(key)) {
+                                        key -= .01;
                                     }
-                                    eliminatedTeamsMap.set(parseFloat(key), `${value}`);
+                                    contentionTeamsMap.set(key, `${value}`);
                                 }
                             });
                         }
@@ -287,36 +289,55 @@ async function playoffPicture(channelID) {
                     teams.push(`${element}`);                
                 } else if (index != 0) {
                     // Final element of the split array is always blank
-                    divisionResults = playoffCalculator(teams, wins, losses);
+                    divisionResults = divisionLeadersCalculator(teams, wins, losses);
                     
                     for (let i = 0; i < 3; i++) {
-                        divisionResults[i].forEach((value, key) => {
+                        divisionResults[i].forEach((value, key) => {                            
                             if (i == 0) {
-                                while (qualifiedTeamsMap.get(key)) {
-                                    key += .01;
+                                while (qualifiedLeadersMap.get(key)) {
+                                    key -= .01;
                                 }
-                                qualifiedTeamsMap.set(parseFloat(key), `${value}`);
+                                qualifiedLeadersMap.set(key, `${value}`);
                             } else if (i == 1) {
-                                while (contentionTeamsMap.get(key)) {
-                                    key += .01;
+                                while (contentionLeadersMap.get(key)) {
+                                    key -= .01;
                                 }
-                                contentionTeamsMap.set(parseFloat(key), `${value}`);
+                                contentionLeadersMap.set(key, `${value}`);
                             } else {
-                                while (eliminatedTeamsMap.get(key)) {
-                                    key += .01;
+                                while (contentionTeamsMap.get(key)) {
+                                    key -= .01;
                                 }
-                                eliminatedTeamsMap.set(parseFloat(key), `${value}`);
+                                contentionTeamsMap.set(key, `${value}`);
                             }
                         });
                     }
 
-                    // Sort each map by their key (wins)
-                    qualifiedTeamsMap = new Map([...qualifiedTeamsMap.entries()].sort((a, b) => b[0] - a[0]));
+                    // Sort the contenders by their key (wins)
+                    contentionLeadersMap = new Map([...contentionLeadersMap.entries()].sort((a, b) => b[0] - a[0])); 
                     contentionTeamsMap = new Map([...contentionTeamsMap.entries()].sort((a, b) => b[0] - a[0]));
+
+                    // These are the important values for working out qualification and elimination
+                    const fourthPlaceWins = Math.round(Array.from(contentionTeamsMap.keys())[3]);
+                    const fifthPlaceWins = Math.round(Array.from(contentionTeamsMap.keys())[4]);
+                    const fifthPlaceTeam = Array.from(contentionTeamsMap.values())[4];
+                    const fifthPlaceGamesRemaining = parseInt(fifthPlaceTeam.substring(fifthPlaceTeam.indexOf('-') + 1));
+                    
+                    qualifiedLeadersCaclulator(contentionLeadersMap, contentionTeamsMap, qualifiedLeadersMap, fifthPlaceWins, fifthPlaceGamesRemaining);
+                    bestOfTheRestCalculator(contentionTeamsMap, qualifiedTeamsMap, eliminatedTeamsMap, fourthPlaceWins, fifthPlaceWins, fifthPlaceGamesRemaining);
+                    
+                    // Sort each map by their key (wins)
+                    qualifiedLeadersMap = new Map([...qualifiedLeadersMap.entries()].sort((a, b) => b[0] - a[0]));
+                    qualifiedTeamsMap = new Map([...qualifiedTeamsMap.entries()].sort((a, b) => b[0] - a[0]));
                     eliminatedTeamsMap = new Map([...eliminatedTeamsMap.entries()].sort((a, b) => b[0] - a[0]));
 
+                    qualifiedLeadersMap.forEach((value) => {
+                        qualifiedTeams += `> ${value}\n`;
+                    });
                     qualifiedTeamsMap.forEach((value) => {
                         qualifiedTeams += `> ${value}\n`;
+                    });
+                    contentionLeadersMap.forEach((value) => {
+                        contentionTeams += `> ${value}\n`;
                     });
                     contentionTeamsMap.forEach((value) => {
                         contentionTeams += `> ${value}\n`;
@@ -347,43 +368,82 @@ async function playoffPicture(channelID) {
     });
 };
 
-function playoffCalculator(teams, wins, losses) {
-    const qualifiedTeams = new Map([]);
+// Calculate if the leader of a division has won and made the playoffs
+function divisionLeadersCalculator(teams, wins, losses) {    
+    const qualifiedLeaders = new Map([]);
+    const contentionLeaders = new Map([]);
     const contentionTeams = new Map([]);
-    const eliminatedTeams = new Map([]);
 
     teams.forEach((element, index) => {
-        const gamesRemaining = GamesPerSeason - (parseInt(wins[index]) + parseInt(losses[index]));
         let winCount = parseInt(wins[index]);
-        
-        if (index <= 1) {
-            // 1st and 2nd places are qualified if 3rd can't catch them            
-            if (winCount > (gamesRemaining + parseInt(wins[2]))) {
-                while (qualifiedTeams.get(winCount)) {
-                    winCount += 0.01;
-                }
-                qualifiedTeams.set(winCount,`${teamEmoji.get(element)} ${element}`);
+        const gamesRemaining = GamesPerSeason - (winCount + parseInt(losses[index]));        
+                
+        if (index == 0) {
+            // The division leader has won if 2nd can't catch them          
+            if (winCount > (gamesRemaining + parseInt(wins[1]))) {
+                qualifiedLeaders.set(winCount,`${teamEmoji.get(element)} ${element} - Division Winner`);
             } else {
-                while (contentionTeams.get(winCount)) {
-                    winCount += 0.01;
-                }
-                contentionTeams.set(winCount,`${teamEmoji.get(element)} ${element}`);
+                contentionLeaders.set(winCount,`${teamEmoji.get(element)} ${element} - Division Leader`);
             }
         } else {
-            // All others are eliminated if they can't catch 2nd
-            if (parseInt(wins[1]) > (gamesRemaining + winCount)) {
-                while (eliminatedTeams.get(winCount)) {
-                    winCount += 0.01;
-                }               
-                eliminatedTeams.set(winCount,`${teamEmoji.get(element)} ${element}`);
-            } else {
-                while (contentionTeams.get(winCount)) {
-                    winCount += 0.01;
-                }
-                contentionTeams.set(winCount,`${teamEmoji.get(element)} ${element}`);
+            // Count all other teams as being in contention for now
+            while (contentionTeams.get(winCount)) {
+                winCount -= .01;
             }
+            contentionTeams.set(winCount,`${teamEmoji.get(element)} ${element}-${gamesRemaining}`);
         }
     });
 
-    return [qualifiedTeams, contentionTeams, eliminatedTeams];
+    return [qualifiedLeaders, contentionLeaders, contentionTeams];
 };
+
+// Calculates which leaders will have qualified, even if they haven't won
+function qualifiedLeadersCaclulator(contentionLeadersMap, contentionTeamsMap, qualifiedLeadersMap, fifthPlaceWins, fifthPlaceGamesRemaining) {    
+    contentionLeadersMap.forEach((value, key) => {
+        // Qualified if they can't be caught by 5th place of the non-leading teams in contention
+        if (Math.round(key) > (fifthPlaceWins + fifthPlaceGamesRemaining)) {
+            contentionLeadersMap.delete(key);
+            while (qualifiedLeadersMap.get(key)) {
+                key -= .01;
+            }
+            qualifiedLeadersMap.set(key, value);
+        } else {
+            contentionLeadersMap.set(key, value);
+        }
+    });
+}
+
+// Calculate which of the rest of the teams have qualified and which have been eliminated
+function bestOfTheRestCalculator(contentionTeamsMap, qualifiedTeamsMap, eliminatedTeamsMap, fourthPlaceWins, fifthPlaceWins, fifthPlaceGamesRemaining) {    
+    let position = 0;
+    
+    contentionTeamsMap.forEach((value, key) => {        
+        position++;
+        
+        if (position <= 4) {
+            // Top 4 qualify as soon as they can't be caught by 5th place
+            if (Math.round(key) > (fifthPlaceWins + fifthPlaceGamesRemaining)) {
+                contentionTeamsMap.delete(key);
+                while (qualifiedTeamsMap.get(key)) {
+                    key -= .01;
+                }
+                qualifiedTeamsMap.set(key, `${value.substring(0,value.indexOf('-'))}`);
+            } else {
+                contentionTeamsMap.set(key, `${value.substring(0,value.indexOf('-'))}`);
+            }
+        } else {
+            const gamesRemaining = parseInt(value.substring(value.indexOf('-') + 1));
+
+            // Everyone else is eliminated as soon as they can't catch 4th place
+            if ((Math.round(key) + gamesRemaining) < fourthPlaceWins) {
+                contentionTeamsMap.delete(key);
+                while (eliminatedTeamsMap.get(key)) {
+                    key -= .01;
+                }
+                eliminatedTeamsMap.set(key, `${value.substring(0,value.indexOf('-'))}`);                
+            } else {
+                contentionTeamsMap.set(key, `${value.substring(0,value.indexOf('-'))}`);
+            }
+        }
+    });
+}
