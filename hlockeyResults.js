@@ -14,6 +14,7 @@ const GamesPerSeason = 114;
 const SleepyGifs = Fs.readFileSync("./sleepyGifs.txt").toString().split(',');
 
 const teamEmoji = new Map([]);
+const WhitespaceRegex = /\s\s+/g;
 
 // Configure Logger settings
 Logger.remove(Logger.transports.Console);
@@ -48,7 +49,17 @@ bot.on('message', function (user, userID, channelID, message, evt) {
     if (message.substring(0, 1) == '!') {
         Logger.debug('Command ' + message + ' from ' + userID + ' in channel ' + channelID);
 
-        switch (message.toLowerCase()) {
+        let command = '';
+        let parameters = '';
+
+        if (message.indexOf(' ') > 0) {
+            command = message.substring(0,message.indexOf(' '));
+            parameters = message.substring(message.indexOf(' ') + 1);    
+        } else {
+            command = message;
+        }
+
+        switch (command.toLowerCase()) {
             case '!results':
                 isOffSeason((result) => {
                     if (result) {
@@ -76,30 +87,39 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                     }
                 });
                 break;
+            case '!team':
+                isOffSeason((result) => {
+                    if (result) {
+                        sleeping(channelID);
+                    } else {
+                        findTeam(channelID, parameters.toLowerCase());
+                    }
+                });
+                break;
         }
     }
 });
 
 function setEmoji() {
+    teamEmoji.set('Antalya Pirates', ':ocean:');
     teamEmoji.set('Baden Hallucinations', ':mushroom:');
+    teamEmoji.set('Kópavogur Seals', ':seal:');
     teamEmoji.set('Lagos Soup', ':bowl_with_spoon:');
     teamEmoji.set('Pica Acid', ':test_tube:');
-    teamEmoji.set('Antalya Pirates', ':ocean:');
-    teamEmoji.set('Kópavogur Seals', ':seal:');
-    teamEmoji.set('Erlangen Ohms', ':aquarius:');
-    teamEmoji.set('Wyrzysk Rockets', ':rocket:');
-    teamEmoji.set('Pompei Eruptions', ':volcano:');
     teamEmoji.set('Dawson City Impostors', ':knife:');
-    teamEmoji.set('Rio de Janeiro Directors', ':cinema:');
-    teamEmoji.set('Orcadas Base Fog', ':foggy:');
-    teamEmoji.set('Nice Backflippers', ':arrows_counterclockwise:');
+    teamEmoji.set('Erlangen Ohms', ':aquarius:');
+    teamEmoji.set('Pompei Eruptions', ':volcano:');
+    teamEmoji.set('Rio de Janeiro Directors', ':cinema:');      
+    teamEmoji.set('Wyrzysk Rockets', ':rocket:');
+    teamEmoji.set('Cape Town Transplants', ':seedling:');
     teamEmoji.set('Manbij Fish', ':tropical_fish:');
     teamEmoji.set('Nagqu Paint', ':art:');
-    teamEmoji.set('Cape Town Transplants', ':seedling:');
-    teamEmoji.set('Kyoto Payphones', ':vibration_mode:');
-    teamEmoji.set('Stony Brook Reapers', ':skull:');
-    teamEmoji.set('Jakarta Architects', ':triangular_ruler:');
+    teamEmoji.set('Nice Backflippers', ':arrows_counterclockwise:');    
+    teamEmoji.set('Orcadas Base Fog', ':foggy:');
     teamEmoji.set('Baghdad Abacuses', ':abacus:');
+    teamEmoji.set('Jakarta Architects', ':triangular_ruler:');    
+    teamEmoji.set('Kyoto Payphones', ':vibration_mode:');
+    teamEmoji.set('Stony Brook Reapers', ':skull:');    
     teamEmoji.set('Sydney Thinkers', ':thinking:');
     teamEmoji.set('Sleepers', ':sleeping_accommodation:');
 }
@@ -126,7 +146,6 @@ async function getResults(channelID) {
     await Axios.get(GamesUrl).then((resolve) => {
         let results = '';
         let gamesProcessed = 0;
-        const whitespaceRegex = /\s\s+/g;
 
         const $ = Cheerio.load(resolve.data);
         const games = $('#content').find('.game');
@@ -139,7 +158,7 @@ async function getResults(channelID) {
             const afterWeather = afterResults.substring(afterResults.indexOf('\n') + 1);
             const status = afterWeather.substring(0,afterWeather.indexOf('\n')).trim();
 
-            const resultArray = resultRaw.trim().replaceAll('\n','').replace(whitespaceRegex,'|').split('|');
+            const resultArray = resultRaw.trim().replaceAll('\n','').replace(WhitespaceRegex,'|').split('|');
             const result = `${teamEmoji.get(resultArray[0])} ${resultArray[0]}  **${resultArray[1]} - ${resultArray[3]}**  ${resultArray[2]} ${teamEmoji.get(resultArray[2])}`
 
             results += `> ${result.trim()}\n> :white_sun_rain_cloud: ${weather}     ${(status == 'game in progress' ? '**Game In Progress**' : 'Game Over')}\n\n`;
@@ -170,12 +189,11 @@ async function getStandings(channelID, playoffsOnly) {
         let counter = 0;
         let standings = '';
         const $ = Cheerio.load(resolve.data);
-        const whitespaceRegex = /\s\s+/g;
 
         if (playoffsOnly) {
-            divisionsArray = $('#content').find('.teams').text().split(whitespaceRegex);
+            divisionsArray = $('#content').find('.teams').text().split(WhitespaceRegex);
         } else {
-            divisionsArray = $('#content').find('.divisions').text().split(whitespaceRegex);
+            divisionsArray = $('#content').find('.divisions').text().split(WhitespaceRegex);
         }
         
         divisionsArray.forEach((element, index) => {
@@ -240,13 +258,12 @@ async function playoffPicture(channelID) {
         let contentionTeams = '';
         let eliminatedTeams = '';
         const $ = Cheerio.load(resolve.data);
-        const whitespaceRegex = /\s\s+/g;
 
         // Playoffs in progress, don't work out the playoff picture, get standings instead
         if ($('#content').text().includes('Playoffs')) {
             getStandings(channelID, true);    
         } else {
-            const divisionsArray = $('#content').find('.divisions').text().split(whitespaceRegex);
+            const divisionsArray = $('#content').find('.divisions').text().split(WhitespaceRegex);
             
             divisionsArray.forEach((element, index) => {
                 if (element.includes('Playoffs')) {
@@ -408,3 +425,68 @@ function bestOfTheRestCalculator(contentionTeamsMap, qualifiedTeamsMap, eliminat
         }
     });
 }
+
+function findTeam(channelID, teamName) {    
+    if (teamName == "") {    
+        bot.sendMessage({
+            to: channelID,
+            message: 'You need to give me a team name'
+        });
+    } else if (teamName == "sleepers") {
+        bot.sendMessage({
+            to: channelID,
+            message: 'Who are they?'
+        });
+    } else {
+        let i = 0;
+        let teamFound = false;
+
+        teamEmoji.forEach((value, key) => {
+            if (!teamFound && key != "Sleepers") {
+                if (key.toLowerCase().includes(teamName)) {
+                    teamFound = true;
+                    getTeam(channelID, i, key);
+                }
+                i++
+            }
+        })
+
+        if (!teamFound) {
+            bot.sendMessage({
+                to: channelID,
+                message: `I don't know which team ${teamName} refers to`
+            });    
+        }
+    }      
+}
+
+async function getTeam(channelID, i, team) {
+    await Axios.get(`${StandingsUrl}/${i.toString()}`).then((resolve) => {
+        let playerList = `${teamEmoji.get(team)} **${team}**\n\n`;
+        const $ = Cheerio.load(resolve.data);
+        
+        const playerArray = $('#content').find('.player').text().split(WhitespaceRegex).slice(1,-1);
+
+        playerArray.forEach((element, index) => {
+            if ((index % 8) == 0){
+                playerList += `> **${element}**  -  ${playerArray[index + 1]}\n`;
+            } else if ((index % 8) == 2) {
+                playerList += `> **${element}**  -  ${playerArray[index + 1]}, **${playerArray[index + 2]}**  -  ${playerArray[index + 3]}, **${playerArray[index + 4]}**  -  `;
+            } else if ((index % 8) == 7) {
+                playerList += `${element}\n\n`;
+            }
+        });
+
+        bot.sendMessage({
+            to: channelID,
+            message: `${playerList.trim()}`
+        });
+    }).catch((reject) => {
+        bot.sendMessage({
+            to: channelID,
+            message: 'I\'m too tired to get that team right now'
+        });
+
+        Logger.error(`Error obtaining standings: ${reject}`);
+    });
+};
