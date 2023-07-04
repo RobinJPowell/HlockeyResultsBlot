@@ -462,20 +462,34 @@ function findTeam(channelID, teamName) {
 
 async function getTeam(channelID, i, team) {
     await Axios.get(`${StandingsUrl}/${i.toString()}`).then((resolve) => {
-        let playerList = `${teamEmoji.get(team)} **${team}**\n\n`;
         const $ = Cheerio.load(resolve.data);
+        let playerList = `${teamEmoji.get(team)} **${team}**\n\n`;
         
         const playerArray = $('#content').find('.player').text().split(WhitespaceRegex).slice(1,-1);
+        const rosterPlayers = [...playerArray].slice(0,-21);
+        const shadowPlayers = [...playerArray].slice(48);
 
-        playerArray.forEach((element, index) => {
+        rosterPlayers.forEach((element, index) => {            
             if ((index % 8) == 0){
-                playerList += `> **${element}**  -  ${playerArray[index + 1]}\n`;
+                playerList += `> ${element} - ${rosterPlayers[index + 1]}\n`;
             } else if ((index % 8) == 2) {
-                playerList += `> **${element}**  -  ${playerArray[index + 1]}, **${playerArray[index + 2]}**  -  ${playerArray[index + 3]}, **${playerArray[index + 4]}**  -  `;
+                playerList += `> ${element} - **${rosterPlayers[index + 1]}**, ${rosterPlayers[index + 2]} - **${rosterPlayers[index + 3]}**, ${rosterPlayers[index + 4]} - `;
             } else if ((index % 8) == 7) {
-                playerList += `${element}\n\n`;
+                playerList += `**${element}**\n\n`;
             }
         });
+
+        playerList += '**Shadows:**\n\n'
+
+        shadowPlayers.forEach((element, index) => {
+            if ((index % 7) == 0){
+                playerList += `> ${element}\n`;
+            } else if ((index % 7) == 1) {
+                playerList += `> ${element} - **${shadowPlayers[index + 1]}**, ${shadowPlayers[index + 2]} - **${shadowPlayers[index + 3]}**, ${shadowPlayers[index + 4]} - `;
+            } else if ((index % 7) == 6) {
+                playerList += `**${element}**\n\n`;
+            }
+        })
 
         bot.sendMessage({
             to: channelID,
