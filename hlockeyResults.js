@@ -199,7 +199,7 @@ async function getStandings(channelID, playoffsOnly) {
         divisionsArray.forEach((element, index) => {
             if (index == 0) {
                 standings = `${element}`;
-            } else if (element.includes('Wet') || element.includes('Dry')) {
+            } else if (element.includes('Wet') || element.includes('Dry') || element.includes('Sleepy')) {
                 if (playoffsOnly) {
                     divisionsArray.length = index + 1;
 
@@ -261,15 +261,11 @@ async function playoffPicture(channelID) {
 
         // Playoffs in progress, don't work out the playoff picture, get standings instead
         if ($('#content').text().includes('Playoffs')) {
-            getStandings(channelID, true);    
+            getStandings(channelID, true);
         } else {
             const divisionsArray = $('#content').find('.divisions').text().split(WhitespaceRegex);
             
             divisionsArray.forEach((element, index) => {
-                if (element.includes('Playoffs')) {
-                    getStandings(channelID, true);
-                    divisionsArray.length = index + 1;    
-                }
                 if (element.includes('Wet') || element.includes('Dry') || element.includes('Sleepy')) {
                     if (teams != []) {
                         divisionLeadersCalculator(teams, wins, losses, qualifiedLeadersMap, contentionLeadersMap, contentionTeamsMap);
@@ -282,11 +278,9 @@ async function playoffPicture(channelID) {
                     wins.push(`${element.substring(0,element.indexOf('-'))}`);
                     losses.push(`${element.substring(element.indexOf('-') + 1)}`);
                 } else if (element != '') {
-                    teams.push(`${element}`);                
+                    teams.push(`${element}`);
                 } else if (index != 0) {
                     // Final element of the split array is always blank
-                    divisionLeadersCalculator(teams, wins, losses, qualifiedLeadersMap, contentionLeadersMap, contentionTeamsMap);
-
                     // Sort the contenders by their key (wins)
                     contentionLeadersMap = new Map([...contentionLeadersMap.entries()].sort((a, b) => b[0] - a[0])); 
                     contentionTeamsMap = new Map([...contentionTeamsMap.entries()].sort((a, b) => b[0] - a[0]));
@@ -385,8 +379,6 @@ function qualifiedLeadersCaclulator(contentionLeadersMap, qualifiedLeadersMap, f
                 key -= .01;
             }
             qualifiedLeadersMap.set(key, value);
-        } else {
-            contentionLeadersMap.set(key, value);
         }
     });
 }
