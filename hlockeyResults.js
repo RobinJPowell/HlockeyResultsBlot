@@ -7,6 +7,8 @@ const Fs = require("fs");
 const Auth = require('./auth.json');
 const Axios = require('axios');
 const Cheerio = require('cheerio');
+const { off } = require('process');
+const { type } = require('os');
 
 const GamesUrl = 'https://hlockey.onrender.com/league/games';
 const StandingsUrl = 'https://hlockey.onrender.com/league/standings';
@@ -418,7 +420,13 @@ function bestOfTheRestCalculator(contentionTeamsMap, qualifiedTeamsMap, eliminat
     });
 }
 
-function findTeam(channelID, teamName) {    
+function findTeam(channelID, teamName) {
+    const teamChannel = isTeamChannel(channelID);
+
+    if (teamName == '' && teamChannel[0] == true) {
+        teamName = teamChannel[1].toLowerCase();
+    }
+
     if (teamName == "") {    
         bot.sendMessage({
             to: channelID,
@@ -437,7 +445,7 @@ function findTeam(channelID, teamName) {
             if (!teamFound && key != "Sleepers") {
                 if (key.toLowerCase().includes(teamName)) {
                     teamFound = true;
-                    getTeam(channelID, i, key);
+                    getTeam(channelID, i, key, teamChannel[0]);
                 }
                 i++
             }
@@ -449,39 +457,111 @@ function findTeam(channelID, teamName) {
                 message: `I don't know which team ${teamName} refers to`
             });    
         }
-    }      
+    }    
 }
 
-async function getTeam(channelID, i, team) {
+function isTeamChannel(channelID) {
+    // You really should be able to do this a better way, but I can't work it out.
+    // bot.channels.get(channelID) doesn't work, says it isn't a valid function despite all the doumentation saying it is.
+    // Everything on Stack Overflow suggests this is because the bot doesn't have permissions to see the channels,
+    // but then why does bot.channels return an object with all the channels in it?
+    // Can't work out how to do anything with the returned object, you can print out the contents fine with console.log
+    // and it looks very much like a JSON, but nothing you'd usually be able to do with a JSON works.
+    // Except for stringify, tried it on a whim and that works for some reason.
+    // Just parse it as text for now, maybe some nice person will look at this comment on GitHub and say, "You silly donkey,
+    // it's so easy, you just do this", and that will make me very happy.
+    let teamName = '';
+    const channels = JSON.stringify(bot.channels);
+    const thisChannel = channels.substring(channels.indexOf(channelID));
+    const parentChannelIndex = thisChannel.indexOf('"parent_id":') + 13;
+    
+    if (parentChannelIndex > 13) {
+        const parentChannelID = thisChannel.substring(parentChannelIndex,parentChannelIndex + 19);
+        const parentChannel = channels.substring(channels.indexOf(parentChannelID));        
+        const parentChannelNameStart = parentChannel.substring(parentChannel.indexOf('\"name":"') + 8);
+        const parentChannelName = parentChannelNameStart.substring(0,parentChannelNameStart.indexOf('"'));
+        
+        teamEmoji.forEach((value,key) => {
+            if (teamName == '' && parentChannelName.match(key)) {
+                teamName = key;
+            }
+        })
+    }
+
+    if (teamName > '') {
+        return [true, teamName];
+    } else {
+        return [false, ''];
+    }
+}
+
+async function getTeam(channelID, i, team, teamChannel) {
     await Axios.get(`${StandingsUrl}/${i.toString()}`).then((resolve) => {
         const $ = Cheerio.load(resolve.data);
         let playerList = `${teamEmoji.get(team)} **${team}**\n\n`;
+        let player = '';
+        let offence = 0.0;
+        let defence = 0.0;
+        let agility = 0.0;
+        let electionStats = [];
         
         const playerArray = $('#content').find('.player').text().split(WhitespaceRegex).slice(1,-1);
         const rosterPlayers = [...playerArray].slice(0,-21);
         const shadowPlayers = [...playerArray].slice(48);
 
         rosterPlayers.forEach((element, index) => {            
-            if ((index % 8) == 0){
+            if ((index % 8) == 0){                
                 playerList += `> ${element} - ${rosterPlayers[index + 1]}\n`;
-            } else if ((index % 8) == 2) {
+
+                if (teamChannel) {
+                    player = `${rosterPlayers[index + 1]}, ${element}`;
+                }
+            } else if ((index % 8) == 2) {                
                 playerList += `> ${element} - **${rosterPlayers[index + 1]}**, ${rosterPlayers[index + 2]} - **${rosterPlayers[index + 3]}**, ${rosterPlayers[index + 4]} - `;
-            } else if ((index % 8) == 7) {
+
+                if (teamChannel) {
+                    offence = parseFloat(rosterPlayers[index + 1]);
+                    defence = parseFloat(rosterPlayers[index + 3]);
+                }
+            } else if ((index % 8) == 7) {                
                 playerList += `**${element}**\n\n`;
+                
+                if (teamChannel) {
+                    agility = parseFloat(element);
+                    electionStats = calculateElectionStats(player, offence, defence, agility, electionStats);
+                }
             }
         });
 
         playerList += '**Shadows:**\n\n'
 
         shadowPlayers.forEach((element, index) => {
-            if ((index % 7) == 0){
+            if ((index % 7) == 0){                
                 playerList += `> ${element}\n`;
+
+                if (teamChannel) {
+                    player = `Shadows, ${element}`;
+                }
             } else if ((index % 7) == 1) {
                 playerList += `> ${element} - **${shadowPlayers[index + 1]}**, ${shadowPlayers[index + 2]} - **${shadowPlayers[index + 3]}**, ${shadowPlayers[index + 4]} - `;
+
+                if (teamChannel) {
+                    offence = parseFloat(shadowPlayers[index + 1]);
+                    defence = parseFloat(shadowPlayers[index + 3]);
+                }
             } else if ((index % 7) == 6) {
                 playerList += `**${element}**\n\n`;
+
+                if (teamChannel) {
+                    agility = parseFloat(element);
+                    electionStats = calculateElectionStats(player, offence, defence, agility, electionStats);
+                }
             }
         })
+
+        if (teamChannel) {
+            playerList += `> Best Player: ${electionStats[0][0]} - **${electionStats[0][1]}**\n> Worst Player: ${electionStats[1][0]} - **${electionStats[1][1]}**\n> Worst Stat: ${electionStats[2][0]}, ${electionStats[2][1]} - **${electionStats[2][2]}**\n> Best Offence: ${electionStats[3][0]} - **${electionStats[3][1]}**\n> Best Defence: ${electionStats[4][0]} - **${electionStats[4][1]}**`;
+        }
 
         bot.sendMessage({
             to: channelID,
@@ -496,3 +576,52 @@ async function getTeam(channelID, i, team) {
         Logger.error(`Error obtaining standings: ${reject}`);
     });
 };
+
+// Caculate stats which may be useful when deciding how to vote in elections
+function calculateElectionStats(player, offence, defence, agility, electionStats) {
+    const totalStats = offence + defence + agility;
+    let bestPlayer = [];
+    let worstPlayer = [];
+    let worstStat = [];
+    let bestOffence = [];
+    let bestDefence = [];
+    
+    // First player encountered, make them best and worst of everything
+    if (electionStats.length == 0) {
+        bestPlayer = [player, totalStats];
+        worstPlayer = [player, totalStats];
+        worstStat = [player, 'Offence', offence];
+        bestOffence = [player, offence];
+        bestDefence = [player, defence];
+        electionStats[2] = worstStat;
+    } else {
+        if (totalStats > electionStats[0][1]) {
+            bestPlayer = [player, totalStats];
+        } else if (totalStats < electionStats[1][1]) {
+            worstPlayer = [player, totalStats];
+        }
+
+        if (offence > electionStats[3][1]) {
+            bestOffence = [player, offence];
+        }
+        if (defence > electionStats[4][1]) {
+            bestDefence = [player, defence];
+        }
+    }
+
+    if (offence < electionStats[2][2]) {
+        worstStat = [player, 'Offence', offence];
+    }
+    if (defence < electionStats[2][2]) {
+        worstStat = [player, 'Defence', defence];
+    }
+    if (agility < electionStats[2][2]) {
+        worstStat = [player, 'Agility', agility];
+    }
+
+    return [(bestPlayer.length == 0) ? electionStats[0] : bestPlayer,
+            (worstPlayer.length == 0) ? electionStats[1] : worstPlayer,
+            (worstStat.length == 0) ? electionStats[2] : worstStat,
+            (bestOffence.length == 0) ? electionStats[3] : bestOffence,
+            (bestDefence.length == 0) ? electionStats[4] : bestDefence]
+}
