@@ -15,7 +15,8 @@ const StandingsUrl = 'https://hlockey.onrender.com/league/standings';
 const GamesPerSeason = 114;
 const SleepyGifs = Fs.readFileSync("./sleepyGifs.txt").toString().split(',');
 
-const teamEmoji = new Map([]);
+const TeamEmoji = new Map([]);
+const TeamChannel = new Map([]);
 const WhitespaceRegex = /\s\s+/g;
 
 // Configure Logger settings
@@ -43,6 +44,7 @@ const bot = new Discord.Client({
 });
 bot.on('ready', function (evt) {
     setEmoji();
+    setTeamChannels();
     Logger.info('Connected');
     Logger.info(bot.username + ' - (' + bot.id + ')');
 });
@@ -103,27 +105,50 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 });
 
 function setEmoji() {
-    teamEmoji.set('Antalya Pirates', ':ocean:');
-    teamEmoji.set('Baden Hallucinations', ':mushroom:');
-    teamEmoji.set('Kópavogur Seals', ':seal:');
-    teamEmoji.set('Lagos Soup', ':bowl_with_spoon:');
-    teamEmoji.set('Pica Acid', ':test_tube:');
-    teamEmoji.set('Dawson City Impostors', ':knife:');
-    teamEmoji.set('Erlangen Ohms', ':aquarius:');
-    teamEmoji.set('Pompei Eruptions', ':volcano:');
-    teamEmoji.set('Rio de Janeiro Directors', ':cinema:');      
-    teamEmoji.set('Wyrzysk Rockets', ':rocket:');
-    teamEmoji.set('Cape Town Transplants', ':seedling:');
-    teamEmoji.set('Manbij Fish', ':tropical_fish:');
-    teamEmoji.set('Nagqu Paint', ':art:');
-    teamEmoji.set('Nice Backflippers', ':arrows_counterclockwise:');    
-    teamEmoji.set('Orcadas Base Fog', ':foggy:');
-    teamEmoji.set('Baghdad Abacuses', ':abacus:');
-    teamEmoji.set('Jakarta Architects', ':triangular_ruler:');    
-    teamEmoji.set('Kyoto Payphones', ':vibration_mode:');
-    teamEmoji.set('Stony Brook Reapers', ':skull:');    
-    teamEmoji.set('Sydney Thinkers', ':thinking:');
-    teamEmoji.set('Sleepers', ':sleeping_accommodation:');
+    TeamEmoji.set('Antalya Pirates', ':ocean:');
+    TeamEmoji.set('Baden Hallucinations', ':mushroom:');
+    TeamEmoji.set('Kópavogur Seals', ':seal:');
+    TeamEmoji.set('Lagos Soup', ':bowl_with_spoon:');
+    TeamEmoji.set('Pica Acid', ':test_tube:');
+    TeamEmoji.set('Dawson City Impostors', ':knife:');
+    TeamEmoji.set('Erlangen Ohms', ':aquarius:');
+    TeamEmoji.set('Pompei Eruptions', ':volcano:');
+    TeamEmoji.set('Rio de Janeiro Directors', ':cinema:');
+    TeamEmoji.set('Wyrzysk Rockets', ':rocket:');
+    TeamEmoji.set('Cape Town Transplants', ':seedling:');
+    TeamEmoji.set('Manbij Fish', ':tropical_fish:');
+    TeamEmoji.set('Nagqu Paint', ':art:');
+    TeamEmoji.set('Nice Backflippers', ':arrows_counterclockwise:');
+    TeamEmoji.set('Orcadas Base Fog', ':foggy:');
+    TeamEmoji.set('Baghdad Abacuses', ':abacus:');
+    TeamEmoji.set('Jakarta Architects', ':triangular_ruler:');
+    TeamEmoji.set('Kyoto Payphones', ':vibration_mode:');
+    TeamEmoji.set('Stony Brook Reapers', ':skull:');
+    TeamEmoji.set('Sydney Thinkers', ':thinking:');
+    TeamEmoji.set('Sleepers', ':sleeping_accommodation:');
+}
+
+function setTeamChannels() {
+    TeamChannel.set('987173855737024522', 'Antalya Pirates');
+    TeamChannel.set('987174495687147540', 'Baden Hallucinations');
+    TeamChannel.set('987175832902586389', 'Kópavogur Seals');
+    TeamChannel.set('987176850927276032', 'Lagos Soup');
+    TeamChannel.set('987177076249468988', 'Pica Acid');
+    TeamChannel.set('987177378667167765', 'Dawson City Impostors');
+    TeamChannel.set('987178525406687262', 'Erlangen Ohms');
+    TeamChannel.set('987178627051434038', 'Pompei Eruptions');
+    TeamChannel.set('987178803992354846', 'Rio de Janeiro Directors');
+    TeamChannel.set('987178965057830972', 'Wyrzysk Rockets');
+    TeamChannel.set('987179092992462898', 'Cape Town Transplants');
+    TeamChannel.set('987179214677639228', 'Manbij Fish');
+    TeamChannel.set('987179372781928469', 'Nagqu Paint');
+    TeamChannel.set('987179504659202058', 'Nice Backflippers');
+    TeamChannel.set('987179678479552532', 'Orcadas Base Fog');
+    TeamChannel.set('987180068008759357', 'Baghdad Abacuses');
+    TeamChannel.set('987180244488290354', 'Jakarta Architects');
+    TeamChannel.set('987180425254408242', 'Kyoto Payphones');
+    TeamChannel.set('987180600073019422', 'Stony Brook Reapers');
+    TeamChannel.set('987180723196805200', 'Sydney Thinkers');
 }
 
 async function isOffSeason(result) {
@@ -161,7 +186,7 @@ async function getResults(channelID) {
             const status = afterWeather.substring(0,afterWeather.indexOf('\n')).trim();
 
             const resultArray = resultRaw.trim().replaceAll('\n','').replace(WhitespaceRegex,'|').split('|');
-            const result = `${teamEmoji.get(resultArray[0])} ${resultArray[0]}  **${resultArray[1]} - ${resultArray[3]}**  ${resultArray[2]} ${teamEmoji.get(resultArray[2])}`
+            const result = `${TeamEmoji.get(resultArray[0])} ${resultArray[0]}  **${resultArray[1]} - ${resultArray[3]}**  ${resultArray[2]} ${TeamEmoji.get(resultArray[2])}`
 
             results += `> ${result.trim()}\n> :white_sun_rain_cloud: ${weather}     ${(status == 'game in progress' ? '**Game In Progress**' : 'Game Over')}\n\n`;
             gamesProcessed ++;
@@ -225,7 +250,7 @@ async function getStandings(channelID, playoffsOnly) {
                     }
                 }
             } else if (element != '') {
-                standings += `\n> ${teamEmoji.get(element)} ${element}`;
+                standings += `\n> ${TeamEmoji.get(element)} ${element}`;
             } else {
                 // Final element of the split array is always blank
                 bot.sendMessage({
@@ -351,12 +376,12 @@ function divisionLeadersCalculator(teams, wins, losses, qualifiedLeadersMap, con
                     while (qualifiedLeadersMap.get(winCount)) {
                         winCount -= .01;
                     }
-                    qualifiedLeadersMap.set(winCount,`${teamEmoji.get(element)} ${element} - Division Winner`);
+                    qualifiedLeadersMap.set(winCount,`${TeamEmoji.get(element)} ${element} - Division Winner`);
                 } else {
                     while (contentionLeadersMap.get(winCount)) {
                         winCount -= .01;
                     }
-                    contentionLeadersMap.set(winCount,`${teamEmoji.get(element)} ${element} - Division Leader`);
+                    contentionLeadersMap.set(winCount,`${TeamEmoji.get(element)} ${element} - Division Leader`);
                 }
             } else {
                 const maximumWins = GamesPerSeason - parseInt(losses[index]);
@@ -365,7 +390,7 @@ function divisionLeadersCalculator(teams, wins, losses, qualifiedLeadersMap, con
                 while (contentionTeamsMap.get(winCount)) {
                     winCount -= .01;
                 }
-                contentionTeamsMap.set(winCount,`${teamEmoji.get(element)} ${element}-${maximumWins}`);
+                contentionTeamsMap.set(winCount,`${TeamEmoji.get(element)} ${element}-${maximumWins}`);
             }
         }
     });
@@ -441,7 +466,7 @@ function findTeam(channelID, teamName) {
         let i = 0;
         let teamFound = false;
 
-        teamEmoji.forEach((value, key) => {
+        TeamEmoji.forEach((value, key) => {
             if (!teamFound && key != "Sleepers") {
                 if (key.toLowerCase().includes(teamName)) {
                     teamFound = true;
@@ -481,11 +506,18 @@ function isTeamChannel(channelID) {
         const parentChannelNameStart = parentChannel.substring(parentChannel.indexOf('\"name":"') + 8);
         const parentChannelName = parentChannelNameStart.substring(0,parentChannelNameStart.indexOf('"'));
         
-        teamEmoji.forEach((value,key) => {
+        TeamEmoji.forEach((value,key) => {
             if (teamName == '' && parentChannelName.match(key)) {
                 teamName = key;
             }
         })
+    }
+
+    // Certain team emojis cause the channel names to not return properly from bot.channels
+    // Only happens on the live system in AWS, not when I run locally to test
+    // Backstop with hard-coded channel IDs while I try and work out what's going on
+    if (teamName == '') {
+        teamName = TeamChannel.get(channelID);
     }
 
     if (teamName > '') {
@@ -498,7 +530,7 @@ function isTeamChannel(channelID) {
 async function getTeam(channelID, i, team, teamChannel) {
     await Axios.get(`${StandingsUrl}/${i.toString()}`).then((resolve) => {
         const $ = Cheerio.load(resolve.data);
-        let playerList = `${teamEmoji.get(team)} **${team}**\n\n`;
+        let playerList = `${TeamEmoji.get(team)} **${team}**\n\n`;
         let player = '';
         let offence = 0.0;
         let defence = 0.0;
