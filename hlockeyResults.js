@@ -572,7 +572,7 @@ async function getTeam(channelID, i, team, teamChannel) {
                 playerList += `> ${element}\n`;
 
                 if (teamChannel) {
-                    player = `Shadows, ${element}`;
+                    player = `${element}, Shadows`;
                 }
             } else if ((index % 7) == 1) {
                 playerList += `> ${element} - **${shadowPlayers[index + 1]}**, ${shadowPlayers[index + 2]} - **${shadowPlayers[index + 3]}**, ${shadowPlayers[index + 4]} - `;
@@ -592,7 +592,7 @@ async function getTeam(channelID, i, team, teamChannel) {
         })
 
         if (teamChannel) {
-            playerList += `> Best Player: ${electionStats[0][0]} - **${electionStats[0][1]}**\n> Worst Player: ${electionStats[1][0]} - **${electionStats[1][1]}**\n> Worst Stat: ${electionStats[2][0]}, ${electionStats[2][1]} - **${electionStats[2][2]}**\n> Best Offence: ${electionStats[3][0]} - **${electionStats[3][1]}**\n> Best Defence: ${electionStats[4][0]} - **${electionStats[4][1]}**`;
+            playerList += `> Best Player: ${electionStats[0][0]} - **${electionStats[0][1].toFixed(2)}**\n> Worst Player: ${electionStats[1][0]} - **${electionStats[1][1].toFixed(2)}**\n> Worst Stat: ${electionStats[2][0]}, ${electionStats[2][1]} - **${electionStats[2][2].toFixed(2)}**\n> Best Offence: ${electionStats[3][0]} - **${electionStats[3][1].toFixed(2)}**\n> Best Defence: ${electionStats[4][0]} - **${electionStats[4][1].toFixed(2)}**`;
         }
 
         bot.sendMessage({
