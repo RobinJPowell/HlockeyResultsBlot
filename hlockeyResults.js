@@ -182,7 +182,7 @@ async function getResults(channelID) {
             const resultRaw = $(element).find('.scoreboard').text();
             const afterResults = $(element).text().substring($(element).text().indexOf('Weather:'));
             const weather = afterResults.substring(9,afterResults.indexOf('\n'));
-            const afterWeather = afterResults.substring(afterResults.indexOf('\n') + 1);
+            const afterWeather = afterResults.substring(afterResults.indexOf('\n') + 1).trim();
             const status = afterWeather.substring(0,afterWeather.indexOf('\n')).trim();
 
             const resultArray = resultRaw.trim().replaceAll('\n','').replace(WhitespaceRegex,'|').split('|');
