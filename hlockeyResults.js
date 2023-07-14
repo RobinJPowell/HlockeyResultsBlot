@@ -358,7 +358,7 @@ async function playoffPicture(channelID) {
                         message: `The Playoff Picture with ${remainingGames} Games Remaining:`
                                 + `${(qualifiedTeams != '') ? '\n\n**Clinched:**\n' : ''}${qualifiedTeams.trim()}`
                                 + `${(contentionTeams != '') ? '\n\n**In Contention:**\n' : ''}${contentionTeams.trim()}`
-                                + `${(eliminatedTeams != '') ? '\n\n**Party Time :partypuck::**\n' : ''}${eliminatedTeams.trim()}`
+                                + `${(eliminatedTeams != '') ? '\n\n**Party Time <:partypuck:1129421806260981842>:**\n' : ''}${eliminatedTeams.trim()}`
                     });
 
                     Logger.debug('Playoff picture returned to channel ' + channelID);
