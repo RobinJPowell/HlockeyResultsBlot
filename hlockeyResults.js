@@ -276,6 +276,7 @@ async function playoffPicture(channelID) {
         let teams = [];
         let wins = [];
         let losses = [];
+        let remainingGames = null;
         let qualifiedLeadersMap = new Map([]);
         let qualifiedTeamsMap = new Map([]);
         let contentionLeadersMap = new Map([]);
@@ -304,6 +305,17 @@ async function playoffPicture(channelID) {
                 } else if (element.includes('-')) {
                     wins.push(`${element.substring(0,element.indexOf('-'))}`);
                     losses.push(`${element.substring(element.indexOf('-') + 1)}`);
+
+                    // Calculate twice and compare due there always being 1 team with 5 bonus wins at start of season
+                    if (remainingGames == null) {
+                        remainingGames = -(GamesPerSeason - wins[0] - losses[0]);
+                    } else if (remainingGames < 0) {
+                        if ((0 - remainingGames) > (GamesPerSeason - wins[1] - losses[1])) {
+                            remainingGames = GamesPerSeason - wins[1] - losses[1];
+                        } else {
+                            remainingGames = 0 - remainingGames;
+                        }
+                    }
                 } else if (element != '') {
                     teams.push(`${element}`);
                 } else if (index != 0) {
@@ -315,7 +327,7 @@ async function playoffPicture(channelID) {
                     // These are the important values for working out qualification and elimination
                     const fourthPlaceWins = Math.round(Array.from(contentionTeamsMap.keys())[3]);
                     const fifthPlaceTeam = Array.from(contentionTeamsMap.values())[4];
-                    const fifthPlaceMaximumWins = parseInt(fifthPlaceTeam.substring(fifthPlaceTeam.indexOf('-') + 1));
+                    const fifthPlaceMaximumWins = parseInt(fifthPlaceTeam.substring(fifthPlaceTeam.indexOf('|') + 1));
                     
                     qualifiedLeadersCaclulator(contentionLeadersMap, qualifiedLeadersMap, fifthPlaceMaximumWins);
                     bestOfTheRestCalculator(contentionTeamsMap, qualifiedTeamsMap, eliminatedTeamsMap, fourthPlaceWins, fifthPlaceMaximumWins);
@@ -343,7 +355,7 @@ async function playoffPicture(channelID) {
 
                     bot.sendMessage({
                         to: channelID,
-                        message: `The Playoff Picture:`
+                        message: `The Playoff Picture with ${remainingGames} Games Remaining:`
                                 + `${(qualifiedTeams != '') ? '\n\n**Clinched:**\n' : ''}${qualifiedTeams.trim()}`
                                 + `${(contentionTeams != '') ? '\n\n**In Contention:**\n' : ''}${contentionTeams.trim()}`
                                 + `${(eliminatedTeams != '') ? '\n\n**Eliminated:**\n' : ''}${eliminatedTeams.trim()}`
@@ -376,12 +388,12 @@ function divisionLeadersCalculator(teams, wins, losses, qualifiedLeadersMap, con
                     while (qualifiedLeadersMap.get(winCount)) {
                         winCount -= .01;
                     }
-                    qualifiedLeadersMap.set(winCount,`${TeamEmoji.get(element)} ${element} - Division Winner`);
+                    qualifiedLeadersMap.set(winCount,`${TeamEmoji.get(element)} ${element} **${wins[index]}-${losses[index]}** - Division Winner`);
                 } else {
                     while (contentionLeadersMap.get(winCount)) {
                         winCount -= .01;
                     }
-                    contentionLeadersMap.set(winCount,`${TeamEmoji.get(element)} ${element} - Division Leader`);
+                    contentionLeadersMap.set(winCount,`${TeamEmoji.get(element)} ${element} **${wins[index]}-${losses[index]}** - Division Leader`);
                 }
             } else {
                 const maximumWins = GamesPerSeason - parseInt(losses[index]);
@@ -390,7 +402,7 @@ function divisionLeadersCalculator(teams, wins, losses, qualifiedLeadersMap, con
                 while (contentionTeamsMap.get(winCount)) {
                     winCount -= .01;
                 }
-                contentionTeamsMap.set(winCount,`${TeamEmoji.get(element)} ${element}-${maximumWins}`);
+                contentionTeamsMap.set(winCount,`${TeamEmoji.get(element)} ${element} **${wins[index]}-${losses[index]}**|${maximumWins}`);
             }
         }
     });
@@ -424,12 +436,12 @@ function bestOfTheRestCalculator(contentionTeamsMap, qualifiedTeamsMap, eliminat
                 while (qualifiedTeamsMap.get(key)) {
                     key -= .01;
                 }
-                qualifiedTeamsMap.set(key, `${value.substring(0,value.indexOf('-'))}`);
+                qualifiedTeamsMap.set(key, `${value.substring(0,value.indexOf('|'))}`);
             } else {
-                contentionTeamsMap.set(key, `${value.substring(0,value.indexOf('-'))}`);
+                contentionTeamsMap.set(key, `${value.substring(0,value.indexOf('|'))}`);
             }
         } else {
-            const maximumWins = parseInt(value.substring(value.indexOf('-') + 1));
+            const maximumWins = parseInt(value.substring(value.indexOf('|') + 1));
 
             // Everyone else is eliminated as soon as they can't catch 4th place
             if (maximumWins < fourthPlaceWins) {
@@ -437,9 +449,9 @@ function bestOfTheRestCalculator(contentionTeamsMap, qualifiedTeamsMap, eliminat
                 while (eliminatedTeamsMap.get(key)) {
                     key -= .01;
                 }
-                eliminatedTeamsMap.set(key, `${value.substring(0,value.indexOf('-'))}`);                
+                eliminatedTeamsMap.set(key, `${value.substring(0,value.indexOf('|'))}`);                
             } else {
-                contentionTeamsMap.set(key, `${value.substring(0,value.indexOf('-'))}`);
+                contentionTeamsMap.set(key, `${value.substring(0,value.indexOf('|'))}`);
             }
         }
     });
