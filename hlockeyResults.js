@@ -92,13 +92,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 });
                 break;
             case '!team':
-                isOffSeason((result) => {
-                    if (result) {
-                        sleeping(channelID);
-                    } else {
-                        findTeam(channelID, parameters.toLowerCase());
-                    }
-                });
+                findTeam(channelID, parameters.toLowerCase());
                 break;
         }
     }
