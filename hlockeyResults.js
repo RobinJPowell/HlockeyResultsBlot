@@ -3,21 +3,28 @@ const Discord = require('discord.io');
 const GatewayIntentBits = require('discord.io');
 const Partials = require('discord.io');
 const Logger = require('winston');
-const Fs = require("fs");
+const Fs = require('fs');
+const MongoDB = require('mongodb').MongoClient;
 const Auth = require('./auth.json');
 const Axios = require('axios');
 const Cheerio = require('cheerio');
-const { off } = require('process');
-const { type } = require('os');
 
 const GamesUrl = 'https://hlockey.onrender.com/league/games';
 const StandingsUrl = 'https://hlockey.onrender.com/league/standings';
 const GamesPerSeason = 114;
-const SleepyGifs = Fs.readFileSync("./sleepyGifs.txt").toString().split(',');
+const SleepyGifs = Fs.readFileSync('./sleepyGifs.txt').toString().split('|');
+const Sponsors = Fs.readFileSync('./sponsors.txt').toString().split('|');
 
 const TeamEmoji = new Map([]);
 const TeamChannel = new Map([]);
 const WhitespaceRegex = /\s\s+/g;
+const WatchChannel = '987112252412923914';
+
+const Teams = ['Antalya Pirates', 'Baden Hallucinations', 'Kópavogur Seals', 'Lagos Soup', 'Pica Acid',
+               'Dawson City Impostors', 'Erlangen Ohms', 'Pompei Eruptions', 'Rio de Janeiro Directors', 'Wyrzysk Rockets',
+               'Cape Town Transplants', 'Manbij Fish', 'Nagqu Paint', 'Nice Backflippers', 'Orcadas Base Fog',
+               'Baghdad Abacuses', 'Jakarta Architects', 'Kyoto Payphones', 'Stony Brook Reapers', 'Sydney Thinkers',
+               'Sleepers'];
 
 // Configure Logger settings
 Logger.remove(Logger.transports.Console);
@@ -42,6 +49,13 @@ const bot = new Discord.Client({
         Partials.Message
     ]
 });
+
+// Connect to database
+const MongoClient = new MongoDB('mongodb://127.0.0.1:27017', { family: 4 });
+const Database = MongoClient.db('hlockey');
+
+setInterval(weatherReport, 60000);
+
 bot.on('ready', function (evt) {
     setEmoji();
     setTeamChannels();
@@ -99,50 +113,50 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 });
 
 function setEmoji() {
-    TeamEmoji.set('Antalya Pirates', ':ocean:');
-    TeamEmoji.set('Baden Hallucinations', ':mushroom:');
-    TeamEmoji.set('Kópavogur Seals', ':seal:');
-    TeamEmoji.set('Lagos Soup', ':bowl_with_spoon:');
-    TeamEmoji.set('Pica Acid', ':test_tube:');
-    TeamEmoji.set('Dawson City Impostors', ':knife:');
-    TeamEmoji.set('Erlangen Ohms', ':aquarius:');
-    TeamEmoji.set('Pompei Eruptions', ':volcano:');
-    TeamEmoji.set('Rio de Janeiro Directors', ':cinema:');
-    TeamEmoji.set('Wyrzysk Rockets', ':rocket:');
-    TeamEmoji.set('Cape Town Transplants', ':seedling:');
-    TeamEmoji.set('Manbij Fish', ':tropical_fish:');
-    TeamEmoji.set('Nagqu Paint', ':art:');
-    TeamEmoji.set('Nice Backflippers', ':arrows_counterclockwise:');
-    TeamEmoji.set('Orcadas Base Fog', ':foggy:');
-    TeamEmoji.set('Baghdad Abacuses', ':abacus:');
-    TeamEmoji.set('Jakarta Architects', ':triangular_ruler:');
-    TeamEmoji.set('Kyoto Payphones', ':vibration_mode:');
-    TeamEmoji.set('Stony Brook Reapers', ':skull:');
-    TeamEmoji.set('Sydney Thinkers', ':thinking:');
-    TeamEmoji.set('Sleepers', ':sleeping_accommodation:');
+    TeamEmoji.set(Teams[0], ':ocean:');
+    TeamEmoji.set(Teams[1], ':mushroom:');
+    TeamEmoji.set(Teams[2], ':seal:');
+    TeamEmoji.set(Teams[3], ':bowl_with_spoon:');
+    TeamEmoji.set(Teams[4], ':test_tube:');
+    TeamEmoji.set(Teams[5], ':knife:');
+    TeamEmoji.set(Teams[6], ':aquarius:');
+    TeamEmoji.set(Teams[7], ':volcano:');
+    TeamEmoji.set(Teams[8], ':cinema:');
+    TeamEmoji.set(Teams[9], ':rocket:');
+    TeamEmoji.set(Teams[10], ':seedling:');
+    TeamEmoji.set(Teams[11], ':tropical_fish:');
+    TeamEmoji.set(Teams[12], ':art:');
+    TeamEmoji.set(Teams[13], ':arrows_counterclockwise:');
+    TeamEmoji.set(Teams[14], ':foggy:');
+    TeamEmoji.set(Teams[15], ':abacus:');
+    TeamEmoji.set(Teams[16], ':triangular_ruler:');
+    TeamEmoji.set(Teams[17], ':vibration_mode:');
+    TeamEmoji.set(Teams[18], ':skull:');
+    TeamEmoji.set(Teams[19], ':thinking:');
+    TeamEmoji.set(Teams[20], ':sleeping_accommodation:');
 }
 
 function setTeamChannels() {
-    TeamChannel.set('987173855737024522', 'Antalya Pirates');
-    TeamChannel.set('987174495687147540', 'Baden Hallucinations');
-    TeamChannel.set('987175832902586389', 'Kópavogur Seals');
-    TeamChannel.set('987176850927276032', 'Lagos Soup');
-    TeamChannel.set('987177076249468988', 'Pica Acid');
-    TeamChannel.set('987177378667167765', 'Dawson City Impostors');
-    TeamChannel.set('987178525406687262', 'Erlangen Ohms');
-    TeamChannel.set('987178627051434038', 'Pompei Eruptions');
-    TeamChannel.set('987178803992354846', 'Rio de Janeiro Directors');
-    TeamChannel.set('987178965057830972', 'Wyrzysk Rockets');
-    TeamChannel.set('987179092992462898', 'Cape Town Transplants');
-    TeamChannel.set('987179214677639228', 'Manbij Fish');
-    TeamChannel.set('987179372781928469', 'Nagqu Paint');
-    TeamChannel.set('987179504659202058', 'Nice Backflippers');
-    TeamChannel.set('987179678479552532', 'Orcadas Base Fog');
-    TeamChannel.set('987180068008759357', 'Baghdad Abacuses');
-    TeamChannel.set('987180244488290354', 'Jakarta Architects');
-    TeamChannel.set('987180425254408242', 'Kyoto Payphones');
-    TeamChannel.set('987180600073019422', 'Stony Brook Reapers');
-    TeamChannel.set('987180723196805200', 'Sydney Thinkers');
+    TeamChannel.set('987173855737024522', Teams[0]);
+    TeamChannel.set('987174495687147540', Teams[1]);
+    TeamChannel.set('987175832902586389', Teams[2]);
+    TeamChannel.set('987176850927276032', Teams[3]);
+    TeamChannel.set('987177076249468988', Teams[4]);
+    TeamChannel.set('987177378667167765', Teams[5]);
+    TeamChannel.set('987178525406687262', Teams[6]);
+    TeamChannel.set('987178627051434038', Teams[7]);
+    TeamChannel.set('987178803992354846', Teams[8]);
+    TeamChannel.set('987178965057830972', Teams[9]);
+    TeamChannel.set('987179092992462898', Teams[10]);
+    TeamChannel.set('987179214677639228', Teams[11]);
+    TeamChannel.set('987179372781928469', Teams[12]);
+    TeamChannel.set('987179504659202058', Teams[13]);
+    TeamChannel.set('987179678479552532', Teams[14]);
+    TeamChannel.set('987180068008759357', Teams[15]);
+    TeamChannel.set('987180244488290354', Teams[16]);
+    TeamChannel.set('987180425254408242', Teams[17]);
+    TeamChannel.set('987180600073019422', Teams[18]);
+    TeamChannel.set('987180723196805200', Teams[19]);
 }
 
 async function isOffSeason(result) {
@@ -611,7 +625,7 @@ async function getTeam(channelID, i, team, teamChannel) {
             message: 'I\'m too tired to get that team right now'
         });
 
-        Logger.error(`Error obtaining standings: ${reject}`);
+        Logger.error(`Error obtaining team: ${reject}`);
     });
 };
 
@@ -662,4 +676,114 @@ function calculateElectionStats(player, offence, defence, agility, electionStats
             (worstStat.length == 0) ? electionStats[2] : worstStat,
             (bestOffence.length == 0) ? electionStats[3] : bestOffence,
             (bestDefence.length == 0) ? electionStats[4] : bestDefence]
+}
+
+async function weatherReport () {
+    const miscCollection = Database.collection('misc');
+    const rostersCollection = Database.collection('rosters');
+    const now = new Date(Date.now());
+    let lastWeatherHour = -1
+    let gamesInProgress = false;
+    let weatherReport = '';
+
+    try {
+        const result = await miscCollection.findOne({ name: 'lastWeatherHour' });
+        
+        if (result) {
+            lastWeatherHour = result.hour;
+        }        
+
+        if (now.getHours() != lastWeatherHour && now.getMinutes() > 14) {
+            await Axios.get(GamesUrl).then((resolve) => {        
+                const $ = Cheerio.load(resolve.data);
+                const games = $('#content').find('.game');                
+        
+                games.each((index, element) => {
+                    if ($(element).text().substring($(element).text().indexOf('game in progress')) > 0) {
+                        gamesInProgress = true;
+                        games.length = index + 1;
+                    }
+                });                
+            }).catch((reject) => {        
+                Logger.error(`Error obtaining game status': ${reject}`);
+            });
+            
+            if (!gamesInProgress) {
+                let teamCount = 0;
+
+                for (let i = 0; i < 20; i++) {
+                    let playerArray = [];
+                    let rosterPlayers = [];
+                    let shadowPlayers = [];
+                    let teamWeather = '';
+                    let shadowCount = 0;                    
+
+                    await Axios.get(`${StandingsUrl}/${i.toString()}`).then((resolve) => {
+                        const $ = Cheerio.load(resolve.data);
+                        
+                        playerArray = $('#content').find('.player').text().split(WhitespaceRegex).slice(1,-1);
+                        rosterPlayers = [...playerArray].slice(0,-21);
+                        shadowPlayers = [...playerArray].slice(48);                        
+                    }).catch((reject) => {                
+                        Logger.error(`Error obtaining team ${i}: ${reject}`);
+                    });
+
+                    rosterPlayers.forEach(async (element, index) => {
+                        if ((index % 8) == 0) {
+                            const findPlayer = { team: Teams[i], name: rosterPlayers[index + 1] };
+                            const player = await rostersCollection.findOne(findPlayer);
+
+                            if (player) {
+                                if (player.position != element) {
+                                    teamWeather += `> ${rosterPlayers[index + 1]} ${(player.position == 'Shadows' ? 'emerges from the Shadows to take' : `switches from ${player.position} to`)} ${element}\n`
+                                    await rostersCollection.updateOne(findPlayer, { $set: { position: element } })
+                                }
+                            } else {
+                                await rostersCollection.insertOne({ team: Teams[i], name: rosterPlayers[index + 1], position: element });
+                            }
+                        }
+                    });
+
+                    shadowPlayers.forEach(async (element, index) => {
+                        if ((index % 7) == 0){                
+                            const findPlayer = { team: Teams[i], name: element };
+                            const player = await rostersCollection.findOne(findPlayer);
+
+                            if (player) {
+                                if (player.position != 'Shadows') {
+                                    teamWeather += `> ${element} was swept away from ${player.position} into the Shadows\n`
+                                    await rostersCollection.updateOne(findPlayer, { $set: { position: 'Shadows' } })
+                                }
+                            } else {
+                                await rostersCollection.insertOne({ team: Teams[i], name: element, position: 'Shadows' });
+                            }
+
+                            shadowCount++;
+
+                            if (shadowCount == 3 && teamWeather != '') {
+                                if (weatherReport == '') {
+                                    weatherReport = `Greetings splorts fans! With all games concluded it\'s time for the Hlockey Weather Report, brought to you by ${Sponsors[Math.floor(Math.random()*Sponsors.length)]}\n\n`
+                                }
+        
+                                weatherReport += `${TeamEmoji.get(Teams[i])}**${Teams[i]}**\n\n${teamWeather}\n`;
+                            }                            
+                        }
+                    });
+
+                    teamCount++;
+                    
+                    if (teamCount == 20 && weatherReport != '') {
+                        bot.sendMessage({
+                            to: WatchChannel,
+                            message: `${weatherReport.trim()}`
+                        });    
+                    }
+                }
+
+                await miscCollection.insertOne({ name: 'lastWeatherHour',  hour: now.getHours() });
+            }
+        }
+    } catch (error) {
+        Logger.error(`Error obtaining weather report: ${error}`);
+    }
 }
