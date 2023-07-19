@@ -678,11 +678,14 @@ function calculateElectionStats(player, offence, defence, agility, electionStats
             (bestDefence.length == 0) ? electionStats[4] : bestDefence]
 }
 
+// Once per hour once all games are finished, report roster changes caused by weather effects
 async function weatherReport () {
     const miscCollection = Database.collection('misc');
     const rostersCollection = Database.collection('rosters');
     const now = new Date(Date.now());
     let lastWeatherHour = -1
+    let games;
+    let $games;
     let gamesInProgress = false;
     let weatherReport = '';
 
@@ -691,17 +694,19 @@ async function weatherReport () {
         
         if (result) {
             lastWeatherHour = result.hour;
-        }        
+        } else {
+            await miscCollection.insertOne({ name: 'lastWeatherHour',  hour: now.getHours() });
+        }       
 
-        if (now.getHours() != lastWeatherHour && now.getMinutes() > 14) {
+        // Games start on the hour and always last at least 15 mins, so don't do anything before then
+        if (now.getHours() != lastWeatherHour && now.getMinutes() > 15) {
             await Axios.get(GamesUrl).then((resolve) => {        
-                const $ = Cheerio.load(resolve.data);
-                const games = $('#content').find('.game');                
+                $games = Cheerio.load(resolve.data);
+                games = $games('#content').find('.game');
         
-                games.each((index, element) => {
-                    if ($(element).text().substring($(element).text().indexOf('game in progress')) > 0) {
+                games.each((index, element) => {                    
+                    if ($games(element).text().indexOf('game in progress') > 0) {
                         gamesInProgress = true;
-                        games.length = index + 1;
                     }
                 });                
             }).catch((reject) => {        
@@ -715,13 +720,24 @@ async function weatherReport () {
                     let playerArray = [];
                     let rosterPlayers = [];
                     let shadowPlayers = [];
-                    let teamWeather = '';
-                    let shadowCount = 0;                    
+                    let teamWeatherReport = '';
+                    let shadowCount = 0;
+                    let weather = '';
+                    
+                    games.each((index, element) => {
+                        const scoreboard = $games(element).find('.scoreboard').text();
+
+                        // Get the weather for the game the current team played in
+                        if (scoreboard.indexOf(Teams[i]) > 0) {
+                            const afterResults = $games(element).text().substring($games(element).text().indexOf('Weather:'));
+                            weather = afterResults.substring(9,afterResults.indexOf('\n'));
+                        }
+                    })
 
                     await Axios.get(`${StandingsUrl}/${i.toString()}`).then((resolve) => {
-                        const $ = Cheerio.load(resolve.data);
+                        const $team = Cheerio.load(resolve.data);
                         
-                        playerArray = $('#content').find('.player').text().split(WhitespaceRegex).slice(1,-1);
+                        playerArray = $team('#content').find('.player').text().split(WhitespaceRegex).slice(1,-1);
                         rosterPlayers = [...playerArray].slice(0,-21);
                         shadowPlayers = [...playerArray].slice(48);                        
                     }).catch((reject) => {                
@@ -735,7 +751,7 @@ async function weatherReport () {
 
                             if (player) {
                                 if (player.position != element) {
-                                    teamWeather += `> ${rosterPlayers[index + 1]} ${(player.position == 'Shadows' ? 'emerges from the Shadows to take' : `switches from ${player.position} to`)} ${element}\n`
+                                    teamWeatherReport += `> ${rosterPlayers[index + 1]} ${(player.position == 'Shadows' ? 'emerges from the Shadows to take' : `switches from ${player.position} to`)} ${element}\n`
                                     await rostersCollection.updateOne(findPlayer, { $set: { position: element } })
                                 }
                             } else {
@@ -751,7 +767,7 @@ async function weatherReport () {
 
                             if (player) {
                                 if (player.position != 'Shadows') {
-                                    teamWeather += `> ${element} was swept away from ${player.position} into the Shadows\n`
+                                    teamWeatherReport += `> ${element} ${(weather.toLowerCase() == 'chicken') ? 'ran away from' : 'was swept away from'} ${player.position} into the Shadows\n`
                                     await rostersCollection.updateOne(findPlayer, { $set: { position: 'Shadows' } })
                                 }
                             } else {
@@ -760,12 +776,12 @@ async function weatherReport () {
 
                             shadowCount++;
 
-                            if (shadowCount == 3 && teamWeather != '') {
+                            if (shadowCount == 3 && teamWeatherReport != '') {
                                 if (weatherReport == '') {
                                     weatherReport = `Greetings splorts fans! With all games concluded it\'s time for the Hlockey Weather Report, brought to you by ${Sponsors[Math.floor(Math.random()*Sponsors.length)]}\n\n`
                                 }
         
-                                weatherReport += `${TeamEmoji.get(Teams[i])}**${Teams[i]}**\n\n${teamWeather}\n`;
+                                weatherReport += `${TeamEmoji.get(Teams[i])}**${Teams[i]}**\n:white_sun_rain_cloud:**${weather}**\n\n${teamWeatherReport}\n`;
                             }                            
                         }
                     });
@@ -780,7 +796,7 @@ async function weatherReport () {
                     }
                 }
 
-                await miscCollection.insertOne({ name: 'lastWeatherHour',  hour: now.getHours() });
+                await miscCollection.updateOne({ name: 'lastWeatherHour' }, { $set: { hour: now.getHours() } });
             }
         }
     } catch (error) {
