@@ -744,6 +744,7 @@ async function loadStats(parameters) {
 // Once per hour once all games are finished, parse the game logs to gather stats
 async function statsGatherer () {
     const miscCollection = Database.collection('misc');
+    const statsCollection = Database.collection('stats');
     const now = new Date(Date.now());
     let lastStatsHour = -1
     let games = null;
@@ -785,7 +786,7 @@ async function statsGatherer () {
             
             if (!gamesInProgress) {
                 const currentSeason = await miscCollection.findOne({ name: 'currentSeason' });
-                const seasonNumber = currentSeason.season;
+                const seasonNumber = currentSeason.season;                
                 let weatherReport = '';
                 let weatherReportArray = [];
 
@@ -797,6 +798,14 @@ async function statsGatherer () {
                         playoffStats = true;
                     }
                 });
+
+                const findWalCarine = { name: 'Wal Carine', season: seasonNumber, playoffs: playoffStats };
+                let walCarineStats = await statsCollection.findOne(findWalCarine);
+                let walCarineFights = 0;
+
+                if (walCarineStats) {
+                    walCarineFights = walCarineStats.fights;
+                }
                 
                 games.each(async (index, element) => {
                     await Axios.get(`${GamesUrl}/${index.toString()}`).then(async (resolve) => {
@@ -807,14 +816,33 @@ async function statsGatherer () {
                         const resultArray = resultRaw.trim().replaceAll('\n','').replace(WhitespaceRegex,'|').split('|');
                         const teamsArray = [`${resultArray[0]}`,`${resultArray[2]}`];
 
-                        parseGameLog(gameLog, seasonNumber, playoffStats, teamsArray, weatherReportArray).then(() => {
+                        parseGameLog(gameLog, seasonNumber, playoffStats, teamsArray, weatherReportArray).then(async () => {
                             if (games.length == (index + 1) && weatherReportArray.length > 0) {
                                 weatherReport = `Greetings splorts fans! With all games concluded it\'s time for the Hlockey Weather Report, brought to you by ${Sponsors[Math.floor(Math.random()*Sponsors.length)]}\n`;
 
-                                weatherReportArray.forEach((element, index) => {
+                                weatherReportArray.forEach(async (element, index) => {
                                     weatherReport += `\n${element}`;
 
                                     if (weatherReportArray.length == (index + 1)) {
+                                        walCarineStats = await statsCollection.findOne(findWalCarine); 
+                                        let walCarineGamesWithoutAFightRecord = await miscCollection.findOne({ name: 'walCarineGamesWithoutAFight' });
+                                        let walCarineGamesWithoutAFight = 0;
+
+                                        if (!walCarineGamesWithoutAFightRecord) {
+                                            await miscCollection.insertOne({ name: 'walCarineGamesWithoutAFight',  games: 0 });
+                                            walCarineGamesWithoutAFightRecord = await miscCollection.findOne({ name: 'walCarineGamesWithoutAFight' });
+                                        }
+                                        
+                                        if (!walCarineStats || walCarineStats.fights == walCarineFights) {
+                                            walCarineGamesWithoutAFight = walCarineGamesWithoutAFightRecord.fights + 1;
+                                        }
+
+                                        await miscCollection.updateOne({ name: 'walCarineGamesWithoutAFight' }, { $set: { games: walCarineGamesWithoutAFight } });
+
+                                        if (walCarineGamesWithoutAFight > 0) {
+                                            weatherReport += `\nIt has been ${walCarineGamesWithoutAFight} games since Wal Carine has had a fight`;
+                                        }
+
                                         bot.sendMessage({
                                             to: WatchChannel,
                                             message: `${weatherReport.trim()}`
