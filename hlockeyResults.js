@@ -569,7 +569,7 @@ async function getTeam(channelID, i, team, teamChannel) {
         let electionStats = [];
         
         const playerArray = $('#content').find('.player').text().split(WhitespaceRegex).slice(1,-1);
-        const rosterPlayers = [...playerArray].slice(0,-21);
+        const rosterPlayers = [...playerArray].slice(0,48);
         const shadowPlayers = [...playerArray].slice(48);
 
         rosterPlayers.forEach((element, index) => {            
@@ -702,7 +702,7 @@ async function populateRosters () {
             const $ = Cheerio.load(resolve.data);
                         
             playerArray = $('#content').find('.player').text().split(WhitespaceRegex).slice(1,-1);
-            rosterPlayers = [...playerArray].slice(0,-21);
+            rosterPlayers = [...playerArray].slice(0,48);
             shadowPlayers = [...playerArray].slice(48);
         }).catch((reject) => {                
             Logger.error(`Error obtaining team ${i}: ${reject}`);
