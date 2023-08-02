@@ -20,12 +20,15 @@ const TeamEmoji = new Map([]);
 const TeamChannel = new Map([]);
 const WhitespaceRegex = /\s\s+/g;
 const WatchChannel = '987112252412923914';
+const StatsChannel = '1136393010817536041'
 
 const Teams = ['Antalya Pirates', 'Baden Hallucinations', 'Kópavogur Seals', 'Lagos Soup', 'Pica Acid',
                'Dawson City Impostors', 'Erlangen Ohms', 'Pompei Eruptions', 'Rio de Janeiro Directors', 'Wyrzysk Rockets',
                'Cape Town Transplants', 'Manbij Fish', 'Nagqu Paint', 'Nice Backflippers', 'Orcadas Base Fog',
                'Baghdad Abacuses', 'Jakarta Architects', 'Kyoto Payphones', 'Stony Brook Reapers', 'Sydney Thinkers',
                'Sleepers'];
+
+let StatsUpdateInProgress = false;
 
 // Configure Logger settings
 Logger.remove(Logger.transports.Console);
@@ -73,7 +76,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 
         if (message.indexOf(' ') > 0) {
             command = message.substring(0,message.indexOf(' '));
-            parameters = message.substring(message.indexOf(' ') + 1);    
+            parameters = message.substring(message.indexOf(' ') + 1);
         } else {
             command = message;
         }
@@ -108,6 +111,59 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 break;
             case '!team':
                 findTeam(channelID, parameters.toLowerCase());
+                break;
+            case '!stats':
+                if (StatsUpdateInProgress) {
+                    bot.sendMessage({
+                        to: channelID,
+                        message: 'I am currently updating my notes, please try again later'
+                    }); 
+                } else if (channelID == StatsChannel) {
+                    getStats(parameters.toLowerCase()).then((resolve) => {
+                        let statsReturn = '';
+                        resolve.forEach((element, index) => {
+                            statsReturn += element;
+                            
+                            if (resolve.length == (index + 1)) {
+                                // Discord limits messages to 2000 characters, so need to split this up
+                                if (statsReturn.length > 2000) {
+                                    const statsReturnArray = statsReturn.trim().split('\n');
+                                    statsReturn = '';
+
+                                    statsReturnArray.forEach((element, index) => {
+                                        // Discord limits bot message posting speed, so slow it down
+                                        setTimeout(() => {
+                                            statsReturn += `${element}\n`                                            
+
+                                            if ((index % 25) == 0 || statsReturnArray.length == (index + 1)) {                                                
+                                                bot.sendMessage({
+                                                    to: StatsChannel,
+                                                    message: statsReturn.trim()
+                                                });
+                                                statsReturn = '';
+                                            }
+                                        }, 100 * index);
+                                    })
+                                } else {
+                                    bot.sendMessage({
+                                        to: StatsChannel,
+                                        message: statsReturn.trim()
+                                    });
+                                }
+                            }
+                        });
+                    }).catch((reject) => {
+                        bot.sendMessage({
+                            to: StatsChannel,
+                            message: reject
+                        });
+                    });
+                } else {
+                    bot.sendMessage({
+                        to: channelID,
+                        message: `Please use <#${StatsChannel}> for !stats`
+                    }); 
+                }
                 break;
             case '!loadstats':
                 if (userID == AdminUser) {
@@ -483,12 +539,12 @@ function findTeam(channelID, teamName) {
         teamName = teamChannel[1].toLowerCase();
     }
 
-    if (teamName == "") {    
+    if (teamName == '') {    
         bot.sendMessage({
             to: channelID,
             message: 'You need to give me a team name'
         });
-    } else if (teamName == "sleepers") {
+    } else if (teamName == 'sleepers') {
         bot.sendMessage({
             to: channelID,
             message: 'Who are they?'
@@ -689,6 +745,341 @@ function calculateElectionStats(player, offence, defence, agility, electionStats
             (bestDefence.length == 0) ? electionStats[4] : bestDefence]
 }
 
+// Return requested season stats to the user
+async function getStats(parameters) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const miscCollection = Database.collection('misc');
+            const statsCollection = Database.collection('stats');
+            const currentSeason = await miscCollection.findOne({ name: 'currentSeason' });
+            let season = { season: currentSeason.season };
+            let playoffStats = false;
+            let sort = -1;
+            let count = 5;
+            let resource = '';
+            let teamName = '';
+            let stats = [];
+
+            if (parameters == '') {
+                await getBasicStats(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                    stats = resolve;                    
+                }).catch((reject) => {
+                    return Promise.reject(reject);
+                });
+            } else {
+                const parametersArray = parameters.split(' ');
+
+                parametersArray.forEach((element) => {
+                    if (element.includes('top')) {
+                        sort = -1;
+                        count = parseInt(element.substring(3));
+                        
+                        if (count == 0 || isNaN(count)) {
+                            return reject('You must specify a number with top, e.g. \'top10\'');
+                        }
+                    } else if (element.includes('bottom')) {
+                        sort = 1;
+                        count = parseInt(element.substring(6));
+
+                        if (count == 0 || isNaN(count)) {
+                            return reject('You must specify a number with bottom, e.g. \'bottom10\'');
+                        }
+                    } else if (element == 'all') {
+                        sort = -1;
+                        count = 0;
+                    } else if (Number.isInteger(parseInt(element))) {
+                        season = { season: element };
+                    } else if (element == 'playoffs') {
+                        playoffStats = true;
+                    } else if (element == 'teams') {
+                        teamName = element;
+                    } else {
+                        Teams.forEach((team) => {
+                            if (team.toLowerCase().includes(element)) {
+                                teamName = team;
+                            }
+                        });
+                        resource = element;
+                    }
+                });
+
+                switch (resource) {
+                    case 'gamesplayed':
+                        await getGamesPlayed(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'gameswon':
+                        await getGamesWon(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'winpercentage':
+                        await getWinPercentage(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    default:
+                        await getBasicStats(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                            stats = resolve;
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                }
+            }
+
+            return resolve(stats);
+        } catch (error) {
+            return reject(error);
+        }
+    });
+}
+
+async function getBasicStats(statsCollection, season, playoffStats, sort, count, teamName) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let stats = [];
+            
+            await getGoalsScored(statsCollection, season, playoffStats, sort, count, teamName).then(async (resolve) => {
+                stats.push(resolve);
+
+                await getGoalsConceded(statsCollection, season, playoffStats, sort, count, teamName).then(async (resolve) => {
+                    stats.push(resolve);
+                }).catch((reject) => {
+                    return Promise.reject(reject);
+                });
+            }).catch((reject) => {
+                return Promise.reject(reject);
+            });
+
+            return resolve(stats);
+        } catch (error) {
+            return reject(error);
+        }
+    });
+}
+
+async function getGamesPlayed(statsCollection, season, playoffStats, sort, count, teamName) {
+    return new Promise(async (resolve, reject) => {
+        let findGamesPlayed = null;
+
+        if (teamName == 'teams') {
+            findGamesPlayed = { ...season, playoffs: playoffStats, team: '' };
+        } else if (teamName != '') {
+            findGamesPlayed = { ...season, playoffs: playoffStats, team: teamName };
+        } else {
+            findGamesPlayed = { ...season, playoffs: playoffStats, team: { $ne: '' } };
+        }
+
+        const cursor = await statsCollection.find(findGamesPlayed).sort({ gamesPlayed: sort });
+        const gamesPlayedArray = await cursor.toArray();
+        let i = 0;
+        let index = 0;
+
+        if (count == 0) {
+            i -= gamesPlayedArray.length;
+        } else if (count > gamesPlayedArray.length) {
+            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} gamesPlayed ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
+        }
+
+        let gamesPlayed = '\n**Games Played**\n\n';       
+
+        do {
+            let name = '';
+
+            if (teamName == 'teams') {
+                name = `${TeamEmoji.get(gamesPlayedArray[index].name)} ${gamesPlayedArray[index].name}`;
+            } else {
+                name = `${TeamEmoji.get(gamesPlayedArray[index].team)} ${gamesPlayedArray[index].name}`
+            }
+
+            gamesPlayed += `> **${index + 1}.** ${name}  -  **${gamesPlayedArray[index].gamesPlayed}**\n`
+            i++;
+            index++;
+        } while (i < count);
+
+        return resolve(gamesPlayed);
+    });
+}
+
+async function getGamesWon(statsCollection, season, playoffStats, sort, count, teamName) {
+    return new Promise(async (resolve, reject) => {
+        let findGamesWon = null;
+
+        if (teamName == 'teams') {
+            findGamesWon = { ...season, playoffs: playoffStats, team: '' };
+        } else if (teamName != '') {
+            findGamesWon = { ...season, playoffs: playoffStats, team: teamName };
+        } else {
+            findGamesWon = { ...season, playoffs: playoffStats, team: { $ne: '' } };
+        }
+
+        const cursor = await statsCollection.find(findGamesWon).sort({ gamesWon: sort, winPercentage: sort });
+        const gamesWonArray = await cursor.toArray();
+        let i = 0;
+        let index = 0;
+
+        if (count == 0) {
+            i -= gamesWonArray.length;
+        } else if (count > gamesWonArray.length) {
+            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} gamesWon ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
+        }
+
+        let gamesWon = '\n**Games Won** (Win Percentage)\n\n';       
+
+        do {
+            let name = '';
+
+            if (teamName == 'teams') {
+                name = `${TeamEmoji.get(gamesWonArray[index].name)} ${gamesWonArray[index].name}`;
+            } else {
+                name = `${TeamEmoji.get(gamesWonArray[index].team)} ${gamesWonArray[index].name}`
+            }
+
+            gamesWon += `> **${index + 1}.** ${name}  -  **${gamesWonArray[index].gamesWon}** (${gamesWonArray[index].winPercentage.toFixed(2)})\n`
+            i++;
+            index++;
+        } while (i < count);
+
+        return resolve(gamesWon);
+    });
+}
+
+async function getWinPercentage(statsCollection, season, playoffStats, sort, count, teamName) {
+    return new Promise(async (resolve, reject) => {
+        let findWinPercentage = null;
+
+        if (teamName == 'teams') {
+            findWinPercentage = { ...season, playoffs: playoffStats, team: '' };
+        } else if (teamName != '') {
+            findWinPercentage = { ...season, playoffs: playoffStats, team: teamName };
+        } else {
+            findWinPercentage = { ...season, playoffs: playoffStats, team: { $ne: '' } };
+        }
+
+        const cursor = await statsCollection.find(findWinPercentage).sort({ winPercentage: sort, gamesPlayed: sort });
+        const winPercentageArray = await cursor.toArray();
+        let i = 0;
+        let index = 0;
+
+        if (count == 0) {
+            i -= winPercentageArray.length;
+        } else if (count > winPercentageArray.length) {
+            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} winPercentage ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
+        }
+
+        let winPercentage = `\n**Win Percentage** (Games Played)\n\n`;
+        
+        do {
+            let name = '';
+
+            if (teamName == 'teams') {
+                name = `${TeamEmoji.get(winPercentageArray[index].name)} ${winPercentageArray[index].name}`;
+            } else {
+                name = `${TeamEmoji.get(winPercentageArray[index].team)} ${winPercentageArray[index].name}`
+            }
+
+            winPercentage += `> **${index + 1}.** ${name}  -  **${winPercentageArray[index].winPercentage.toFixed(2)}** (${winPercentageArray[index].gamesPlayed})\n`
+            i++;
+            index++;
+        } while (i < count);
+
+        return resolve(winPercentage);
+    });    
+}
+
+async function getGoalsScored(statsCollection, season, playoffStats, sort, count, teamName) {
+    return new Promise(async (resolve, reject) => {
+        let findGoalsScored = null;
+
+        if (teamName == 'teams') {
+            findGoalsScored = { ...season, playoffs: playoffStats, team: '' };
+        } else if (teamName != '') {
+            findGoalsScored = { ...season, playoffs: playoffStats, team: teamName };
+        } else {
+            findGoalsScored = { ...season, playoffs: playoffStats, team: { $ne: '' } };
+        }
+
+        const cursor = await statsCollection.find(findGoalsScored).sort({ goalsScored: sort, scoringPercentage: sort });
+        const goalsScoredArray = await cursor.toArray();
+        let i = 0;
+        let index = 0;
+
+        if (count == 0) {
+            i -= goalsScoredArray.length;
+        } else if (count > goalsScoredArray.length) {
+            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} goalsScored ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
+        }
+
+        let goalsScored = '\n**Goals Scored** (Scoring Percentage)\n\n';       
+
+        do {
+            let name = '';
+
+            if (teamName == 'teams') {
+                name = `${TeamEmoji.get(goalsScoredArray[index].name)} ${goalsScoredArray[index].name}`;
+            } else {
+                name = `${TeamEmoji.get(goalsScoredArray[index].team)} ${goalsScoredArray[index].name}`
+            }
+
+            goalsScored += `> **${index + 1}.** ${name}  -  **${goalsScoredArray[index].goalsScored}** (${goalsScoredArray[index].scoringPercentage.toFixed(2)})\n`
+            i++;
+            index++;
+        } while (i < count);
+
+        return resolve(goalsScored);
+    });
+}
+
+async function getGoalsConceded(statsCollection, season, playoffStats, sort, count, teamName) {
+    return new Promise(async (resolve, reject) => {
+        let findGoalsConceded = null;
+
+        if (teamName == 'teams') {
+            findGoalsConceded = { ...season, playoffs: playoffStats, team: '', shotsFaced: { $gte: 10 } };
+        } else if (teamName != '') {
+            findGoalsConceded = { ...season, playoffs: playoffStats, team: teamName, shotsFaced: { $gte: 10 } };
+        } else {
+            findGoalsConceded = { ...season, playoffs: playoffStats, team: { $ne: '' }, shotsFaced: { $gte: 10 } };
+        }
+
+        const cursor = await statsCollection.find(findGoalsConceded).sort({ goalsConceded: -sort, savePercentage: sort });
+        const goalsConcededArray = await cursor.toArray();
+        let i = 0;
+        let index = 0;
+
+        if (count == 0) {
+            i -= goalsConcededArray.length;
+        } else if (count > goalsConcededArray.length) {
+            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} goalsConceded ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
+        }
+
+        let goalsConceded = `\n**Goals Conceded** ${(teamName == 'teams') ? '(Shots Blocked Percentage)' : '(Save Percentage) - Minimum 10 shots faced'}\n\n`;
+        
+        do {
+            let name = '';
+
+            if (teamName == 'teams') {
+                name = `${TeamEmoji.get(goalsConcededArray[index].name)} ${goalsConcededArray[index].name}`;
+            } else {
+                name = `${TeamEmoji.get(goalsConcededArray[index].team)} ${goalsConcededArray[index].name}`
+            }
+
+            goalsConceded += `> **${index + 1}.** ${name}  -  **${goalsConcededArray[index].goalsConceded}** (${(teamName == 'teams') ? goalsConcededArray[index].shotsBlockedPercentage.toFixed(2) : goalsConcededArray[index].savePercentage.toFixed(2)})\n`
+            i++;
+            index++;
+        } while (i < count);
+
+        return resolve(goalsConceded);
+    });    
+}
+
 // Admin function to populate rosters in the DB
 async function populateRosters () {
     const rostersCollection = Database.collection('rosters');
@@ -790,6 +1181,8 @@ async function statsGatherer () {
                 let weatherReport = '';
                 let weatherReportArray = [];
 
+                StatsUpdateInProgress = true;
+
                 await Axios.get(StandingsUrl).then((resolve) => {
                     const $ = Cheerio.load(resolve.data);
                 
@@ -817,48 +1210,53 @@ async function statsGatherer () {
                         const teamsArray = [`${resultArray[0]}`,`${resultArray[2]}`];
 
                         parseGameLog(gameLog, seasonNumber, playoffStats, teamsArray, weatherReportArray).then(async () => {
-                            if (games.length == (index + 1) && weatherReportArray.length > 0) {
-                                weatherReport = `Greetings splorts fans! With all games concluded it\'s time for the Hlockey Weather Report, brought to you by ${Sponsors[Math.floor(Math.random()*Sponsors.length)]}\n`;
+                            if (games.length == (index + 1)) {
+                                StatsUpdateInProgress = false;
 
-                                weatherReportArray.forEach(async (element, index) => {
-                                    weatherReport += `\n${element}`;
+                                if (weatherReportArray.length > 0) {
+                                    weatherReport = `Greetings splorts fans! With all games concluded it\'s time for the Hlockey Weather Report, brought to you by ${Sponsors[Math.floor(Math.random()*Sponsors.length)]}\n`;
 
-                                    if (weatherReportArray.length == (index + 1)) {
-                                        walCarineStats = await statsCollection.findOne(findWalCarine); 
-                                        let walCarineGamesWithoutAFightRecord = await miscCollection.findOne({ name: 'walCarineGamesWithoutAFight' });
-                                        let walCarineGamesWithoutAFight = 0;
+                                    weatherReportArray.forEach(async (element, index) => {
+                                        weatherReport += `\n${element}`;
 
-                                        if (!walCarineGamesWithoutAFightRecord) {
-                                            await miscCollection.insertOne({ name: 'walCarineGamesWithoutAFight',  games: 0 });
-                                            walCarineGamesWithoutAFightRecord = await miscCollection.findOne({ name: 'walCarineGamesWithoutAFight' });
+                                        if (weatherReportArray.length == (index + 1)) {
+                                            walCarineStats = await statsCollection.findOne(findWalCarine); 
+                                            let walCarineGamesWithoutAFightRecord = await miscCollection.findOne({ name: 'walCarineGamesWithoutAFight' });
+                                            let walCarineGamesWithoutAFight = 0;
+
+                                            if (!walCarineGamesWithoutAFightRecord) {
+                                                await miscCollection.insertOne({ name: 'walCarineGamesWithoutAFight',  games: 0 });
+                                                walCarineGamesWithoutAFightRecord = await miscCollection.findOne({ name: 'walCarineGamesWithoutAFight' });
+                                            }
+                                            
+                                            if (!walCarineStats || walCarineStats.fights == walCarineFights) {
+                                                walCarineGamesWithoutAFight = walCarineGamesWithoutAFightRecord.fights + 1;
+                                            }
+
+                                            await miscCollection.updateOne({ name: 'walCarineGamesWithoutAFight' }, { $set: { games: walCarineGamesWithoutAFight } });
+
+                                            if (walCarineGamesWithoutAFight > 0) {
+                                                weatherReport += `\nIt has been ${walCarineGamesWithoutAFight} games since Wal Carine has had a fight`;
+                                            }
+
+                                            bot.sendMessage({
+                                                to: WatchChannel,
+                                                message: `${weatherReport.trim()}`
+                                            });
                                         }
-                                        
-                                        if (!walCarineStats || walCarineStats.fights == walCarineFights) {
-                                            walCarineGamesWithoutAFight = walCarineGamesWithoutAFightRecord.fights + 1;
-                                        }
-
-                                        await miscCollection.updateOne({ name: 'walCarineGamesWithoutAFight' }, { $set: { games: walCarineGamesWithoutAFight } });
-
-                                        if (walCarineGamesWithoutAFight > 0) {
-                                            weatherReport += `\nIt has been ${walCarineGamesWithoutAFight} games since Wal Carine has had a fight`;
-                                        }
-
-                                        bot.sendMessage({
-                                            to: WatchChannel,
-                                            message: `${weatherReport.trim()}`
-                                        });
-                                    }
-                                });
+                                    });
+                                }
                             }
                         });
                     });
                 });                
                 
-                await miscCollection.updateOne({ name: 'lastStatsHour' }, { $set: { hour: now.getHours() } });
+                await miscCollection.updateOne({ name: 'lastStatsHour' }, { $set: { hour: now.getHours() } });                
             }
         }
     } catch (error) {
         Logger.error(`Error processing stats: ${error}`);
+        StatsUpdateInProgress = false;
     }
 }
 
@@ -866,7 +1264,7 @@ function parseGameLog(gameLog, seasonNumber, playoffStats, teamsArray, weatherRe
     return new Promise((resolve) => {
         const rostersCollection = Database.collection('rosters');
         const statsCollection = Database.collection('stats');
-        const interval = 100;
+        const interval = 200;
         let lineCount = 0;
         let overtime = false;
         let playersArray = [];
@@ -875,7 +1273,7 @@ function parseGameLog(gameLog, seasonNumber, playoffStats, teamsArray, weatherRe
         let temporaryGoalies = ['',''];
         
         gameLog.forEach((element, index) => {
-            // Process each line at 100ms intervals to give the DB time to do its thing
+            // Process each line at 200ms intervals to give the DB time to do its thing
             setTimeout(async () => {
                 // When coming from a log file many lines end in either . or !
                 // Remove this, it can mess things up
@@ -917,11 +1315,16 @@ function parseGameLog(gameLog, seasonNumber, playoffStats, teamsArray, weatherRe
                     let fightArray = [element];
                     let i = 1;
 
-                    // Get the whole fight
+                    // Get the whole fight, weather can occur mid-fight
                     do {
                         fightArray.push(gameLog[index + i].replace(/[\.!]/g,''));
                         i++
-                    } while (gameLog[index + i].toLowerCase().includes('punch') || gameLog[index + i].toLowerCase().includes('fight'))
+                    } while (gameLog[index + i].toLowerCase().includes('punch')
+                            || gameLog[index + i].toLowerCase().includes('fight')
+                            || gameLog[index + i].toLowerCase().includes('washed away')
+                            || gameLog[index + i].toLowerCase().includes('chickened')
+                            || gameLog[index + i].toLowerCase().includes('replaces')
+                            || gameLog[index + i].toLowerCase().includes('audacious'))
 
                     // After the fight is over we get morale changes for each team
                     fightArray.push(gameLog[index + i + 1].replace(/[\.!]/g,''));
@@ -942,6 +1345,8 @@ function parseGameLog(gameLog, seasonNumber, playoffStats, teamsArray, weatherRe
                 lineCount++
 
                 if (lineCount == gameLog.length) {
+                    updateCalculatedStats(statsCollection, teamsArray, playersArray, seasonNumber, playoffStats);
+
                     if (gameWeatherArray.length == 0) {
                         return resolve();
                     }
@@ -1462,6 +1867,249 @@ async function updatePlayedStats(victoryLine, rostersCollection, statsCollection
     });    
 }
 
+async function updateCalculatedStats(statsCollection, teamsArray, playersArray, seasonNumber, playoffStats) {
+    teamsArray.forEach(async (element) => {
+        const findTeam = { name: element, season: seasonNumber, playoffs: playoffStats };
+        const teamStats = await statsCollection.findOne(findTeam);
+        let winPercentage = 0.00;
+        let overtimeGamesPercentage = 0.00;
+        let passesAttemptedPerGame = 0.00;
+        let passesCompletedPerGame = 0.00;
+        let interceptionsPerGame = 0.00;
+        let hitsPerGame = 0.00;
+        let takeawaysPerGame = 0.00;
+        let hitsTakenPerGame = 0.00;
+        let pucksLostPerGame = 0.00;
+        let goalsPerGame = 0.00;
+        let shotsPerGame = 0.00;
+        let shotsFacedPerGame = 0.00;
+        let shotsBlockedPerGame = 0.00;
+        let goalsConcededPerGame = 0.00;
+        let fightsPerGame = 0.00;
+        let fightWinsPerGame = 0.00;        
+        let punchesThrownPerGame = 0.00;
+        let punchesLandedPerGame = 0.00;
+        let punchesTakenPerGame = 0.00;
+        let punchesBlockedPerGame = 0.00;
+        let overtimeWinPercentage = 0.00;
+        let faceoffWinPercentage = 0.00;
+        let passCompletionPercentage = 0.00;
+        let takeawayPercentage = 0.00;
+        let puckLostPercentage = 0.00;
+        let scoringPercentage = 0.00;
+        let shotsBlockedPercentage = 0.00;
+        let fightWinPercentage = 0.00;
+        let punchLandedPercentage = 0.00;
+        let punchBlockedPercentage = 0.00;
+        
+        if (teamStats.gamesPlayed > 0) {
+            winPercentage = (teamStats.gamesWon / teamStats.gamesPlayed) * 100;
+            overtimeGamesPercentage = (teamStats.overtimeGames / teamStats.gamesPlayed) * 100;
+            passesAttemptedPerGame = teamStats.passesAttempted / teamStats.gamesPlayed;
+            passesCompletedPerGame = teamStats.passesCompleted / teamStats.gamesPlayed;
+            interceptionsPerGame = teamStats.interceptions / teamStats.gamesPlayed;
+            hitsPerGame = teamStats.hits / teamStats.gamesPlayed;
+            takeawaysPerGame = teamStats.takeaways / teamStats.gamesPlayed;
+            hitsTakenPerGame = teamStats.hitsTaken / teamStats.gamesPlayed;
+            pucksLostPerGame = teamStats.pucksLost / teamStats.gamesPlayed;
+            goalsPerGame = teamStats.goalsScored / teamStats.gamesPlayed;
+            shotsPerGame = teamStats.shotsTaken / teamStats.gamesPlayed;
+            shotsFacedPerGame = teamStats.shotsFaced / teamStats.gamesPlayed;
+            shotsBlockedPerGame = teamStats.shotsBlocked / teamStats.gamesPlayed;
+            goalsConcededPerGame = teamStats.goalsConceded / teamStats.gamesPlayed;
+            fightsPerGame = teamStats.fights / teamStats.gamesPlayed;
+            fightWinsPerGame = teamStats.fightsWon / teamStats.gamesPlayed;
+            punchesThrownPerGame = teamStats.punchesThrown / teamStats.gamesPlayed;
+            punchesLandedPerGame = teamStats.punchesLanded / teamStats.gamesPlayed;
+            punchesTakenPerGame = teamStats.punchesTaken / teamStats.gamesPlayed;
+            punchesBlockedPerGame = teamStats.punchesBlocked / teamStats.gamesPlayed;
+        }
+        if (teamStats.overtimeGamesPlayed > 0) {
+            overtimeWinPercentage = (teamStats.overtimeGamesWon / teamStats.overtimeGamesPlayed) * 100;
+        }
+        if (teamStats.faceoffsTaken > 0) {
+            faceoffWinPercentage = (teamStats.faceoffsWon / teamStats.faceoffsTaken) * 100;
+        }
+        if (teamStats.passesAttempted > 0) {
+            passCompletionPercentage = (teamStats.passesCompleted / teamStats.passesAttempted) * 100;
+        }
+        if (teamStats.hits > 0) {
+            takeawayPercentage = (teamStats.takeaways / teamStats.hits) * 100;
+        }
+        if (teamStats.hitsTaken > 0) {
+            puckLostPercentage = (teamStats.pucksLost / teamStats.hitsTaken) * 100;
+        }
+        if (teamStats.shotsTaken > 0) {
+            scoringPercentage = (teamStats.goalsScored / teamStats.shotsTaken) * 100;
+        }
+        if (teamStats.shotsFaced > 0) {
+            shotsBlockedPercentage = (teamStats.shotsBlocked / teamStats.shotsFaced) * 100;
+        }
+        if (teamStats.fights > 0) {
+            fightWinPercentage = (teamStats.fightsWon / teamStats.fights) * 100;
+        }
+        if (teamStats.punchesThrown > 0) {
+            punchLandedPercentage = (teamStats.punchesLanded / teamStats.punchesThrown) * 100;
+        }
+        if (teamStats.punchesTaken > 0) {
+            punchBlockedPercentage = (teamStats.punchesBlocked / teamStats.punchesTaken) * 100;
+        }
+
+        await statsCollection.updateOne(findTeam, { $set: { winPercentage: winPercentage,
+                                                            overtimeGamesPercentage: overtimeGamesPercentage,
+                                                            passesAttemptedPerGame: passesAttemptedPerGame,
+                                                            passesCompletedPerGame: passesCompletedPerGame,
+                                                            interceptionsPerGame: interceptionsPerGame,
+                                                            hitsPerGame: hitsPerGame,
+                                                            takeawaysPerGame: takeawaysPerGame,
+                                                            hitsTakenPerGame: hitsTakenPerGame,
+                                                            pucksLostPerGame: pucksLostPerGame,
+                                                            goalsPerGame: goalsPerGame,
+                                                            shotsPerGame: shotsPerGame,
+                                                            shotsFacedPerGame: shotsFacedPerGame,
+                                                            shotsBlockedPerGame: shotsBlockedPerGame,
+                                                            goalsConcededPerGame: goalsConcededPerGame,
+                                                            fightsPerGame: fightsPerGame,
+                                                            fightWinsPerGame: fightWinsPerGame,
+                                                            punchesThrownPerGame: punchesThrownPerGame,
+                                                            punchesLandedPerGame: punchesLandedPerGame,
+                                                            punchesTakenPerGame: punchesTakenPerGame,
+                                                            punchesBlockedPerGame: punchesBlockedPerGame,
+                                                            overtimeWinPercentage: overtimeWinPercentage,
+                                                            faceoffWinPercentage: faceoffWinPercentage,
+                                                            passCompletionPercentage: passCompletionPercentage,
+                                                            takeawayPercentage: takeawayPercentage,
+                                                            puckLostPercentage: puckLostPercentage,
+                                                            scoringPercentage: scoringPercentage,
+                                                            shotsBlockedPercentage: shotsBlockedPercentage,
+                                                            fightWinPercentage: fightWinPercentage,
+                                                            punchLandedPercentage: punchLandedPercentage,
+                                                            punchBlockedPercentage: punchBlockedPercentage } });
+    });
+
+    playersArray.forEach(async (element) => {
+        const findPlayer = { name: element, season: seasonNumber, playoffs: playoffStats };
+        const playerStats = await statsCollection.findOne(findPlayer);
+        let winPercentage = 0.00;
+        let overtimeGamesPercentage = 0.00;
+        let passesAttemptedPerGame = 0.00;
+        let passesCompletedPerGame = 0.00;
+        let interceptionsPerGame = 0.00;
+        let hitsPerGame = 0.00;
+        let takeawaysPerGame = 0.00;
+        let hitsTakenPerGame = 0.00;
+        let pucksLostPerGame = 0.00;
+        let goalsPerGame = 0.00;
+        let shotsPerGame = 0.00;
+        let shotsFacedPerGame = 0.00;
+        let shotsBlockedPerGame = 0.00;
+        let savesPerGame = 0.00;
+        let goalsConcededPerGame = 0.00;
+        let fightsPerGame = 0.00;
+        let fightWinsPerGame = 0.00;        
+        let punchesThrownPerGame = 0.00;
+        let punchesLandedPerGame = 0.00;
+        let punchesTakenPerGame = 0.00;
+        let punchesBlockedPerGame = 0.00;
+        let overtimeWinPercentage = 0.00;
+        let faceoffWinPercentage = 0.00;
+        let passCompletionPercentage = 0.00;
+        let takeawayPercentage = 0.00;
+        let puckLostPercentage = 0.00;
+        let scoringPercentage = 0.00;
+        let savePercentage = 0.00;
+        let fightWinPercentage = 0.00;
+        let punchLandedPercentage = 0.00;
+        let punchBlockedPercentage = 0.00;
+        
+        if (playerStats.gamesPlayed > 0) {
+            winPercentage = (playerStats.gamesWon / playerStats.gamesPlayed) * 100;
+            overtimeGamesPercentage = (playerStats.overtimeGames / playerStats.gamesPlayed) * 100;
+            passesAttemptedPerGame = playerStats.passesAttempted / playerStats.gamesPlayed;
+            passesCompletedPerGame = playerStats.passesCompleted / playerStats.gamesPlayed;
+            interceptionsPerGame = playerStats.interceptions / playerStats.gamesPlayed;
+            hitsPerGame = playerStats.hits / playerStats.gamesPlayed;
+            takeawaysPerGame = playerStats.takeaways / playerStats.gamesPlayed;
+            hitsTakenPerGame = playerStats.hitsTaken / playerStats.gamesPlayed;
+            pucksLostPerGame = playerStats.pucksLost / playerStats.gamesPlayed;
+            goalsPerGame = playerStats.goalsScored / playerStats.gamesPlayed;
+            shotsPerGame = playerStats.shotsTaken / playerStats.gamesPlayed;
+            shotsFacedPerGame = playerStats.shotsFaced / playerStats.gamesPlayed;
+            shotsBlockedPerGame = playerStats.shotsBlockedDefence / playerStats.gamesPlayed;
+            savesPerGame = playerStats.shotsBlockedGoalie / playerStats.gamesPlayed;
+            goalsConcededPerGame = playerStats.goalsConceded / playerStats.gamesPlayed;
+            fightsPerGame = playerStats.fights / playerStats.gamesPlayed;
+            fightWinsPerGame = playerStats.fightsWon / playerStats.gamesPlayed;
+            punchesThrownPerGame = playerStats.punchesThrown / playerStats.gamesPlayed;
+            punchesLandedPerGame = playerStats.punchesLanded / playerStats.gamesPlayed;
+            punchesTakenPerGame = playerStats.punchesTaken / playerStats.gamesPlayed;
+            punchesBlockedPerGame = playerStats.punchesBlocked / playerStats.gamesPlayed;
+        }
+        if (playerStats.overtimeGamesPlayed > 0) {
+            overtimeWinPercentage = (playerStats.overtimeGamesWon / playerStats.overtimeGamesPlayed) * 100;
+        }
+        if (playerStats.faceoffsTaken > 0) {
+            faceoffWinPercentage = (playerStats.faceoffsWon / playerStats.faceoffsTaken) * 100;
+        }
+        if (playerStats.passesAttempted > 0) {
+            passCompletionPercentage = (playerStats.passesCompleted / playerStats.passesAttempted) * 100;
+        }
+        if (playerStats.hits > 0) {
+            takeawayPercentage = (playerStats.takeaways / playerStats.hits) * 100;
+        }
+        if (playerStats.hitsTaken > 0) {
+            puckLostPercentage = (playerStats.pucksLost / playerStats.hitsTaken) * 100;
+        }
+        if (playerStats.shotsTaken > 0) {
+            scoringPercentage = (playerStats.goalsScored / playerStats.shotsTaken) * 100;
+        }
+        if (playerStats.shotsFaced > 0) {
+            savePercentage = (playerStats.shotsBlockedGoalie / playerStats.shotsFaced) * 100;
+        }
+        if (playerStats.fights > 0) {
+            fightWinPercentage = (playerStats.fightsWon / playerStats.fights) * 100;
+        }
+        if (playerStats.punchesThrown > 0) {
+            punchLandedPercentage = (playerStats.punchesLanded / playerStats.punchesThrown) * 100;
+        }
+        if (playerStats.punchesTaken > 0) {
+            punchBlockedPercentage = (playerStats.punchesBlocked / playerStats.punchesTaken) * 100;
+        }
+
+        await statsCollection.updateOne(findPlayer, { $set: { winPercentage: winPercentage,
+                                                            overtimeGamesPercentage: overtimeGamesPercentage,
+                                                            passesAttemptedPerGame: passesAttemptedPerGame,
+                                                            passesCompletedPerGame: passesCompletedPerGame,
+                                                            interceptionsPerGame: interceptionsPerGame,
+                                                            hitsPerGame: hitsPerGame,
+                                                            takeawaysPerGame: takeawaysPerGame,
+                                                            hitsTakenPerGame: hitsTakenPerGame,
+                                                            pucksLostPerGame: pucksLostPerGame,
+                                                            goalsPerGame: goalsPerGame,
+                                                            shotsPerGame: shotsPerGame,
+                                                            shotsFacedPerGame: shotsFacedPerGame,
+                                                            shotsBlockedPerGame: shotsBlockedPerGame,
+                                                            savesPerGame: savesPerGame,
+                                                            goalsConcededPerGame: goalsConcededPerGame,
+                                                            fightsPerGame: fightsPerGame,
+                                                            fightWinsPerGame: fightWinsPerGame,
+                                                            punchesThrownPerGame: punchesThrownPerGame,
+                                                            punchesLandedPerGame: punchesLandedPerGame,
+                                                            punchesTakenPerGame: punchesTakenPerGame,
+                                                            punchesBlockedPerGame: punchesBlockedPerGame,
+                                                            overtimeWinPercentage: overtimeWinPercentage,
+                                                            faceoffWinPercentage: faceoffWinPercentage,
+                                                            passCompletionPercentage: passCompletionPercentage,
+                                                            takeawayPercentage: takeawayPercentage,
+                                                            puckLostPercentage: puckLostPercentage,
+                                                            scoringPercentage: scoringPercentage,
+                                                            savePercentage: savePercentage,
+                                                            fightWinPercentage: fightWinPercentage,
+                                                            punchLandedPercentage: punchLandedPercentage,
+                                                            punchBlockedPercentage: punchBlockedPercentage } });
+    });
+}
+
 async function createPlayerStats(player, statsCollection, seasonNumber, playoffStats) {
     await statsCollection.insertOne({ name: player.name,
                                       team: player.team,
@@ -1469,59 +2117,121 @@ async function createPlayerStats(player, statsCollection, seasonNumber, playoffS
                                       playoffs: playoffStats,
                                       gamesPlayed: 0,
                                       gamesWon: 0,
+                                      winPercentage: 0.00,
                                       overtimeGames: 0,
                                       overtimeGamesWon: 0,
+                                      overtimeWinPercentage: 0.00,
+                                      overtimeGamesPercentage: 0.00,
                                       faceoffsTaken: 0,
                                       faceoffsWon: 0,
+                                      faceoffWinPercentage: 0.00,
                                       passesAttempted: 0,
                                       passesCompleted: 0,
+                                      passCompletionPercentage: 0.00,
+                                      passesAttemptedPerGame: 0.00,
+                                      passesCompletedPerGame: 0.00,
                                       interceptions: 0,
+                                      interceptionsPerGame: 0.00,
                                       hits: 0,
                                       takeaways: 0,
+                                      takeawayPercentage: 0.00,
+                                      hitsPerGame: 0.00,
+                                      takeawaysPerGame: 0.00,
                                       hitsTaken: 0,
                                       pucksLost: 0,
+                                      puckLostPercentage: 0.00,
+                                      hitsTakenPerGame: 0.00,
+                                      pucksLostPerGame: 0.00,
                                       goalsScored: 0,
-                                      goalsConceded: 0,
                                       shotsTaken: 0,
+                                      scoringPercentage: 0.00,
+                                      goalsPerGame: 0.00,
+                                      shotsPerGame: 0.00,
+                                      goalsConceded: 0,
                                       shotsFaced: 0,
                                       shotsBlockedGoalie: 0,
-                                      shotsBlockedDefence: 0,
+                                      savePercentage: 0.00,
+                                      shotsFacedPerGame: 0.00,
+                                      savesPerGame: 0.00,
+                                      shotsBlockedDefence: 0.00,
+                                      shotsBlockedPerGame: 0.00,
+                                      goalsConcededPerGame: 0.00,
                                       fights: 0,
                                       fightsWon: 0,
+                                      fightWinPercentage: 0.00,
+                                      fightsPerGame: 0.00,
+                                      fightWinsPerGame: 0.00,
                                       punchesThrown: 0,
                                       punchesLanded: 0,
+                                      punchLandedPercentage: 0.00,
+                                      punchesThrownPerGame: 0.00,
+                                      punchesLandedPerGame: 0.00,
                                       punchesTaken: 0,
                                       punchesBlocked: 0,
+                                      punchBlockedPercentage: 0.00,
+                                      punchesTakenPerGame: 0.00,
+                                      punchesBlockedPerGame: 0.00,
                                       timesSweptAway: 0,
                                       timesChickenedOut: 0 });
 }
 
 async function createTeamStats(team, statsCollection, seasonNumber, playoffStats) {
     await statsCollection.insertOne({ name: team,
+                                      team: '',
                                       season: seasonNumber,
                                       playoffs: playoffStats,
                                       gamesPlayed: 0,
                                       gamesWon: 0,
+                                      winPercentage: 0.00,
                                       overtimeGames: 0,
                                       overtimeGamesWon: 0,
+                                      overtimeWinPercentage: 0.00,
+                                      overtimeGamesPercentage: 0.00,
                                       faceoffsTaken: 0,
                                       faceoffsWon: 0,
+                                      faceoffWinPercentage: 0.00,
                                       passesAttempted: 0,
                                       passesCompleted: 0,
+                                      passCompletionPercentage: 0.00,
+                                      passesAttemptedPerGame: 0.00,
+                                      passesCompletedPerGame: 0.00,
                                       interceptions: 0,
+                                      interceptionsPerGame: 0.00,
                                       hits: 0,
                                       takeaways: 0,
+                                      takeawayPercentage: 0.00,
+                                      hitsPerGame: 0.00,
+                                      takeawaysPerGame: 0.00,
                                       hitsTaken: 0,
                                       pucksLost: 0,
+                                      puckLostPercentage: 0.00,
+                                      hitsTakenPerGame: 0.00,
+                                      pucksLostPerGame: 0.00,
                                       goalsScored: 0,
-                                      goalsConceded: 0,
                                       shotsTaken: 0,
+                                      scoringPercentage: 0.00,
+                                      goalsPerGame: 0.00,
+                                      shotsPerGame: 0.00,
+                                      goalsConceded: 0,
                                       shotsFaced: 0,
                                       shotsBlocked: 0,
+                                      shotsBlockedPercentage: 0.00,
+                                      shotsFacedPerGame: 0.00,
+                                      shotsBlockedPerGame: 0.00,
+                                      goalsConcededPerGame: 0.00,
                                       fights: 0,
                                       fightsWon: 0,
+                                      fightWinPercentage: 0.00,
+                                      fightsPerGame: 0.00,
+                                      fightWinsPerGame: 0.00,
                                       punchesThrown: 0,
                                       punchesLanded: 0,
+                                      punchLandedPercentage: 0.00,
+                                      punchesThrownPerGame: 0.00,
+                                      punchesLandedPerGame: 0.00,
                                       punchesTaken: 0,
-                                      punchesBlocked: 0 });
+                                      punchesBlocked: 0,
+                                      punchBlockedPercentage: 0.00,
+                                      punchesTakenPerGame: 0.00,
+                                      punchesBlockedPerGame: 0.00 });
 }
