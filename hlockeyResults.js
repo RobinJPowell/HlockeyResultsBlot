@@ -794,12 +794,18 @@ async function getStats(parameters) {
                     } else if (element == 'teams') {
                         teamName = element;
                     } else {
+                        let foundTeam = false;
+
                         Teams.forEach((team) => {
                             if (team.toLowerCase().includes(element)) {
                                 teamName = team;
+                                foundTeam = true;
                             }
                         });
-                        resource = element;
+
+                        if (!foundTeam) {
+                            resource = element;
+                        }
                     }
                 });
 
@@ -820,6 +826,55 @@ async function getStats(parameters) {
                         break;
                     case 'winpercentage':
                         await getWinPercentage(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'overtimegamesplayed':
+                        await getOvertimeGamesPlayed(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'overtimegameswon':
+                        await getOvertimeGamesWon(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'overtimewinpercentage':
+                        await getOvertimeWinPercentage(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'overtimegamespercentage':
+                        await getOvertimeGamesPercentage(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'faceoffstaken':
+                        await getFaceoffsTaken(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'faceoffswon':
+                        await getFaceoffsWon(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'faceoffwinpercentage':
+                        await getFaceoffWinPercentage(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
                             stats.push(resolve);
                         }).catch((reject) => {
                             return Promise.reject(reject);
@@ -994,6 +1049,307 @@ async function getWinPercentage(statsCollection, season, playoffStats, sort, cou
     });    
 }
 
+async function getOvertimeGamesPlayed(statsCollection, season, playoffStats, sort, count, teamName) {
+    return new Promise(async (resolve, reject) => {
+        let findOvertimeGamesPlayed = null;
+
+        if (teamName == 'teams') {
+            findOvertimeGamesPlayed = { ...season, playoffs: playoffStats, team: '' };
+        } else if (teamName != '') {
+            findOvertimeGamesPlayed = { ...season, playoffs: playoffStats, team: teamName };
+        } else {
+            findOvertimeGamesPlayed = { ...season, playoffs: playoffStats, team: { $ne: '' } };
+        }
+
+        const cursor = await statsCollection.find(findOvertimeGamesPlayed).sort({ overtimeGamesPlayed: sort });
+        const overtimeGamesPlayedArray = await cursor.toArray();
+        let i = 0;
+        let index = 0;
+
+        if (count == 0) {
+            i -= overtimeGamesPlayedArray.length;
+        } else if (count > overtimeGamesPlayedArray.length) {
+            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} overtimeGamesPlayed ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
+        }
+
+        let overtimeGamesPlayed = '\n**Overtime Games Played**\n\n';       
+
+        do {
+            let name = '';
+
+            if (teamName == 'teams') {
+                name = `${TeamEmoji.get(overtimeGamesPlayedArray[index].name)} ${overtimeGamesPlayedArray[index].name}`;
+            } else {
+                name = `${TeamEmoji.get(overtimeGamesPlayedArray[index].team)} ${overtimeGamesPlayedArray[index].name}`
+            }
+
+            overtimeGamesPlayed += `> **${index + 1}.** ${name}  -  **${overtimeGamesPlayedArray[index].overtimeGamesPlayed}**\n`
+            i++;
+            index++;
+        } while (i < count);
+
+        return resolve(overtimeGamesPlayed);
+    });
+}
+
+async function getOvertimeGamesWon(statsCollection, season, playoffStats, sort, count, teamName) {
+    return new Promise(async (resolve, reject) => {
+        let findOvertimeGamesWon = null;
+
+        if (teamName == 'teams') {
+            findOvertimeGamesWon = { ...season, playoffs: playoffStats, team: '' };
+        } else if (teamName != '') {
+            findOvertimeGamesWon = { ...season, playoffs: playoffStats, team: teamName };
+        } else {
+            findOvertimeGamesWon = { ...season, playoffs: playoffStats, team: { $ne: '' } };
+        }
+
+        const cursor = await statsCollection.find(findOvertimeGamesWon).sort({ overtimeGamesWon: sort, overtimeWinPercentage: sort });
+        const overtimeGamesWonArray = await cursor.toArray();
+        let i = 0;
+        let index = 0;
+
+        if (count == 0) {
+            i -= overtimeGamesWonArray.length;
+        } else if (count > overtimeGamesWonArray.length) {
+            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} overtimeGamesWon ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
+        }
+
+        let overtimeGamesWon = '\n**Overtime Games Won** (Overtime Win Percentage)\n\n';       
+
+        do {
+            let name = '';
+
+            if (teamName == 'teams') {
+                name = `${TeamEmoji.get(overtimeGamesWonArray[index].name)} ${overtimeGamesWonArray[index].name}`;
+            } else {
+                name = `${TeamEmoji.get(overtimeGamesWonArray[index].team)} ${overtimeGamesWonArray[index].name}`
+            }
+
+            overtimeGamesWon += `> **${index + 1}.** ${name}  -  **${overtimeGamesWonArray[index].overtimeGamesWon}** (${overtimeGamesWonArray[index].overtimeWinPercentage.toFixed(2)})\n`
+            i++;
+            index++;
+        } while (i < count);
+
+        return resolve(overtimeGamesWon);
+    });
+}
+
+async function getOvertimeWinPercentage(statsCollection, season, playoffStats, sort, count, teamName) {
+    return new Promise(async (resolve, reject) => {
+        let findOvertimeWinPercentage = null;
+
+        if (teamName == 'teams') {
+            findOvertimeWinPercentage = { ...season, playoffs: playoffStats, team: '' };
+        } else if (teamName != '') {
+            findOvertimeWinPercentage = { ...season, playoffs: playoffStats, team: teamName };
+        } else {
+            findOvertimeWinPercentage = { ...season, playoffs: playoffStats, team: { $ne: '' } };
+        }
+
+        const cursor = await statsCollection.find(findOvertimeWinPercentage).sort({ overtimeWinPercentage: sort, overtimeGamesPlayed: sort });
+        const overtimeWinPercentageArray = await cursor.toArray();
+        let i = 0;
+        let index = 0;
+
+        if (count == 0) {
+            i -= overtimeWinPercentageArray.length;
+        } else if (count > overtimeWinPercentageArray.length) {
+            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} overtimeWinPercentage ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
+        }
+
+        let overtimeWinPercentage = `\n**Overtime Win Percentage** (Overtime Games Played)\n\n`;
+        
+        do {
+            let name = '';
+
+            if (teamName == 'teams') {
+                name = `${TeamEmoji.get(overtimeWinPercentageArray[index].name)} ${overtimeWinPercentageArray[index].name}`;
+            } else {
+                name = `${TeamEmoji.get(overtimeWinPercentageArray[index].team)} ${overtimeWinPercentageArray[index].name}`
+            }
+
+            overtimeWinPercentage += `> **${index + 1}.** ${name}  -  **${overtimeWinPercentageArray[index].overtimeWinPercentage.toFixed(2)}** (${overtimeWinPercentageArray[index].overtimeGamesPlayed})\n`
+            i++;
+            index++;
+        } while (i < count);
+
+        return resolve(overtimeWinPercentage);
+    });    
+}
+
+async function getOvertimeGamesPercentage(statsCollection, season, playoffStats, sort, count, teamName) {
+    return new Promise(async (resolve, reject) => {
+        let findOvertimeGamesPercentage = null;
+
+        if (teamName == 'teams') {
+            findOvertimeGamesPercentage = { ...season, playoffs: playoffStats, team: '' };
+        } else if (teamName != '') {
+            findOvertimeGamesPercentage = { ...season, playoffs: playoffStats, team: teamName };
+        } else {
+            findOvertimeGamesPercentage = { ...season, playoffs: playoffStats, team: { $ne: '' } };
+        }
+
+        const cursor = await statsCollection.find(findOvertimeGamesPercentage).sort({ overtimeGamesPercentage: sort, gamesPlayed: sort });
+        const overtimeGamesPercentageArray = await cursor.toArray();
+        let i = 0;
+        let index = 0;
+
+        if (count == 0) {
+            i -= overtimeGamesPercentageArray.length;
+        } else if (count > overtimeGamesPercentageArray.length) {
+            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} overtimeGamesPercentage ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
+        }
+
+        let overtimeGamesPercentage = `\n**Overtime Games Percentage** (Games Played)\n\n`;
+        
+        do {
+            let name = '';
+
+            if (teamName == 'teams') {
+                name = `${TeamEmoji.get(overtimeGamesPercentageArray[index].name)} ${overtimeGamesPercentageArray[index].name}`;
+            } else {
+                name = `${TeamEmoji.get(overtimeGamesPercentageArray[index].team)} ${overtimeGamesPercentageArray[index].name}`
+            }
+
+            overtimeGamesPercentage += `> **${index + 1}.** ${name}  -  **${overtimeGamesPercentageArray[index].overtimeGamesPercentage.toFixed(2)}** (${overtimeGamesPercentageArray[index].gamesPlayed})\n`
+            i++;
+            index++;
+        } while (i < count);
+
+        return resolve(overtimeGamesPercentage);
+    });    
+}
+
+async function getFaceoffsTaken(statsCollection, season, playoffStats, sort, count, teamName) {
+    return new Promise(async (resolve, reject) => {
+        let findFaceoffsTaken = null;
+
+        if (teamName == 'teams') {
+            findFaceoffsTaken = { ...season, playoffs: playoffStats, team: '' };
+        } else if (teamName != '') {
+            findFaceoffsTaken = { ...season, playoffs: playoffStats, team: teamName };
+        } else {
+            findFaceoffsTaken = { ...season, playoffs: playoffStats, team: { $ne: '' } };
+        }
+
+        const cursor = await statsCollection.find(findFaceoffsTaken).sort({ faceoffsTaken: sort });
+        const faceoffsTakenArray = await cursor.toArray();
+        let i = 0;
+        let index = 0;
+
+        if (count == 0) {
+            i -= faceoffsTakenArray.length;
+        } else if (count > faceoffsTakenArray.length) {
+            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} faceoffsTaken ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
+        }
+
+        let faceoffsTaken = '\n**Faceoffs Taken**\n\n';       
+
+        do {
+            let name = '';
+
+            if (teamName == 'teams') {
+                name = `${TeamEmoji.get(faceoffsTakenArray[index].name)} ${faceoffsTakenArray[index].name}`;
+            } else {
+                name = `${TeamEmoji.get(faceoffsTakenArray[index].team)} ${faceoffsTakenArray[index].name}`
+            }
+
+            faceoffsTaken += `> **${index + 1}.** ${name}  -  **${faceoffsTakenArray[index].faceoffsTaken}**\n`
+            i++;
+            index++;
+        } while (i < count);
+
+        return resolve(faceoffsTaken);
+    });
+}
+
+async function getFaceoffsWon(statsCollection, season, playoffStats, sort, count, teamName) {
+    return new Promise(async (resolve, reject) => {
+        let findFaceoffsWon = null;
+
+        if (teamName == 'teams') {
+            findFaceoffsWon = { ...season, playoffs: playoffStats, team: '' };
+        } else if (teamName != '') {
+            findFaceoffsWon = { ...season, playoffs: playoffStats, team: teamName };
+        } else {
+            findFaceoffsWon = { ...season, playoffs: playoffStats, team: { $ne: '' } };
+        }
+
+        const cursor = await statsCollection.find(findFaceoffsWon).sort({ faceoffsWon: sort, faceoffWinPercentage: sort });
+        const faceoffsWonArray = await cursor.toArray();
+        let i = 0;
+        let index = 0;
+
+        if (count == 0) {
+            i -= faceoffsWonArray.length;
+        } else if (count > faceoffsWonArray.length) {
+            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} faceoffsWon ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
+        }
+
+        let faceoffsWon = '\n**Faceoffs Won** (Faceoff Win Percentage)\n\n';       
+
+        do {
+            let name = '';
+
+            if (teamName == 'teams') {
+                name = `${TeamEmoji.get(faceoffsWonArray[index].name)} ${faceoffsWonArray[index].name}`;
+            } else {
+                name = `${TeamEmoji.get(faceoffsWonArray[index].team)} ${faceoffsWonArray[index].name}`
+            }
+
+            faceoffsWon += `> **${index + 1}.** ${name}  -  **${faceoffsWonArray[index].faceoffsWon}** (${faceoffsWonArray[index].faceoffWinPercentage.toFixed(2)})\n`
+            i++;
+            index++;
+        } while (i < count);
+
+        return resolve(faceoffsWon);
+    });
+}
+
+async function getFaceoffWinPercentage(statsCollection, season, playoffStats, sort, count, teamName) {
+    return new Promise(async (resolve, reject) => {
+        let findFaceoffWinPercentage = null;
+
+        if (teamName == 'teams') {
+            findFaceoffWinPercentage = { ...season, playoffs: playoffStats, team: '' };
+        } else if (teamName != '') {
+            findFaceoffWinPercentage = { ...season, playoffs: playoffStats, team: teamName };
+        } else {
+            findFaceoffWinPercentage = { ...season, playoffs: playoffStats, team: { $ne: '' }, faceoffsTaken: { $gte: 10 } };
+        }
+
+        const cursor = await statsCollection.find(findFaceoffWinPercentage).sort({ faceoffWinPercentage: sort, faceoffsTaken: sort });
+        const faceoffWinPercentageArray = await cursor.toArray();
+        let i = 0;
+        let index = 0;
+
+        if (count == 0) {
+            i -= faceoffWinPercentageArray.length;
+        } else if (count > faceoffWinPercentageArray.length) {
+            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} faceoffWinPercentage ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
+        }
+
+        let faceoffWinPercentage = `\n**Faceoff Win Percentage** (Faceoffs Taken)${(teamName == '') ? ' - Minimum 10 faceoffs taken' : ''}\n\n`;
+        
+        do {
+            let name = '';
+
+            if (teamName == 'teams') {
+                name = `${TeamEmoji.get(faceoffWinPercentageArray[index].name)} ${faceoffWinPercentageArray[index].name}`;
+            } else {
+                name = `${TeamEmoji.get(faceoffWinPercentageArray[index].team)} ${faceoffWinPercentageArray[index].name}`
+            }
+
+            faceoffWinPercentage += `> **${index + 1}.** ${name}  -  **${faceoffWinPercentageArray[index].faceoffWinPercentage.toFixed(2)}** (${faceoffWinPercentageArray[index].faceoffsTaken})\n`
+            i++;
+            index++;
+        } while (i < count);
+
+        return resolve(faceoffWinPercentage);
+    });    
+}
+
 async function getGoalsScored(statsCollection, season, playoffStats, sort, count, teamName) {
     return new Promise(async (resolve, reject) => {
         let findGoalsScored = null;
@@ -1083,6 +1439,7 @@ async function getGoalsConceded(statsCollection, season, playoffStats, sort, cou
 // Admin function to populate rosters in the DB
 async function populateRosters () {
     const rostersCollection = Database.collection('rosters');
+    await rostersCollection.deleteMany({ name: { $ne : '' } });
 
     for (let i = 0; i < 21; i++) {
         let playerArray = [];
@@ -1177,8 +1534,7 @@ async function statsGatherer () {
             
             if (!gamesInProgress) {
                 const currentSeason = await miscCollection.findOne({ name: 'currentSeason' });
-                const seasonNumber = currentSeason.season;                
-                let weatherReport = '';
+                const seasonNumber = currentSeason.season;
                 let weatherReportArray = [];
 
                 StatsUpdateInProgress = true;
@@ -1211,41 +1567,13 @@ async function statsGatherer () {
 
                         parseGameLog(gameLog, seasonNumber, playoffStats, teamsArray, weatherReportArray).then(async () => {
                             if (games.length == (index + 1)) {
-                                StatsUpdateInProgress = false;
-
-                                if (weatherReportArray.length > 0) {
-                                    weatherReport = `Greetings splorts fans! With all games concluded it\'s time for the Hlockey Weather Report, brought to you by ${Sponsors[Math.floor(Math.random()*Sponsors.length)]}\n`;
-
-                                    weatherReportArray.forEach(async (element, index) => {
-                                        weatherReport += `\n${element}`;
-
-                                        if (weatherReportArray.length == (index + 1)) {
-                                            walCarineStats = await statsCollection.findOne(findWalCarine); 
-                                            let walCarineGamesWithoutAFightRecord = await miscCollection.findOne({ name: 'walCarineGamesWithoutAFight' });
-                                            let walCarineGamesWithoutAFight = 0;
-
-                                            if (!walCarineGamesWithoutAFightRecord) {
-                                                await miscCollection.insertOne({ name: 'walCarineGamesWithoutAFight',  games: 0 });
-                                                walCarineGamesWithoutAFightRecord = await miscCollection.findOne({ name: 'walCarineGamesWithoutAFight' });
-                                            }
-                                            
-                                            if (!walCarineStats || walCarineStats.fights == walCarineFights) {
-                                                walCarineGamesWithoutAFight = walCarineGamesWithoutAFightRecord.fights + 1;
-                                            }
-
-                                            await miscCollection.updateOne({ name: 'walCarineGamesWithoutAFight' }, { $set: { games: walCarineGamesWithoutAFight } });
-
-                                            if (walCarineGamesWithoutAFight > 0) {
-                                                weatherReport += `\nIt has been ${walCarineGamesWithoutAFight} games since Wal Carine has had a fight`;
-                                            }
-
-                                            bot.sendMessage({
-                                                to: WatchChannel,
-                                                message: `${weatherReport.trim()}`
-                                            });
-                                        }
-                                    });
-                                }
+                                finishStatsUpdate(weatherReportArray, miscCollection, statsCollection, walCarineStats, findWalCarine);
+                            }
+                        }).catch((reject) => {
+                            Logger.error(`Error parsing stats for ${teamsArray[0]} vs ${teamsArray[1]}: ${reject}`);
+                            
+                            if (games.length == (index + 1)) {
+                                finishStatsUpdate(weatherReportArray, miscCollection, statsCollection, walCarineStats, findWalCarine);
                             }
                         });
                     });
@@ -1260,8 +1588,49 @@ async function statsGatherer () {
     }
 }
 
+async function finishStatsUpdate(weatherReportArray, miscCollection, statsCollection, walCarineStats, findWalCarine) {
+    StatsUpdateInProgress = false;    
+
+    if (weatherReportArray.length > 0) {
+        let weatherReport = `Greetings splorts fans! With all games concluded it\'s time for the Hlockey Weather Report, brought to you by ${Sponsors[Math.floor(Math.random()*Sponsors.length)]}\n`;
+
+        weatherReportArray.forEach(async (element, index) => {
+            weatherReport += `\n${element}`;
+
+            if (weatherReportArray.length == (index + 1)) {
+                walCarineStats = await statsCollection.findOne(findWalCarine); 
+                let walCarineGamesWithoutAFightRecord = await miscCollection.findOne({ name: 'walCarineGamesWithoutAFight' });
+                let walCarineGamesWithoutAFight = 0;
+
+                if (!walCarineGamesWithoutAFightRecord) {
+                    await miscCollection.insertOne({ name: 'walCarineGamesWithoutAFight',  games: 0 });
+                    walCarineGamesWithoutAFightRecord = await miscCollection.findOne({ name: 'walCarineGamesWithoutAFight' });
+                }
+                                            
+                if (!walCarineStats || walCarineStats.fights == walCarineFights) {
+                    walCarineGamesWithoutAFight = walCarineGamesWithoutAFightRecord.fights + 1;
+                }
+
+                await miscCollection.updateOne({ name: 'walCarineGamesWithoutAFight' }, { $set: { games: walCarineGamesWithoutAFight } });
+
+                if (walCarineGamesWithoutAFight > 0) {
+                    weatherReport += `\nIt has been ${walCarineGamesWithoutAFight} games since Wal Carine has had a fight`;
+                }
+
+                bot.sendMessage({
+                    to: WatchChannel,
+                    message: `${weatherReport.trim()}`
+                });                
+            }
+        });
+    }
+
+    // Refresh the rosters in case of any shenanigans
+    populateRosters();
+}
+
 function parseGameLog(gameLog, seasonNumber, playoffStats, teamsArray, weatherReportArray) {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         const rostersCollection = Database.collection('rosters');
         const statsCollection = Database.collection('stats');
         const interval = 200;
@@ -1272,96 +1641,100 @@ function parseGameLog(gameLog, seasonNumber, playoffStats, teamsArray, weatherRe
         let temporaryCenters = ['',''];
         let temporaryGoalies = ['',''];
         
-        gameLog.forEach((element, index) => {
-            // Process each line at 200ms intervals to give the DB time to do its thing
-            setTimeout(async () => {
-                // When coming from a log file many lines end in either . or !
-                // Remove this, it can mess things up
-                element = element.replace(/[\.!]/g,'');
-                const elementArray = element.split(' ');
-                
-                if (teamsArray.length == 0 && index == 0) {
-                    // First line is always team names when loading from a log file
-                    teamsArray = element.split(' vs ');
-                } else if (element.toLowerCase().includes('period')) {
-                    if (parseInt(elementArray[elementArray.length - 1]) > 3) {
-                        overtime = true;
-                    }
-                } else if (element.toLowerCase().includes('faceoff')) {
-                    updateFaceoffStats(elementArray, rostersCollection, statsCollection, teamsArray, playersArray, seasonNumber, playoffStats, temporaryCenters);
-                } else if (element.toLowerCase().includes('passes')) {
-                    let interceptionArray = [];
-
-                    // Interceptions will be on the next line
-                    if (gameLog[index + 1].toLowerCase().includes('intercepted')) {
-                        const interceptionLine = gameLog[index + 1].replace(/[\.!]/g,'');
-                        interceptionArray = interceptionLine.split(' ');
-                    }
-
-                    updatePassingStats(elementArray, interceptionArray, rostersCollection, statsCollection, playersArray, seasonNumber, playoffStats);
-                } else if (element.toLowerCase().includes('hits')) {
-                    updateHitStats(elementArray, rostersCollection, statsCollection, playersArray, seasonNumber, playoffStats);
-                } else if (element.toLowerCase().includes('takes a shot')) {
-                    let blockedArray = [];
-
-                    // Blocked shots will be on the next line
-                    if (gameLog[index + 1].toLowerCase().includes('blocks')) {
-                        const blockedLine = gameLog[index + 1].replace(/[\.!]/g,'');
-                        blockedArray = blockedLine.split(' ');
-                    }
-
-                    updateShootingStats(elementArray, blockedArray, rostersCollection, statsCollection, teamsArray, playersArray, seasonNumber, playoffStats, temporaryGoalies);
-                } else if (element.toLowerCase().includes('fighting')) {
-                    let fightArray = [element];
-                    let i = 1;
-
-                    // Get the whole fight, weather can occur mid-fight
-                    do {
-                        fightArray.push(gameLog[index + i].replace(/[\.!]/g,''));
-                        i++
-                    } while (gameLog[index + i].toLowerCase().includes('punch')
-                            || gameLog[index + i].toLowerCase().includes('fight')
-                            || gameLog[index + i].toLowerCase().includes('washed away')
-                            || gameLog[index + i].toLowerCase().includes('chickened')
-                            || gameLog[index + i].toLowerCase().includes('replaces')
-                            || gameLog[index + i].toLowerCase().includes('audacious'))
-
-                    // After the fight is over we get morale changes for each team
-                    fightArray.push(gameLog[index + i + 1].replace(/[\.!]/g,''));
-                    fightArray.push(gameLog[index + i + 2].replace(/[\.!]/g,''));
-
-                    updateFightingStats(fightArray, rostersCollection, statsCollection, teamsArray, playersArray, seasonNumber, playoffStats);
-                } else if (element.toLowerCase().includes('washed away') || element.toLowerCase().includes('chickened')) {
-                    const swappedLine = gameLog[index + 1].replace(/[\.!]/g,'');
-                    const swappedLineArray = swappedLine.split(' ');
+        try {
+            gameLog.forEach((element, index) => {
+                // Process each line at 200ms intervals to give the DB time to do its thing
+                setTimeout(async () => {
+                    // When coming from a log file many lines end in either . or !
+                    // Remove this, it can mess things up
+                    element = element.replace(/[\.!]/g,'');
+                    const elementArray = element.split(' ');
                     
-                    updateGameRosterChanges(elementArray, swappedLineArray, rostersCollection, statsCollection, teamsArray, playersArray, gameWeatherArray, temporaryCenters, temporaryGoalies, seasonNumber, playoffStats);
-                } else if (element.toLowerCase().includes('game over')) {
-                    const victoryLine = gameLog[index + 1];
+                    if (teamsArray.length == 0 && index == 0) {
+                        // First line is always team names when loading from a log file
+                        teamsArray = element.split(' vs ');
+                    } else if (element.toLowerCase().includes('period')) {
+                        if (parseInt(elementArray[elementArray.length - 1]) > 3) {
+                            overtime = true;
+                        }
+                    } else if (element.toLowerCase().includes('faceoff')) {
+                        updateFaceoffStats(elementArray, rostersCollection, statsCollection, teamsArray, playersArray, seasonNumber, playoffStats, temporaryCenters);
+                    } else if (element.toLowerCase().includes('passes')) {
+                        let interceptionArray = [];
 
-                    updatePlayedStats(victoryLine, rostersCollection, statsCollection, teamsArray, playersArray, seasonNumber, playoffStats, overtime);
-                }
-
-                lineCount++
-
-                if (lineCount == gameLog.length) {
-                    updateCalculatedStats(statsCollection, teamsArray, playersArray, seasonNumber, playoffStats);
-
-                    if (gameWeatherArray.length == 0) {
-                        return resolve();
-                    }
-                    gameWeatherArray.forEach((element, index) => {
-                        if (element != '') {
-                            weatherReportArray.push(element);
+                        // Interceptions will be on the next line
+                        if (gameLog[index + 1].toLowerCase().includes('intercepted')) {
+                            const interceptionLine = gameLog[index + 1].replace(/[\.!]/g,'');
+                            interceptionArray = interceptionLine.split(' ');
                         }
 
-                        if (gameWeatherArray.length == (index + 1)) {
+                        updatePassingStats(elementArray, interceptionArray, rostersCollection, statsCollection, playersArray, seasonNumber, playoffStats);
+                    } else if (element.toLowerCase().includes('hits')) {
+                        updateHitStats(elementArray, rostersCollection, statsCollection, playersArray, seasonNumber, playoffStats);
+                    } else if (element.toLowerCase().includes('takes a shot')) {
+                        let blockedArray = [];
+
+                        // Blocked shots will be on the next line
+                        if (gameLog[index + 1].toLowerCase().includes('blocks')) {
+                            const blockedLine = gameLog[index + 1].replace(/[\.!]/g,'');
+                            blockedArray = blockedLine.split(' ');
+                        }
+
+                        updateShootingStats(elementArray, blockedArray, rostersCollection, statsCollection, teamsArray, playersArray, seasonNumber, playoffStats, temporaryGoalies);
+                    } else if (element.toLowerCase().includes('fighting')) {
+                        let fightArray = [element];
+                        let i = 1;
+
+                        // Get the whole fight, weather can occur mid-fight
+                        do {
+                            fightArray.push(gameLog[index + i].replace(/[\.!]/g,''));
+                            i++
+                        } while (gameLog[index + i].toLowerCase().includes('punch')
+                                || gameLog[index + i].toLowerCase().includes('fight')
+                                || gameLog[index + i].toLowerCase().includes('washed away')
+                                || gameLog[index + i].toLowerCase().includes('chickened')
+                                || gameLog[index + i].toLowerCase().includes('replaces')
+                                || gameLog[index + i].toLowerCase().includes('audacious'))
+
+                        // After the fight is over we get morale changes for each team
+                        fightArray.push(gameLog[index + i + 1].replace(/[\.!]/g,''));
+                        fightArray.push(gameLog[index + i + 2].replace(/[\.!]/g,''));
+
+                        updateFightingStats(fightArray, rostersCollection, statsCollection, teamsArray, playersArray, seasonNumber, playoffStats);
+                    } else if (element.toLowerCase().includes('washed away') || element.toLowerCase().includes('chickened')) {
+                        const swappedLine = gameLog[index + 1].replace(/[\.!]/g,'');
+                        const swappedLineArray = swappedLine.split(' ');
+                        
+                        updateGameRosterChanges(elementArray, swappedLineArray, rostersCollection, statsCollection, teamsArray, playersArray, gameWeatherArray, temporaryCenters, temporaryGoalies, seasonNumber, playoffStats);
+                    } else if (element.toLowerCase().includes('game over')) {
+                        const victoryLine = gameLog[index + 1];
+
+                        updatePlayedStats(victoryLine, rostersCollection, statsCollection, teamsArray, playersArray, seasonNumber, playoffStats, overtime);
+                    }
+
+                    lineCount++
+
+                    if (lineCount == gameLog.length) {
+                        updateCalculatedStats(statsCollection, teamsArray, playersArray, seasonNumber, playoffStats);
+
+                        if (gameWeatherArray.length == 0) {
                             return resolve();
                         }
-                    });                   
-                }
-            }, index * interval);
-        });
+                        gameWeatherArray.forEach((element, index) => {
+                            if (element != '') {
+                                weatherReportArray.push(element);
+                            }
+
+                            if (gameWeatherArray.length == (index + 1)) {
+                                return resolve();
+                            }
+                        });                   
+                    }
+                }, index * interval);
+            });
+        } catch (error) {
+            return reject(error);
+        }
     });
 }
 
