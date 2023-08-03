@@ -810,6 +810,13 @@ async function getStats(parameters) {
                 });
 
                 switch (resource) {
+                    case '':
+                        await getBasicStats(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                            stats = resolve;
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
                     case 'gamesplayed':
                         await getGamesPlayed(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
                             stats.push(resolve);
@@ -880,12 +887,43 @@ async function getStats(parameters) {
                             return Promise.reject(reject);
                         });
                         break;
-                    default:
-                        await getBasicStats(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
-                            stats = resolve;
+                    case 'passesattempted':
+                        await getPassesAttempted(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                            stats.push(resolve);
                         }).catch((reject) => {
                             return Promise.reject(reject);
                         });
+                        break;
+                    case 'passescompleted':
+                        await getPassesCompleted(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'passcompletionpercentage':
+                        await getPassCompletionPercentage(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'passesattemptedpergame':
+                        await getPassesAttemptedPerGame(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'passescompletedpergame':
+                        await getPassesCompletedPerGame(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    default:
+                        stats.push('I\'m sorry, I have no idea what you want from me');                        
                 }
             }
 
@@ -1350,6 +1388,221 @@ async function getFaceoffWinPercentage(statsCollection, season, playoffStats, so
     });    
 }
 
+async function getPassesAttempted(statsCollection, season, playoffStats, sort, count, teamName) {
+    return new Promise(async (resolve, reject) => {
+        let findPassesAttempted = null;
+
+        if (teamName == 'teams') {
+            findPassesAttempted = { ...season, playoffs: playoffStats, team: '' };
+        } else if (teamName != '') {
+            findPassesAttempted = { ...season, playoffs: playoffStats, team: teamName };
+        } else {
+            findPassesAttempted = { ...season, playoffs: playoffStats, team: { $ne: '' } };
+        }
+
+        const cursor = await statsCollection.find(findPassesAttempted).sort({ passesAttempted: sort });
+        const passesAttemptedArray = await cursor.toArray();
+        let i = 0;
+        let index = 0;
+
+        if (count == 0) {
+            i -= passesAttemptedArray.length;
+        } else if (count > passesAttemptedArray.length) {
+            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} passesAttempted ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
+        }
+
+        let passesAttempted = '\n**Passes Attempted**\n\n';       
+
+        do {
+            let name = '';
+
+            if (teamName == 'teams') {
+                name = `${TeamEmoji.get(passesAttemptedArray[index].name)} ${passesAttemptedArray[index].name}`;
+            } else {
+                name = `${TeamEmoji.get(passesAttemptedArray[index].team)} ${passesAttemptedArray[index].name}`
+            }
+
+            passesAttempted += `> **${index + 1}.** ${name}  -  **${passesAttemptedArray[index].passesAttempted}**\n`
+            i++;
+            index++;
+        } while (i < count);
+
+        return resolve(passesAttempted);
+    });
+}
+
+async function getPassesCompleted(statsCollection, season, playoffStats, sort, count, teamName) {
+    return new Promise(async (resolve, reject) => {
+        let findPassesCompleted = null;
+
+        if (teamName == 'teams') {
+            findPassesCompleted = { ...season, playoffs: playoffStats, team: '' };
+        } else if (teamName != '') {
+            findPassesCompleted = { ...season, playoffs: playoffStats, team: teamName };
+        } else {
+            findPassesCompleted = { ...season, playoffs: playoffStats, team: { $ne: '' } };
+        }
+
+        const cursor = await statsCollection.find(findPassesCompleted).sort({ passesCompleted: sort, passCompletionPercentage: sort });
+        const passesCompletedArray = await cursor.toArray();
+        let i = 0;
+        let index = 0;
+
+        if (count == 0) {
+            i -= passesCompletedArray.length;
+        } else if (count > passesCompletedArray.length) {
+            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} passesCompleted ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
+        }
+
+        let passesCompleted = '\n**Passes Completed** (Pass Completion Percentage)\n\n';       
+
+        do {
+            let name = '';
+
+            if (teamName == 'teams') {
+                name = `${TeamEmoji.get(passesCompletedArray[index].name)} ${passesCompletedArray[index].name}`;
+            } else {
+                name = `${TeamEmoji.get(passesCompletedArray[index].team)} ${passesCompletedArray[index].name}`
+            }
+
+            passesCompleted += `> **${index + 1}.** ${name}  -  **${passesCompletedArray[index].passesCompleted}** (${passesCompletedArray[index].passCompletionPercentage.toFixed(2)})\n`
+            i++;
+            index++;
+        } while (i < count);
+
+        return resolve(passesCompleted);
+    });
+}
+
+async function getPassCompletionPercentage(statsCollection, season, playoffStats, sort, count, teamName) {
+    return new Promise(async (resolve, reject) => {
+        let findPassCompletionPercentage = null;
+
+        if (teamName == 'teams') {
+            findPassCompletionPercentage = { ...season, playoffs: playoffStats, team: '' };
+        } else if (teamName != '') {
+            findPassCompletionPercentage = { ...season, playoffs: playoffStats, team: teamName };
+        } else {
+            findPassCompletionPercentage = { ...season, playoffs: playoffStats, team: { $ne: '' }, passesAttempted: { $gte: 10 } };
+        }
+
+        const cursor = await statsCollection.find(findPassCompletionPercentage).sort({ passCompletionPercentage: sort, passesAttempted: sort });
+        const passCompletionPercentageArray = await cursor.toArray();
+        let i = 0;
+        let index = 0;
+
+        if (count == 0) {
+            i -= passCompletionPercentageArray.length;
+        } else if (count > passCompletionPercentageArray.length) {
+            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} passCompletionPercentage ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
+        }
+
+        let passCompletionPercentage = `\n**Pass Completion Percentage** (Passes Attempted)${(teamName == '') ? ' - Minimum 10 passes attempted' : ''}\n\n`;
+        
+        do {
+            let name = '';
+
+            if (teamName == 'teams') {
+                name = `${TeamEmoji.get(passCompletionPercentageArray[index].name)} ${passCompletionPercentageArray[index].name}`;
+            } else {
+                name = `${TeamEmoji.get(passCompletionPercentageArray[index].team)} ${passCompletionPercentageArray[index].name}`
+            }
+
+            passCompletionPercentage += `> **${index + 1}.** ${name}  -  **${passCompletionPercentageArray[index].passCompletionPercentage.toFixed(2)}** (${passCompletionPercentageArray[index].passesAttempted})\n`
+            i++;
+            index++;
+        } while (i < count);
+
+        return resolve(passCompletionPercentage);
+    });    
+}
+
+async function getPassesAttemptedPerGame(statsCollection, season, playoffStats, sort, count, teamName) {
+    return new Promise(async (resolve, reject) => {
+        let findPassesAttemptedPerGame = null;
+
+        if (teamName == 'teams') {
+            findPassesAttemptedPerGame = { ...season, playoffs: playoffStats, team: '' };
+        } else if (teamName != '') {
+            findPassesAttemptedPerGame = { ...season, playoffs: playoffStats, team: teamName };
+        } else {
+            findPassesAttemptedPerGame = { ...season, playoffs: playoffStats, team: { $ne: '' } };
+        }
+
+        const cursor = await statsCollection.find(findPassesAttemptedPerGame).sort({ passesAttemptedPerGame: sort, gamesPlayed: sort });
+        const passesAttemptedPerGameArray = await cursor.toArray();
+        let i = 0;
+        let index = 0;
+
+        if (count == 0) {
+            i -= passesAttemptedPerGameArray.length;
+        } else if (count > passesAttemptedPerGameArray.length) {
+            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} passesAttemptedPerGame ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
+        }
+
+        let passesAttemptedPerGame = '\n**Passes Attempted Per Game** (Games Played)\n\n';       
+
+        do {
+            let name = '';
+
+            if (teamName == 'teams') {
+                name = `${TeamEmoji.get(passesAttemptedPerGameArray[index].name)} ${passesAttemptedPerGameArray[index].name}`;
+            } else {
+                name = `${TeamEmoji.get(passesAttemptedPerGameArray[index].team)} ${passesAttemptedPerGameArray[index].name}`
+            }
+
+            passesAttemptedPerGame += `> **${index + 1}.** ${name}  -  **${passesAttemptedPerGameArray[index].passesAttemptedPerGame.toFixed(2)}** (${passesAttemptedPerGameArray[index].gamesPlayed})\n`
+            i++;
+            index++;
+        } while (i < count);
+
+        return resolve(passesAttemptedPerGame);
+    });
+}
+
+async function getPassesCompletedPerGame(statsCollection, season, playoffStats, sort, count, teamName) {
+    return new Promise(async (resolve, reject) => {
+        let findPassesCompletedPerGame = null;
+
+        if (teamName == 'teams') {
+            findPassesCompletedPerGame = { ...season, playoffs: playoffStats, team: '' };
+        } else if (teamName != '') {
+            findPassesCompletedPerGame = { ...season, playoffs: playoffStats, team: teamName };
+        } else {
+            findPassesCompletedPerGame = { ...season, playoffs: playoffStats, team: { $ne: '' } };
+        }
+
+        const cursor = await statsCollection.find(findPassesCompletedPerGame).sort({ passesCompletedPerGame: sort, gamesPlayed: sort });
+        const passesCompletedPerGameArray = await cursor.toArray();
+        let i = 0;
+        let index = 0;
+
+        if (count == 0) {
+            i -= passesCompletedPerGameArray.length;
+        } else if (count > passesCompletedPerGameArray.length) {
+            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} passesCompletedPerGame ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
+        }
+
+        let passesCompletedPerGame = '\n**Passes Completed Per Game** (Games Played)\n\n';       
+
+        do {
+            let name = '';
+
+            if (teamName == 'teams') {
+                name = `${TeamEmoji.get(passesCompletedPerGameArray[index].name)} ${passesCompletedPerGameArray[index].name}`;
+            } else {
+                name = `${TeamEmoji.get(passesCompletedPerGameArray[index].team)} ${passesCompletedPerGameArray[index].name}`
+            }
+
+            passesCompletedPerGame += `> **${index + 1}.** ${name}  -  **${passesCompletedPerGameArray[index].passesCompletedPerGame.toFixed(2)}** (${passesCompletedPerGameArray[index].gamesPlayed})\n`
+            i++;
+            index++;
+        } while (i < count);
+
+        return resolve(passesCompletedPerGame);
+    });
+}
+
 async function getGoalsScored(statsCollection, season, playoffStats, sort, count, teamName) {
     return new Promise(async (resolve, reject) => {
         let findGoalsScored = null;
@@ -1398,9 +1651,9 @@ async function getGoalsConceded(statsCollection, season, playoffStats, sort, cou
         let findGoalsConceded = null;
 
         if (teamName == 'teams') {
-            findGoalsConceded = { ...season, playoffs: playoffStats, team: '', shotsFaced: { $gte: 10 } };
+            findGoalsConceded = { ...season, playoffs: playoffStats, team: '' };
         } else if (teamName != '') {
-            findGoalsConceded = { ...season, playoffs: playoffStats, team: teamName, shotsFaced: { $gte: 10 } };
+            findGoalsConceded = { ...season, playoffs: playoffStats, team: teamName };
         } else {
             findGoalsConceded = { ...season, playoffs: playoffStats, team: { $ne: '' }, shotsFaced: { $gte: 10 } };
         }
@@ -1416,7 +1669,7 @@ async function getGoalsConceded(statsCollection, season, playoffStats, sort, cou
             return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} goalsConceded ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
         }
 
-        let goalsConceded = `\n**Goals Conceded** ${(teamName == 'teams') ? '(Shots Blocked Percentage)' : '(Save Percentage) - Minimum 10 shots faced'}\n\n`;
+        let goalsConceded = `\n**Goals Conceded** ${(teamName == 'teams') ? '(Shots Blocked Percentage)' : '(Save Percentage)'}${(teamName == '') ? ' - Minimum 10 shots faced' : ''}\n\n`;
         
         do {
             let name = '';
