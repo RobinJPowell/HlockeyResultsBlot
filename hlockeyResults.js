@@ -817,106 +817,121 @@ async function getStats(parameters) {
                             return Promise.reject(reject);
                         });
                         break;
-                    case 'gamesplayed':
-                        await getGamesPlayed(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                    case 'gamesplayed':                    
+                        await getStat(statsCollection, season, playoffStats, { gamesPlayed: sort }, count, teamName,
+                                      'gamesPlayed', '**Games Played**').then((resolve) => {
                             stats.push(resolve);
                         }).catch((reject) => {
                             return Promise.reject(reject);
                         });
                         break;
                     case 'gameswon':
-                        await getGamesWon(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                        await getStatWithSecondaryFloatStat(statsCollection, season, playoffStats, { gamesWon: sort, winPercentage: sort }, count, teamName,
+                                                            'gamesWon', 'winPercentage', '**Games Won** (Win Percentage)').then((resolve) => {
                             stats.push(resolve);
                         }).catch((reject) => {
                             return Promise.reject(reject);
                         });
                         break;
                     case 'winpercentage':
-                        await getWinPercentage(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                        await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { winPercentage: sort, gamesWon: sort }, count, teamName,
+                                                            'winPercentage', 'gamesWon', '**Win Percentage** (Games Won)').then((resolve) => {
                             stats.push(resolve);
                         }).catch((reject) => {
                             return Promise.reject(reject);
                         });
                         break;
                     case 'overtimegamesplayed':
-                        await getOvertimeGamesPlayed(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                        await getStat(statsCollection, season, playoffStats, { overtimeGamesPlayed: sort }, count, teamName,
+                                      'overtimeGamesPlayed', '**Overtime Games Played**').then((resolve) => {
                             stats.push(resolve);
                         }).catch((reject) => {
                             return Promise.reject(reject);
                         });
                         break;
                     case 'overtimegameswon':
-                        await getOvertimeGamesWon(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                        await getStatWithSecondaryFloatStat(statsCollection, season, playoffStats, { overtimeGamesWon: sort, overtimeWinPercentage: sort }, count, teamName,
+                                                            'overtimeGamesWon', 'overtimeWinPercentage', '**Overtime Games Won** (Overtime Win Percentage)').then((resolve) => {
                             stats.push(resolve);
                         }).catch((reject) => {
                             return Promise.reject(reject);
                         });
                         break;
                     case 'overtimewinpercentage':
-                        await getOvertimeWinPercentage(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                        await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { overtimeWinPercentage: sort, overtimeGamesPlayed: sort }, count, teamName,
+                                                            'overtimeWinPercentage', 'overtimeGamesPlayed', '**Overtime Win Percentage** (Overtime Games Played)').then((resolve) => {
                             stats.push(resolve);
                         }).catch((reject) => {
                             return Promise.reject(reject);
                         });
                         break;
                     case 'overtimegamespercentage':
-                        await getOvertimeGamesPercentage(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                        await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { overtimeGamesPercentage: sort, gamesPlayed: sort }, count, teamName,
+                                                            'overtimeGamesPercentage', 'gamesPlayed', '**Overtime Games Percentage** (Games Played)').then((resolve) => {
                             stats.push(resolve);
                         }).catch((reject) => {
                             return Promise.reject(reject);
                         });
                         break;
                     case 'faceoffstaken':
-                        await getFaceoffsTaken(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                        await getStat(statsCollection, season, playoffStats, { faceoffsTaken: sort }, count, teamName,
+                                      'faceoffsTaken', '**Faceoffs Taken**').then((resolve) => {
                             stats.push(resolve);
                         }).catch((reject) => {
                             return Promise.reject(reject);
                         });
                         break;
                     case 'faceoffswon':
-                        await getFaceoffsWon(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                        await getStatWithSecondaryFloatStat(statsCollection, season, playoffStats, { faceoffsWon: sort, faceoffWinPercentage: sort }, count, teamName,
+                                                            'faceoffsWon', 'faceoffWinPercentage', '**Faceoffs Won** (Faceoff Win Percentage)').then((resolve) => {
                             stats.push(resolve);
                         }).catch((reject) => {
                             return Promise.reject(reject);
                         });
                         break;
                     case 'faceoffwinpercentage':
-                        await getFaceoffWinPercentage(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                        await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { faceoffWinPercentage: sort, faceoffsTaken: sort }, count, teamName,
+                                                            'faceoffWinPercentage', 'faceoffsTaken', '**Faceoff Win Percentage** (Faceoffs Taken)').then((resolve) => {
                             stats.push(resolve);
                         }).catch((reject) => {
                             return Promise.reject(reject);
                         });
                         break;
                     case 'passesattempted':
-                        await getPassesAttempted(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                        await getStat(statsCollection, season, playoffStats, { passesAttempted: sort }, count, teamName,
+                                      'passesAttempted', '**Passes Attempted**').then((resolve) => {
                             stats.push(resolve);
                         }).catch((reject) => {
                             return Promise.reject(reject);
                         });
                         break;
                     case 'passescompleted':
-                        await getPassesCompleted(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                        await getStatWithSecondaryFloatStat(statsCollection, season, playoffStats, { passesCompleted: sort, passCompletionPercentage: sort }, count, teamName,
+                                                            'passesCompleted', 'passCompletionPercentage', '**Passes Completed** (Pass Completion Percentage)').then((resolve) => {
                             stats.push(resolve);
                         }).catch((reject) => {
                             return Promise.reject(reject);
                         });
                         break;
                     case 'passcompletionpercentage':
-                        await getPassCompletionPercentage(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                        await getFloatStatWithSecondaryStatAndFilter(statsCollection, season, playoffStats, { passCompletionPercentage: sort, passesAttempted: sort }, { passesAttempted: { $gte: 10 } }, count, teamName,
+                                                                     'passCompletionPercentage', 'passesAttempted', '**Pass Completion Percentage** (Passes Attempted)').then((resolve) => {
                             stats.push(resolve);
                         }).catch((reject) => {
                             return Promise.reject(reject);
                         });
                         break;
                     case 'passesattemptedpergame':
-                        await getPassesAttemptedPerGame(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                        await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { passesAttemptedPerGame: sort, gamesPlayed: sort }, count, teamName,
+                                                            'passesAttemptedPerGame', 'gamesPlayed', '**Passes Attempted Per Game** (Games Played)').then((resolve) => {
                             stats.push(resolve);
                         }).catch((reject) => {
                             return Promise.reject(reject);
                         });
                         break;
                     case 'passescompletedpergame':
-                        await getPassesCompletedPerGame(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                        await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { passesCompletedPerGame: sort, gamesPlayed: sort }, count, teamName,
+                                                            'passesCompletedPerGame', 'gamesPlayed', '**Passes Completed Per Game** (Games Played)').then((resolve) => {
                             stats.push(resolve);
                         }).catch((reject) => {
                             return Promise.reject(reject);
@@ -939,10 +954,29 @@ async function getBasicStats(statsCollection, season, playoffStats, sort, count,
         try {
             let stats = [];
             
-            await getGoalsScored(statsCollection, season, playoffStats, sort, count, teamName).then(async (resolve) => {
+            await getStatWithSecondaryFloatStat(statsCollection, season, playoffStats, { goalsScored: sort, scoringPercentage: sort }, count, teamName,
+                                                'goalsScored', 'scoringPercentage', '**Goals Scored** (Goal Scoring Percentage)').then(async (resolve) => {
                 stats.push(resolve);
 
-                await getGoalsConceded(statsCollection, season, playoffStats, sort, count, teamName).then(async (resolve) => {
+                // Teams have a shots blocked percentage, players have a save percentage
+                let secondaryStat = '';
+                let sortQuery = '';
+                let title = '**Goals Conceded** - ('
+                
+                if (teamName == 'teams') {
+                    secondaryStat = 'shotsBlockedPercentage';
+                    sortQuery = { goalsConceded: -sort, shotsBlockedPercentage: sort };
+                    title += 'Shots Blocked';
+                } else {
+                    secondaryStat = 'savePercentage';
+                    sortQuery = { goalsConceded: -sort, savePercentage: sort };
+                    title += 'Save';                    
+                }
+
+                title += ' Percentage)';
+
+                await getStatWithSecondaryFloatStatAndFilter(statsCollection, season, playoffStats, sortQuery, { shotsFaced: { $gte: 10 } }, count, teamName,
+                                                             'goalsConceded', secondaryStat, title).then(async (resolve) => {
                     stats.push(resolve);
                 }).catch((reject) => {
                     return Promise.reject(reject);
@@ -958,735 +992,219 @@ async function getBasicStats(statsCollection, season, playoffStats, sort, count,
     });
 }
 
-async function getGamesPlayed(statsCollection, season, playoffStats, sort, count, teamName) {
+async function getStat(statsCollection, season, playoffStats, sortQuery, count, teamName, statName, title) {
     return new Promise(async (resolve, reject) => {
-        let findGamesPlayed = null;
+        let findStat = null;
 
         if (teamName == 'teams') {
-            findGamesPlayed = { ...season, playoffs: playoffStats, team: '' };
+            findStat = { ...season, playoffs: playoffStats, team: '' };
         } else if (teamName != '') {
-            findGamesPlayed = { ...season, playoffs: playoffStats, team: teamName };
+            findStat = { ...season, playoffs: playoffStats, team: teamName };
         } else {
-            findGamesPlayed = { ...season, playoffs: playoffStats, team: { $ne: '' } };
+            findStat = { ...season, playoffs: playoffStats, team: { $ne: '' } };
         }
 
-        const cursor = await statsCollection.find(findGamesPlayed).sort({ gamesPlayed: sort });
-        const gamesPlayedArray = await cursor.toArray();
+        const cursor = await statsCollection.find(findStat).sort({ ...sortQuery });
+        const statArray = await cursor.toArray();
         let i = 0;
         let index = 0;
 
         if (count == 0) {
-            i -= gamesPlayedArray.length;
-        } else if (count > gamesPlayedArray.length) {
-            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} gamesPlayed ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
+            i -= statArray.length;
+        } else if (count > statArray.length) {
+            return reject(`Not enough records to return ${count} ${statName} ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
         }
 
-        let gamesPlayed = '\n**Games Played**\n\n';       
+        let statReturn = `\n${title}\n`;
 
         do {
             let name = '';
 
             if (teamName == 'teams') {
-                name = `${TeamEmoji.get(gamesPlayedArray[index].name)} ${gamesPlayedArray[index].name}`;
+                name = `${TeamEmoji.get(statArray[index].name)} ${statArray[index].name}`;
             } else {
-                name = `${TeamEmoji.get(gamesPlayedArray[index].team)} ${gamesPlayedArray[index].name}`
+                name = `${TeamEmoji.get(statArray[index].team)} ${statArray[index].name}`;
             }
 
-            gamesPlayed += `> **${index + 1}.** ${name}  -  **${gamesPlayedArray[index].gamesPlayed}**\n`
+            statReturn += `> **${index + 1}.** ${name}  -  **${statArray[index][statName]}**\n`
             i++;
             index++;
         } while (i < count);
 
-        return resolve(gamesPlayed);
+        return resolve(statReturn);
     });
 }
 
-async function getGamesWon(statsCollection, season, playoffStats, sort, count, teamName) {
+async function getStatWithSecondaryFloatStat(statsCollection, season, playoffStats, sortQuery, count, teamName, mainStat, secondaryStat, title) {
     return new Promise(async (resolve, reject) => {
-        let findGamesWon = null;
+        let findStat = null;
 
         if (teamName == 'teams') {
-            findGamesWon = { ...season, playoffs: playoffStats, team: '' };
+            findStat = { ...season, playoffs: playoffStats, team: '' };
         } else if (teamName != '') {
-            findGamesWon = { ...season, playoffs: playoffStats, team: teamName };
+            findStat = { ...season, playoffs: playoffStats, team: teamName };
         } else {
-            findGamesWon = { ...season, playoffs: playoffStats, team: { $ne: '' } };
+            findStat = { ...season, playoffs: playoffStats, team: { $ne: '' } };
         }
 
-        const cursor = await statsCollection.find(findGamesWon).sort({ gamesWon: sort, winPercentage: sort });
-        const gamesWonArray = await cursor.toArray();
+        const cursor = await statsCollection.find(findStat).sort({ ...sortQuery });
+        const statArray = await cursor.toArray();
         let i = 0;
         let index = 0;
 
         if (count == 0) {
-            i -= gamesWonArray.length;
-        } else if (count > gamesWonArray.length) {
-            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} gamesWon ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
+            i -= statArray.length;
+        } else if (count > statArray.length) {
+            return reject(`Not enough records to return ${count} ${mainStat} ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
         }
 
-        let gamesWon = '\n**Games Won** (Win Percentage)\n\n';       
+        let statReturn = `\n${title}\n`;
 
         do {
             let name = '';
 
             if (teamName == 'teams') {
-                name = `${TeamEmoji.get(gamesWonArray[index].name)} ${gamesWonArray[index].name}`;
+                name = `${TeamEmoji.get(statArray[index].name)} ${statArray[index].name}`;
             } else {
-                name = `${TeamEmoji.get(gamesWonArray[index].team)} ${gamesWonArray[index].name}`
+                name = `${TeamEmoji.get(statArray[index].team)} ${statArray[index].name}`;
             }
 
-            gamesWon += `> **${index + 1}.** ${name}  -  **${gamesWonArray[index].gamesWon}** (${gamesWonArray[index].winPercentage.toFixed(2)})\n`
+            statReturn += `> **${index + 1}.** ${name}  -  **${statArray[index][mainStat]}** (${statArray[index][secondaryStat].toFixed(2)})\n`
             i++;
             index++;
         } while (i < count);
 
-        return resolve(gamesWon);
+        return resolve(statReturn);
     });
 }
 
-async function getWinPercentage(statsCollection, season, playoffStats, sort, count, teamName) {
+async function getStatWithSecondaryFloatStatAndFilter(statsCollection, season, playoffStats, sortQuery, filterQuery, count, teamName, mainStat, secondaryStat, title) {
     return new Promise(async (resolve, reject) => {
-        let findWinPercentage = null;
+        let findStat = null;
 
         if (teamName == 'teams') {
-            findWinPercentage = { ...season, playoffs: playoffStats, team: '' };
+            findStat = { ...season, playoffs: playoffStats, team: '' };
         } else if (teamName != '') {
-            findWinPercentage = { ...season, playoffs: playoffStats, team: teamName };
+            findStat = { ...season, playoffs: playoffStats, team: teamName };
         } else {
-            findWinPercentage = { ...season, playoffs: playoffStats, team: { $ne: '' } };
+            findStat = { ...season, playoffs: playoffStats, team: { $ne: '' }, ...filterQuery };
         }
 
-        const cursor = await statsCollection.find(findWinPercentage).sort({ winPercentage: sort, gamesPlayed: sort });
-        const winPercentageArray = await cursor.toArray();
+        const cursor = await statsCollection.find(findStat).sort({ ...sortQuery });
+        const statArray = await cursor.toArray();
         let i = 0;
         let index = 0;
 
         if (count == 0) {
-            i -= winPercentageArray.length;
-        } else if (count > winPercentageArray.length) {
-            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} winPercentage ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
+            i -= statArray.length;
+        } else if (count > statArray.length) {
+            return reject(`Not enough records to return ${count} ${mainStat} ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
         }
 
-        let winPercentage = `\n**Win Percentage** (Games Played)\n\n`;
-        
-        do {
-            let name = '';
-
-            if (teamName == 'teams') {
-                name = `${TeamEmoji.get(winPercentageArray[index].name)} ${winPercentageArray[index].name}`;
-            } else {
-                name = `${TeamEmoji.get(winPercentageArray[index].team)} ${winPercentageArray[index].name}`
-            }
-
-            winPercentage += `> **${index + 1}.** ${name}  -  **${winPercentageArray[index].winPercentage.toFixed(2)}** (${winPercentageArray[index].gamesPlayed})\n`
-            i++;
-            index++;
-        } while (i < count);
-
-        return resolve(winPercentage);
-    });    
-}
-
-async function getOvertimeGamesPlayed(statsCollection, season, playoffStats, sort, count, teamName) {
-    return new Promise(async (resolve, reject) => {
-        let findOvertimeGamesPlayed = null;
-
-        if (teamName == 'teams') {
-            findOvertimeGamesPlayed = { ...season, playoffs: playoffStats, team: '' };
-        } else if (teamName != '') {
-            findOvertimeGamesPlayed = { ...season, playoffs: playoffStats, team: teamName };
-        } else {
-            findOvertimeGamesPlayed = { ...season, playoffs: playoffStats, team: { $ne: '' } };
-        }
-
-        const cursor = await statsCollection.find(findOvertimeGamesPlayed).sort({ overtimeGamesPlayed: sort });
-        const overtimeGamesPlayedArray = await cursor.toArray();
-        let i = 0;
-        let index = 0;
-
-        if (count == 0) {
-            i -= overtimeGamesPlayedArray.length;
-        } else if (count > overtimeGamesPlayedArray.length) {
-            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} overtimeGamesPlayed ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
-        }
-
-        let overtimeGamesPlayed = '\n**Overtime Games Played**\n\n';       
+        let statReturn = `\n${title}\n`;
 
         do {
             let name = '';
 
             if (teamName == 'teams') {
-                name = `${TeamEmoji.get(overtimeGamesPlayedArray[index].name)} ${overtimeGamesPlayedArray[index].name}`;
+                name = `${TeamEmoji.get(statArray[index].name)} ${statArray[index].name}`;
             } else {
-                name = `${TeamEmoji.get(overtimeGamesPlayedArray[index].team)} ${overtimeGamesPlayedArray[index].name}`
+                name = `${TeamEmoji.get(statArray[index].team)} ${statArray[index].name}`;
             }
 
-            overtimeGamesPlayed += `> **${index + 1}.** ${name}  -  **${overtimeGamesPlayedArray[index].overtimeGamesPlayed}**\n`
+            statReturn += `> **${index + 1}.** ${name}  -  **${statArray[index][mainStat]}** (${statArray[index][secondaryStat].toFixed(2)})\n`
             i++;
             index++;
         } while (i < count);
 
-        return resolve(overtimeGamesPlayed);
+        return resolve(statReturn);
     });
 }
 
-async function getOvertimeGamesWon(statsCollection, season, playoffStats, sort, count, teamName) {
+async function getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, sortQuery, count, teamName, mainStat, secondaryStat, title) {
     return new Promise(async (resolve, reject) => {
-        let findOvertimeGamesWon = null;
+        let findStat = null;
 
         if (teamName == 'teams') {
-            findOvertimeGamesWon = { ...season, playoffs: playoffStats, team: '' };
+            findStat = { ...season, playoffs: playoffStats, team: '' };
         } else if (teamName != '') {
-            findOvertimeGamesWon = { ...season, playoffs: playoffStats, team: teamName };
+            findStat = { ...season, playoffs: playoffStats, team: teamName };
         } else {
-            findOvertimeGamesWon = { ...season, playoffs: playoffStats, team: { $ne: '' } };
+            findStat = { ...season, playoffs: playoffStats, team: { $ne: '' } };
         }
 
-        const cursor = await statsCollection.find(findOvertimeGamesWon).sort({ overtimeGamesWon: sort, overtimeWinPercentage: sort });
-        const overtimeGamesWonArray = await cursor.toArray();
+        const cursor = await statsCollection.find(findStat).sort({ ...sortQuery });
+        const statArray = await cursor.toArray();
         let i = 0;
         let index = 0;
 
         if (count == 0) {
-            i -= overtimeGamesWonArray.length;
-        } else if (count > overtimeGamesWonArray.length) {
-            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} overtimeGamesWon ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
+            i -= statArray.length;
+        } else if (count > statArray.length) {
+            return reject(`Not enough records to return ${count} ${mainStat} ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
         }
 
-        let overtimeGamesWon = '\n**Overtime Games Won** (Overtime Win Percentage)\n\n';       
+        let statReturn = `\n${title}\n`;
 
         do {
             let name = '';
 
             if (teamName == 'teams') {
-                name = `${TeamEmoji.get(overtimeGamesWonArray[index].name)} ${overtimeGamesWonArray[index].name}`;
+                name = `${TeamEmoji.get(statArray[index].name)} ${statArray[index].name}`;
             } else {
-                name = `${TeamEmoji.get(overtimeGamesWonArray[index].team)} ${overtimeGamesWonArray[index].name}`
+                name = `${TeamEmoji.get(statArray[index].team)} ${statArray[index].name}`;
             }
 
-            overtimeGamesWon += `> **${index + 1}.** ${name}  -  **${overtimeGamesWonArray[index].overtimeGamesWon}** (${overtimeGamesWonArray[index].overtimeWinPercentage.toFixed(2)})\n`
+            statReturn += `> **${index + 1}.** ${name}  -  **${statArray[index][mainStat].toFixed(2)}** (${statArray[index][secondaryStat]})\n`
             i++;
             index++;
         } while (i < count);
 
-        return resolve(overtimeGamesWon);
+        return resolve(statReturn);
     });
 }
 
-async function getOvertimeWinPercentage(statsCollection, season, playoffStats, sort, count, teamName) {
+async function getFloatStatWithSecondaryStatAndFilter(statsCollection, season, playoffStats, sortQuery, filterQuery, count, teamName, mainStat, secondaryStat, title) {
     return new Promise(async (resolve, reject) => {
-        let findOvertimeWinPercentage = null;
+        let findStat = null;
 
         if (teamName == 'teams') {
-            findOvertimeWinPercentage = { ...season, playoffs: playoffStats, team: '' };
+            findStat = { ...season, playoffs: playoffStats, team: '' };
         } else if (teamName != '') {
-            findOvertimeWinPercentage = { ...season, playoffs: playoffStats, team: teamName };
+            findStat = { ...season, playoffs: playoffStats, team: teamName };
         } else {
-            findOvertimeWinPercentage = { ...season, playoffs: playoffStats, team: { $ne: '' } };
+            findStat = { ...season, playoffs: playoffStats, team: { $ne: '' }, ...filterQuery };
         }
 
-        const cursor = await statsCollection.find(findOvertimeWinPercentage).sort({ overtimeWinPercentage: sort, overtimeGamesPlayed: sort });
-        const overtimeWinPercentageArray = await cursor.toArray();
+        const cursor = await statsCollection.find(findStat).sort({ ...sortQuery });
+        const statArray = await cursor.toArray();
         let i = 0;
         let index = 0;
 
         if (count == 0) {
-            i -= overtimeWinPercentageArray.length;
-        } else if (count > overtimeWinPercentageArray.length) {
-            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} overtimeWinPercentage ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
+            i -= statArray.length;
+        } else if (count > statArray.length) {
+            return reject(`Not enough records to return ${count} ${mainStat} ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
         }
 
-        let overtimeWinPercentage = `\n**Overtime Win Percentage** (Overtime Games Played)\n\n`;
-        
-        do {
-            let name = '';
-
-            if (teamName == 'teams') {
-                name = `${TeamEmoji.get(overtimeWinPercentageArray[index].name)} ${overtimeWinPercentageArray[index].name}`;
-            } else {
-                name = `${TeamEmoji.get(overtimeWinPercentageArray[index].team)} ${overtimeWinPercentageArray[index].name}`
-            }
-
-            overtimeWinPercentage += `> **${index + 1}.** ${name}  -  **${overtimeWinPercentageArray[index].overtimeWinPercentage.toFixed(2)}** (${overtimeWinPercentageArray[index].overtimeGamesPlayed})\n`
-            i++;
-            index++;
-        } while (i < count);
-
-        return resolve(overtimeWinPercentage);
-    });    
-}
-
-async function getOvertimeGamesPercentage(statsCollection, season, playoffStats, sort, count, teamName) {
-    return new Promise(async (resolve, reject) => {
-        let findOvertimeGamesPercentage = null;
-
-        if (teamName == 'teams') {
-            findOvertimeGamesPercentage = { ...season, playoffs: playoffStats, team: '' };
-        } else if (teamName != '') {
-            findOvertimeGamesPercentage = { ...season, playoffs: playoffStats, team: teamName };
-        } else {
-            findOvertimeGamesPercentage = { ...season, playoffs: playoffStats, team: { $ne: '' } };
-        }
-
-        const cursor = await statsCollection.find(findOvertimeGamesPercentage).sort({ overtimeGamesPercentage: sort, gamesPlayed: sort });
-        const overtimeGamesPercentageArray = await cursor.toArray();
-        let i = 0;
-        let index = 0;
-
-        if (count == 0) {
-            i -= overtimeGamesPercentageArray.length;
-        } else if (count > overtimeGamesPercentageArray.length) {
-            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} overtimeGamesPercentage ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
-        }
-
-        let overtimeGamesPercentage = `\n**Overtime Games Percentage** (Games Played)\n\n`;
-        
-        do {
-            let name = '';
-
-            if (teamName == 'teams') {
-                name = `${TeamEmoji.get(overtimeGamesPercentageArray[index].name)} ${overtimeGamesPercentageArray[index].name}`;
-            } else {
-                name = `${TeamEmoji.get(overtimeGamesPercentageArray[index].team)} ${overtimeGamesPercentageArray[index].name}`
-            }
-
-            overtimeGamesPercentage += `> **${index + 1}.** ${name}  -  **${overtimeGamesPercentageArray[index].overtimeGamesPercentage.toFixed(2)}** (${overtimeGamesPercentageArray[index].gamesPlayed})\n`
-            i++;
-            index++;
-        } while (i < count);
-
-        return resolve(overtimeGamesPercentage);
-    });    
-}
-
-async function getFaceoffsTaken(statsCollection, season, playoffStats, sort, count, teamName) {
-    return new Promise(async (resolve, reject) => {
-        let findFaceoffsTaken = null;
-
-        if (teamName == 'teams') {
-            findFaceoffsTaken = { ...season, playoffs: playoffStats, team: '' };
-        } else if (teamName != '') {
-            findFaceoffsTaken = { ...season, playoffs: playoffStats, team: teamName };
-        } else {
-            findFaceoffsTaken = { ...season, playoffs: playoffStats, team: { $ne: '' } };
-        }
-
-        const cursor = await statsCollection.find(findFaceoffsTaken).sort({ faceoffsTaken: sort });
-        const faceoffsTakenArray = await cursor.toArray();
-        let i = 0;
-        let index = 0;
-
-        if (count == 0) {
-            i -= faceoffsTakenArray.length;
-        } else if (count > faceoffsTakenArray.length) {
-            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} faceoffsTaken ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
-        }
-
-        let faceoffsTaken = '\n**Faceoffs Taken**\n\n';       
+        let statReturn = `\n${title}\n`;
 
         do {
             let name = '';
 
             if (teamName == 'teams') {
-                name = `${TeamEmoji.get(faceoffsTakenArray[index].name)} ${faceoffsTakenArray[index].name}`;
+                name = `${TeamEmoji.get(statArray[index].name)} ${statArray[index].name}`;
             } else {
-                name = `${TeamEmoji.get(faceoffsTakenArray[index].team)} ${faceoffsTakenArray[index].name}`
+                name = `${TeamEmoji.get(statArray[index].team)} ${statArray[index].name}`;
             }
 
-            faceoffsTaken += `> **${index + 1}.** ${name}  -  **${faceoffsTakenArray[index].faceoffsTaken}**\n`
+            statReturn += `> **${index + 1}.** ${name}  -  **${statArray[index][mainStat].toFixed(2)}** (${statArray[index][secondaryStat]})\n`
             i++;
             index++;
         } while (i < count);
 
-        return resolve(faceoffsTaken);
+        return resolve(statReturn);
     });
-}
-
-async function getFaceoffsWon(statsCollection, season, playoffStats, sort, count, teamName) {
-    return new Promise(async (resolve, reject) => {
-        let findFaceoffsWon = null;
-
-        if (teamName == 'teams') {
-            findFaceoffsWon = { ...season, playoffs: playoffStats, team: '' };
-        } else if (teamName != '') {
-            findFaceoffsWon = { ...season, playoffs: playoffStats, team: teamName };
-        } else {
-            findFaceoffsWon = { ...season, playoffs: playoffStats, team: { $ne: '' } };
-        }
-
-        const cursor = await statsCollection.find(findFaceoffsWon).sort({ faceoffsWon: sort, faceoffWinPercentage: sort });
-        const faceoffsWonArray = await cursor.toArray();
-        let i = 0;
-        let index = 0;
-
-        if (count == 0) {
-            i -= faceoffsWonArray.length;
-        } else if (count > faceoffsWonArray.length) {
-            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} faceoffsWon ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
-        }
-
-        let faceoffsWon = '\n**Faceoffs Won** (Faceoff Win Percentage)\n\n';       
-
-        do {
-            let name = '';
-
-            if (teamName == 'teams') {
-                name = `${TeamEmoji.get(faceoffsWonArray[index].name)} ${faceoffsWonArray[index].name}`;
-            } else {
-                name = `${TeamEmoji.get(faceoffsWonArray[index].team)} ${faceoffsWonArray[index].name}`
-            }
-
-            faceoffsWon += `> **${index + 1}.** ${name}  -  **${faceoffsWonArray[index].faceoffsWon}** (${faceoffsWonArray[index].faceoffWinPercentage.toFixed(2)})\n`
-            i++;
-            index++;
-        } while (i < count);
-
-        return resolve(faceoffsWon);
-    });
-}
-
-async function getFaceoffWinPercentage(statsCollection, season, playoffStats, sort, count, teamName) {
-    return new Promise(async (resolve, reject) => {
-        let findFaceoffWinPercentage = null;
-
-        if (teamName == 'teams') {
-            findFaceoffWinPercentage = { ...season, playoffs: playoffStats, team: '' };
-        } else if (teamName != '') {
-            findFaceoffWinPercentage = { ...season, playoffs: playoffStats, team: teamName };
-        } else {
-            findFaceoffWinPercentage = { ...season, playoffs: playoffStats, team: { $ne: '' }, faceoffsTaken: { $gte: 10 } };
-        }
-
-        const cursor = await statsCollection.find(findFaceoffWinPercentage).sort({ faceoffWinPercentage: sort, faceoffsTaken: sort });
-        const faceoffWinPercentageArray = await cursor.toArray();
-        let i = 0;
-        let index = 0;
-
-        if (count == 0) {
-            i -= faceoffWinPercentageArray.length;
-        } else if (count > faceoffWinPercentageArray.length) {
-            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} faceoffWinPercentage ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
-        }
-
-        let faceoffWinPercentage = `\n**Faceoff Win Percentage** (Faceoffs Taken)${(teamName == '') ? ' - Minimum 10 faceoffs taken' : ''}\n\n`;
-        
-        do {
-            let name = '';
-
-            if (teamName == 'teams') {
-                name = `${TeamEmoji.get(faceoffWinPercentageArray[index].name)} ${faceoffWinPercentageArray[index].name}`;
-            } else {
-                name = `${TeamEmoji.get(faceoffWinPercentageArray[index].team)} ${faceoffWinPercentageArray[index].name}`
-            }
-
-            faceoffWinPercentage += `> **${index + 1}.** ${name}  -  **${faceoffWinPercentageArray[index].faceoffWinPercentage.toFixed(2)}** (${faceoffWinPercentageArray[index].faceoffsTaken})\n`
-            i++;
-            index++;
-        } while (i < count);
-
-        return resolve(faceoffWinPercentage);
-    });    
-}
-
-async function getPassesAttempted(statsCollection, season, playoffStats, sort, count, teamName) {
-    return new Promise(async (resolve, reject) => {
-        let findPassesAttempted = null;
-
-        if (teamName == 'teams') {
-            findPassesAttempted = { ...season, playoffs: playoffStats, team: '' };
-        } else if (teamName != '') {
-            findPassesAttempted = { ...season, playoffs: playoffStats, team: teamName };
-        } else {
-            findPassesAttempted = { ...season, playoffs: playoffStats, team: { $ne: '' } };
-        }
-
-        const cursor = await statsCollection.find(findPassesAttempted).sort({ passesAttempted: sort });
-        const passesAttemptedArray = await cursor.toArray();
-        let i = 0;
-        let index = 0;
-
-        if (count == 0) {
-            i -= passesAttemptedArray.length;
-        } else if (count > passesAttemptedArray.length) {
-            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} passesAttempted ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
-        }
-
-        let passesAttempted = '\n**Passes Attempted**\n\n';       
-
-        do {
-            let name = '';
-
-            if (teamName == 'teams') {
-                name = `${TeamEmoji.get(passesAttemptedArray[index].name)} ${passesAttemptedArray[index].name}`;
-            } else {
-                name = `${TeamEmoji.get(passesAttemptedArray[index].team)} ${passesAttemptedArray[index].name}`
-            }
-
-            passesAttempted += `> **${index + 1}.** ${name}  -  **${passesAttemptedArray[index].passesAttempted}**\n`
-            i++;
-            index++;
-        } while (i < count);
-
-        return resolve(passesAttempted);
-    });
-}
-
-async function getPassesCompleted(statsCollection, season, playoffStats, sort, count, teamName) {
-    return new Promise(async (resolve, reject) => {
-        let findPassesCompleted = null;
-
-        if (teamName == 'teams') {
-            findPassesCompleted = { ...season, playoffs: playoffStats, team: '' };
-        } else if (teamName != '') {
-            findPassesCompleted = { ...season, playoffs: playoffStats, team: teamName };
-        } else {
-            findPassesCompleted = { ...season, playoffs: playoffStats, team: { $ne: '' } };
-        }
-
-        const cursor = await statsCollection.find(findPassesCompleted).sort({ passesCompleted: sort, passCompletionPercentage: sort });
-        const passesCompletedArray = await cursor.toArray();
-        let i = 0;
-        let index = 0;
-
-        if (count == 0) {
-            i -= passesCompletedArray.length;
-        } else if (count > passesCompletedArray.length) {
-            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} passesCompleted ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
-        }
-
-        let passesCompleted = '\n**Passes Completed** (Pass Completion Percentage)\n\n';       
-
-        do {
-            let name = '';
-
-            if (teamName == 'teams') {
-                name = `${TeamEmoji.get(passesCompletedArray[index].name)} ${passesCompletedArray[index].name}`;
-            } else {
-                name = `${TeamEmoji.get(passesCompletedArray[index].team)} ${passesCompletedArray[index].name}`
-            }
-
-            passesCompleted += `> **${index + 1}.** ${name}  -  **${passesCompletedArray[index].passesCompleted}** (${passesCompletedArray[index].passCompletionPercentage.toFixed(2)})\n`
-            i++;
-            index++;
-        } while (i < count);
-
-        return resolve(passesCompleted);
-    });
-}
-
-async function getPassCompletionPercentage(statsCollection, season, playoffStats, sort, count, teamName) {
-    return new Promise(async (resolve, reject) => {
-        let findPassCompletionPercentage = null;
-
-        if (teamName == 'teams') {
-            findPassCompletionPercentage = { ...season, playoffs: playoffStats, team: '' };
-        } else if (teamName != '') {
-            findPassCompletionPercentage = { ...season, playoffs: playoffStats, team: teamName };
-        } else {
-            findPassCompletionPercentage = { ...season, playoffs: playoffStats, team: { $ne: '' }, passesAttempted: { $gte: 10 } };
-        }
-
-        const cursor = await statsCollection.find(findPassCompletionPercentage).sort({ passCompletionPercentage: sort, passesAttempted: sort });
-        const passCompletionPercentageArray = await cursor.toArray();
-        let i = 0;
-        let index = 0;
-
-        if (count == 0) {
-            i -= passCompletionPercentageArray.length;
-        } else if (count > passCompletionPercentageArray.length) {
-            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} passCompletionPercentage ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
-        }
-
-        let passCompletionPercentage = `\n**Pass Completion Percentage** (Passes Attempted)${(teamName == '') ? ' - Minimum 10 passes attempted' : ''}\n\n`;
-        
-        do {
-            let name = '';
-
-            if (teamName == 'teams') {
-                name = `${TeamEmoji.get(passCompletionPercentageArray[index].name)} ${passCompletionPercentageArray[index].name}`;
-            } else {
-                name = `${TeamEmoji.get(passCompletionPercentageArray[index].team)} ${passCompletionPercentageArray[index].name}`
-            }
-
-            passCompletionPercentage += `> **${index + 1}.** ${name}  -  **${passCompletionPercentageArray[index].passCompletionPercentage.toFixed(2)}** (${passCompletionPercentageArray[index].passesAttempted})\n`
-            i++;
-            index++;
-        } while (i < count);
-
-        return resolve(passCompletionPercentage);
-    });    
-}
-
-async function getPassesAttemptedPerGame(statsCollection, season, playoffStats, sort, count, teamName) {
-    return new Promise(async (resolve, reject) => {
-        let findPassesAttemptedPerGame = null;
-
-        if (teamName == 'teams') {
-            findPassesAttemptedPerGame = { ...season, playoffs: playoffStats, team: '' };
-        } else if (teamName != '') {
-            findPassesAttemptedPerGame = { ...season, playoffs: playoffStats, team: teamName };
-        } else {
-            findPassesAttemptedPerGame = { ...season, playoffs: playoffStats, team: { $ne: '' } };
-        }
-
-        const cursor = await statsCollection.find(findPassesAttemptedPerGame).sort({ passesAttemptedPerGame: sort, gamesPlayed: sort });
-        const passesAttemptedPerGameArray = await cursor.toArray();
-        let i = 0;
-        let index = 0;
-
-        if (count == 0) {
-            i -= passesAttemptedPerGameArray.length;
-        } else if (count > passesAttemptedPerGameArray.length) {
-            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} passesAttemptedPerGame ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
-        }
-
-        let passesAttemptedPerGame = '\n**Passes Attempted Per Game** (Games Played)\n\n';       
-
-        do {
-            let name = '';
-
-            if (teamName == 'teams') {
-                name = `${TeamEmoji.get(passesAttemptedPerGameArray[index].name)} ${passesAttemptedPerGameArray[index].name}`;
-            } else {
-                name = `${TeamEmoji.get(passesAttemptedPerGameArray[index].team)} ${passesAttemptedPerGameArray[index].name}`
-            }
-
-            passesAttemptedPerGame += `> **${index + 1}.** ${name}  -  **${passesAttemptedPerGameArray[index].passesAttemptedPerGame.toFixed(2)}** (${passesAttemptedPerGameArray[index].gamesPlayed})\n`
-            i++;
-            index++;
-        } while (i < count);
-
-        return resolve(passesAttemptedPerGame);
-    });
-}
-
-async function getPassesCompletedPerGame(statsCollection, season, playoffStats, sort, count, teamName) {
-    return new Promise(async (resolve, reject) => {
-        let findPassesCompletedPerGame = null;
-
-        if (teamName == 'teams') {
-            findPassesCompletedPerGame = { ...season, playoffs: playoffStats, team: '' };
-        } else if (teamName != '') {
-            findPassesCompletedPerGame = { ...season, playoffs: playoffStats, team: teamName };
-        } else {
-            findPassesCompletedPerGame = { ...season, playoffs: playoffStats, team: { $ne: '' } };
-        }
-
-        const cursor = await statsCollection.find(findPassesCompletedPerGame).sort({ passesCompletedPerGame: sort, gamesPlayed: sort });
-        const passesCompletedPerGameArray = await cursor.toArray();
-        let i = 0;
-        let index = 0;
-
-        if (count == 0) {
-            i -= passesCompletedPerGameArray.length;
-        } else if (count > passesCompletedPerGameArray.length) {
-            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} passesCompletedPerGame ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
-        }
-
-        let passesCompletedPerGame = '\n**Passes Completed Per Game** (Games Played)\n\n';       
-
-        do {
-            let name = '';
-
-            if (teamName == 'teams') {
-                name = `${TeamEmoji.get(passesCompletedPerGameArray[index].name)} ${passesCompletedPerGameArray[index].name}`;
-            } else {
-                name = `${TeamEmoji.get(passesCompletedPerGameArray[index].team)} ${passesCompletedPerGameArray[index].name}`
-            }
-
-            passesCompletedPerGame += `> **${index + 1}.** ${name}  -  **${passesCompletedPerGameArray[index].passesCompletedPerGame.toFixed(2)}** (${passesCompletedPerGameArray[index].gamesPlayed})\n`
-            i++;
-            index++;
-        } while (i < count);
-
-        return resolve(passesCompletedPerGame);
-    });
-}
-
-async function getGoalsScored(statsCollection, season, playoffStats, sort, count, teamName) {
-    return new Promise(async (resolve, reject) => {
-        let findGoalsScored = null;
-
-        if (teamName == 'teams') {
-            findGoalsScored = { ...season, playoffs: playoffStats, team: '' };
-        } else if (teamName != '') {
-            findGoalsScored = { ...season, playoffs: playoffStats, team: teamName };
-        } else {
-            findGoalsScored = { ...season, playoffs: playoffStats, team: { $ne: '' } };
-        }
-
-        const cursor = await statsCollection.find(findGoalsScored).sort({ goalsScored: sort, scoringPercentage: sort });
-        const goalsScoredArray = await cursor.toArray();
-        let i = 0;
-        let index = 0;
-
-        if (count == 0) {
-            i -= goalsScoredArray.length;
-        } else if (count > goalsScoredArray.length) {
-            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} goalsScored ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
-        }
-
-        let goalsScored = '\n**Goals Scored** (Scoring Percentage)\n\n';       
-
-        do {
-            let name = '';
-
-            if (teamName == 'teams') {
-                name = `${TeamEmoji.get(goalsScoredArray[index].name)} ${goalsScoredArray[index].name}`;
-            } else {
-                name = `${TeamEmoji.get(goalsScoredArray[index].team)} ${goalsScoredArray[index].name}`
-            }
-
-            goalsScored += `> **${index + 1}.** ${name}  -  **${goalsScoredArray[index].goalsScored}** (${goalsScoredArray[index].scoringPercentage.toFixed(2)})\n`
-            i++;
-            index++;
-        } while (i < count);
-
-        return resolve(goalsScored);
-    });
-}
-
-async function getGoalsConceded(statsCollection, season, playoffStats, sort, count, teamName) {
-    return new Promise(async (resolve, reject) => {
-        let findGoalsConceded = null;
-
-        if (teamName == 'teams') {
-            findGoalsConceded = { ...season, playoffs: playoffStats, team: '' };
-        } else if (teamName != '') {
-            findGoalsConceded = { ...season, playoffs: playoffStats, team: teamName };
-        } else {
-            findGoalsConceded = { ...season, playoffs: playoffStats, team: { $ne: '' }, shotsFaced: { $gte: 10 } };
-        }
-
-        const cursor = await statsCollection.find(findGoalsConceded).sort({ goalsConceded: -sort, savePercentage: sort });
-        const goalsConcededArray = await cursor.toArray();
-        let i = 0;
-        let index = 0;
-
-        if (count == 0) {
-            i -= goalsConcededArray.length;
-        } else if (count > goalsConcededArray.length) {
-            return reject(`Not enough records to return ${(sort == -1) ? 'top' : 'bottom'} ${count} goalsConceded ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
-        }
-
-        let goalsConceded = `\n**Goals Conceded** ${(teamName == 'teams') ? '(Shots Blocked Percentage)' : '(Save Percentage)'}${(teamName == '') ? ' - Minimum 10 shots faced' : ''}\n\n`;
-        
-        do {
-            let name = '';
-
-            if (teamName == 'teams') {
-                name = `${TeamEmoji.get(goalsConcededArray[index].name)} ${goalsConcededArray[index].name}`;
-            } else {
-                name = `${TeamEmoji.get(goalsConcededArray[index].team)} ${goalsConcededArray[index].name}`
-            }
-
-            goalsConceded += `> **${index + 1}.** ${name}  -  **${goalsConcededArray[index].goalsConceded}** (${(teamName == 'teams') ? goalsConcededArray[index].shotsBlockedPercentage.toFixed(2) : goalsConcededArray[index].savePercentage.toFixed(2)})\n`
-            i++;
-            index++;
-        } while (i < count);
-
-        return resolve(goalsConceded);
-    });    
 }
 
 // Admin function to populate rosters in the DB
