@@ -841,9 +841,9 @@ async function getStats(parameters) {
                             return Promise.reject(reject);
                         });
                         break;
-                    case 'overtimegamesplayed':
-                        await getStat(statsCollection, season, playoffStats, { overtimeGamesPlayed: sort }, count, teamName,
-                                      'overtimeGamesPlayed', '**Overtime Games Played**').then((resolve) => {
+                    case 'overtimegames':
+                        await getStat(statsCollection, season, playoffStats, { overtimeGames: sort }, count, teamName,
+                                      'overtimeGames', '**Overtime Games Played**').then((resolve) => {
                             stats.push(resolve);
                         }).catch((reject) => {
                             return Promise.reject(reject);
@@ -858,8 +858,8 @@ async function getStats(parameters) {
                         });
                         break;
                     case 'overtimewinpercentage':
-                        await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { overtimeWinPercentage: sort, overtimeGamesPlayed: sort }, count, teamName,
-                                                            'overtimeWinPercentage', 'overtimeGamesPlayed', '**Overtime Win Percentage** (Overtime Games Played)').then((resolve) => {
+                        await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { overtimeWinPercentage: sort, overtimeGames: sort }, count, teamName,
+                                                            'overtimeWinPercentage', 'overtimeGames', '**Overtime Win Percentage** (Overtime Games Played)').then((resolve) => {
                             stats.push(resolve);
                         }).catch((reject) => {
                             return Promise.reject(reject);
@@ -890,8 +890,8 @@ async function getStats(parameters) {
                         });
                         break;
                     case 'faceoffwinpercentage':
-                        await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { faceoffWinPercentage: sort, faceoffsTaken: sort }, count, teamName,
-                                                            'faceoffWinPercentage', 'faceoffsTaken', '**Faceoff Win Percentage** (Faceoffs Taken)').then((resolve) => {
+                        await getFloatStatWithSecondaryStatAndFilter(statsCollection, season, playoffStats, { faceoffWinPercentage: sort, faceoffsTaken: sort }, { faceoffsTaken: { $gte: 10 } }, count, teamName,
+                                                                     'faceoffWinPercentage', 'faceoffsTaken', '**Faceoff Win Percentage** (Faceoffs Taken)').then((resolve) => {
                             stats.push(resolve);
                         }).catch((reject) => {
                             return Promise.reject(reject);
@@ -937,6 +937,46 @@ async function getStats(parameters) {
                             return Promise.reject(reject);
                         });
                         break;
+                    case 'interceptions':
+                        await getStat(statsCollection, season, playoffStats, { interceptions: sort }, count, teamName,
+                                      'interceptions', '**Interceptions**').then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'interceptionspergame':
+                        await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { interceptionsPerGame: sort, gamesPlayed: sort }, count, teamName,
+                                                            'interceptionsPerGame', 'gamesPlayed', '**Interceptions Per Game** (Games Played)').then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'hits':
+                        await getStat(statsCollection, season, playoffStats, { hits: sort }, count, teamName,
+                                      'hits', '**Hits**').then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'takeaways':
+                        await getStatWithSecondaryFloatStat(statsCollection, season, playoffStats, { takeaways: sort, takeawayPercentage: sort }, count, teamName,
+                                                            'takeaways', 'takeawayPercentage', '**Takeaways** (Takeaway Percentage)').then((resolve)=> {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'takeawaypercentage':
+                        await getFloatStatWithSecondaryStatAndFilter(statsCollection, season, playoffStats, { takeawayPercentage: sort, hits: sort }, { hits: { $gte: 10 } }, count, teamName,
+                                                                     'takeawayPercentage', 'hits', '**Takeaway Percentage** (Hits)').then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        })
+                        break;
                     default:
                         stats.push('I\'m sorry, I have no idea what you want from me');                        
                 }
@@ -978,6 +1018,13 @@ async function getBasicStats(statsCollection, season, playoffStats, sort, count,
                 await getStatWithSecondaryFloatStatAndFilter(statsCollection, season, playoffStats, sortQuery, { shotsFaced: { $gte: 10 } }, count, teamName,
                                                              'goalsConceded', secondaryStat, title).then(async (resolve) => {
                     stats.push(resolve);
+
+                    await getStat(statsCollection, season, playoffStats, { interceptions: sort }, count, teamName,
+                                  'interceptions', '**Interceptions**').then((resolve) => {
+                        stats.push(resolve);
+                    }).catch((reject) => {
+                        return Promise.reject(reject);
+                    });
                 }).catch((reject) => {
                     return Promise.reject(reject);
                 });
@@ -1969,7 +2016,7 @@ async function updatePlayedStats(victoryLine, rostersCollection, statsCollection
             if (overtime) {
                 await statsCollection.updateOne(findTeam, { $set: { gamesPlayed: teamStats.gamesPlayed + 1,
                                                                     gamesWon: teamStats.gamesWon + 1,
-                                                                    overtimeGamesPlayed: teamStats.overtimeGamesPlayed + 1,
+                                                                    overtimeGames: teamStats.overtimeGames + 1,
                                                                     overtimeGamesWon: teamStats.overtimeGamesWon + 1 } });
             } else {
                 await statsCollection.updateOne(findTeam, { $set: { gamesPlayed: teamStats.gamesPlayed + 1,
@@ -1978,7 +2025,7 @@ async function updatePlayedStats(victoryLine, rostersCollection, statsCollection
         } else {
             if (overtime) {
                 await statsCollection.updateOne(findTeam, { $set: { gamesPlayed: teamStats.gamesPlayed + 1,
-                                                                    overtimeGamesPlayed: teamStats.overtimeGamesPlayed + 1 } });
+                                                                    overtimeGames: teamStats.overtimeGames + 1 } });
             } else {
                 await statsCollection.updateOne(findTeam, { $set: { gamesPlayed: teamStats.gamesPlayed + 1 } });
             }
@@ -1994,7 +2041,7 @@ async function updatePlayedStats(victoryLine, rostersCollection, statsCollection
             if (overtime) {
                 await statsCollection.updateOne(findPlayer, { $set: { gamesPlayed: playerStats.gamesPlayed + 1,
                                                                       gamesWon: playerStats.gamesWon + 1,
-                                                                      overtimeGamesPlayed: playerStats.overtimeGamesPlayed + 1,
+                                                                      overtimeGames: playerStats.overtimeGames + 1,
                                                                       overtimeGamesWon: playerStats.overtimeGamesWon + 1 } });
             } else {
                 await statsCollection.updateOne(findPlayer, { $set: { gamesPlayed: playerStats.gamesPlayed + 1,
@@ -2003,7 +2050,7 @@ async function updatePlayedStats(victoryLine, rostersCollection, statsCollection
         } else {
             if (overtime) {
                 await statsCollection.updateOne(findPlayer, { $set: { gamesPlayed: playerStats.gamesPlayed + 1,
-                                                                      overtimeGamesPlayed: playerStats.overtimeGamesPlayed + 1 } });
+                                                                      overtimeGames: playerStats.overtimeGames + 1 } });
             } else {
                 await statsCollection.updateOne(findPlayer, { $set: { gamesPlayed: playerStats.gamesPlayed + 1 } });
             }
@@ -2068,8 +2115,8 @@ async function updateCalculatedStats(statsCollection, teamsArray, playersArray, 
             punchesTakenPerGame = teamStats.punchesTaken / teamStats.gamesPlayed;
             punchesBlockedPerGame = teamStats.punchesBlocked / teamStats.gamesPlayed;
         }
-        if (teamStats.overtimeGamesPlayed > 0) {
-            overtimeWinPercentage = (teamStats.overtimeGamesWon / teamStats.overtimeGamesPlayed) * 100;
+        if (teamStats.overtimeGames > 0) {
+            overtimeWinPercentage = (teamStats.overtimeGamesWon / teamStats.overtimeGames) * 100;
         }
         if (teamStats.faceoffsTaken > 0) {
             faceoffWinPercentage = (teamStats.faceoffsWon / teamStats.faceoffsTaken) * 100;
@@ -2189,8 +2236,8 @@ async function updateCalculatedStats(statsCollection, teamsArray, playersArray, 
             punchesTakenPerGame = playerStats.punchesTaken / playerStats.gamesPlayed;
             punchesBlockedPerGame = playerStats.punchesBlocked / playerStats.gamesPlayed;
         }
-        if (playerStats.overtimeGamesPlayed > 0) {
-            overtimeWinPercentage = (playerStats.overtimeGamesWon / playerStats.overtimeGamesPlayed) * 100;
+        if (playerStats.overtimeGames > 0) {
+            overtimeWinPercentage = (playerStats.overtimeGamesWon / playerStats.overtimeGames) * 100;
         }
         if (playerStats.faceoffsTaken > 0) {
             faceoffWinPercentage = (playerStats.faceoffsWon / playerStats.faceoffsTaken) * 100;
