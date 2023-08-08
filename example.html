@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hlockey</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/apple-touch-icon-e9673b12e413b9a8a19f71813f03c6bf2ca4618268a2bb7893115feeaff061a2.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32x32-2a6cc51306486a77eccdb6474737ac33a7cb0f5feca479d10c6ed1e63ab31894.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16x16-f08595980ea9dbe0fbaf28a4aaa6d62704a20675c3fbb76284c15bff0eaf1b3a.png">
+<link rel="manifest" href="/assets/favicon/site-168af88625777148d7d52689124ff899c8c2f88ec787d079452a2905f98aa8e8.webmanifest">
+<link rel="mask-icon" href="/assets/favicon/safari-pinned-tab-8c6ecd064f10cbe9817444d88e0c53738b39423d2d0d61ecfa65b38047ae91ca.svg" color="#000000">
+<link rel="shortcut icon" href="/assets/favicon/favicon-87891303f8874eb8438768505cb68f7b03987561cb5ac83818a36949768515b7.ico">
+<meta name="apple-mobile-web-app-title" content="Hlockey">
+<meta name="application-name" content="Hlockey">
+<meta name="msapplication-TileColor" content="#000000">
+<meta name="msapplication-config" content="/assets/favicon/browserconfig-63e04962c5e5aefeb4967b643484225ed56f5014c752a613ff6a8cedbaa880b5.xml">
+<meta name="theme-color" content="#000000">
+    <meta name="csrf-param" content="authenticity_token" />
+<meta name="csrf-token" content="Gp5SZiQn7w0JTl9Np99O4qVL4ics-trHMuixitHm_JKmJx21hfObPgjgdTKWLgtaLdUy33ktpItIq2Z-ktO5MQ" />
+    
+
+    <link rel="stylesheet" href="/assets/application-4e32feebc62699129b51375c23bb75fde3ae532070343e1b246c79217ad83571.css" data-turbo-track="reload" />
+    <script type="importmap" data-turbo-track="reload">{
+  "imports": {
+    "application": "/assets/application-5a007568cab2aa00ceea592241a54a5e5b51fb00ca4493a9bb476399409d415d.js",
+    "@hotwired/turbo-rails": "/assets/turbo.min-f309baafa3ae5ad6ccee3e7362118b87678d792db8e8ab466c4fa284dd3a4700.js",
+    "@hotwired/stimulus": "/assets/stimulus.min-d03cf1dff41d6c5698ec2c5d6a501615a7a33754dbeef8d1edd31c928d17c652.js",
+    "@hotwired/stimulus-loading": "/assets/stimulus-loading-1fc59770fb1654500044afd3f5f6d7d00800e5be36746d55b94a2963a7a228aa.js",
+    "controllers/application": "/assets/controllers/application-368d98631bccbf2349e0d4f8269afb3fe9625118341966de054759d96ea86c7e.js",
+    "controllers": "/assets/controllers/index-2db729dddcc5b979110e98de4b6720f83f91a123172e87281d5a58410fc43806.js",
+    "controllers/tts_controller": "/assets/controllers/tts_controller-dfb895fdf3562d2fa2cac5a7462163353e8c234d37ff59ad28567138a5c8a537.js"
+  }
+}</script>
+<link rel="modulepreload" href="/assets/application-5a007568cab2aa00ceea592241a54a5e5b51fb00ca4493a9bb476399409d415d.js">
+<link rel="modulepreload" href="/assets/turbo.min-f309baafa3ae5ad6ccee3e7362118b87678d792db8e8ab466c4fa284dd3a4700.js">
+<link rel="modulepreload" href="/assets/stimulus.min-d03cf1dff41d6c5698ec2c5d6a501615a7a33754dbeef8d1edd31c928d17c652.js">
+<link rel="modulepreload" href="/assets/stimulus-loading-1fc59770fb1654500044afd3f5f6d7d00800e5be36746d55b94a2963a7a228aa.js">
+<script src="/assets/es-module-shims.min-4ca9b3dd5e434131e3bb4b0c1d7dff3bfd4035672a5086deec6f73979a49be73.js" async="async" data-turbo-track="reload"></script>
+<script type="module">import "application"</script>
+  </head>
+
+  <body>
+    <nav id="pages">
+      <a href="/">home</a>
+      <a href="/league/games">league</a>
+      <a href="/votes">election</a>
+    </nav>
+
+    <nav>
+        <a href="/sign_in">sign in</a>
+        <a href="/sign_up">sign up</a>
+    </nav>
+
+    <div id="content">
+      <p class="notice"></p>
+      <p class="alert"></p>
+
+      
+  <h1>League</h1>
+  <p class="center"><b>Season 4 day 44</b></p>
+  <div class="center">
+    <a class="button" href="/league/games">games</a>
+    <a class="button" href="/league/standings">standings</a>
+  </div>
+  <div class="scoreboard">
+  <div>
+    <b><img data-svg-fallback="/assets/twemojis/Sleepers-d52882941ba95d8223a31cd9654cd1ced14b665ef44a0bc32cdfcf4f97355b75.svg" class="emoji" src="/assets/twemojis/Sleepers-d52882941ba95d8223a31cd9654cd1ced14b665ef44a0bc32cdfcf4f97355b75.svg" /> <span style='color: #73937c'>Sleepers</span></b>
+    <br />
+    <span id="game_0_score_home">4.5</span>
+  </div>
+  <div>
+    <b><span style='color: #fc1cdc'>Baden Hallucinations</span> <img data-svg-fallback="/assets/twemojis/Baden Hallucinations-75f41b720abe4d562e3c0357d23f877caa85f67c055e012ac3be9d5c3c28727b.svg" class="emoji" src="/assets/twemojis/Baden Hallucinations-75f41b720abe4d562e3c0357d23f877caa85f67c055e012ac3be9d5c3c28727b.svg" /></b>
+    <br />
+    <span id="game_0_score_away">2</span>
+  </div>
+</div>
+
+
+<p class="center">
+  Weather: Stars
+</p>
+
+
+<div class="selectable_option">
+  <input type="checkbox" id="tts-toggle" data-controller="tts" data-action="tts#toggle" />
+  <label for="tts-toggle">Speak game with TTS</label>
+</div>
+
+<br /><br />
+
+<a class="button" href="##">go to bottom</a>
+
+<div id="messages">
+    <p >Hocky!</p>
+
+    <p >Start of period 1.</p>
+
+    <p ><span style='color: #fc1cdc'>Veristi Marrethunk</span> wins the faceoff! <br /><span style='color: #fc1cdc'>Baden Hallucinations</span> have possession.</p>
+
+    <p ><span style='color: #fc1cdc'>Veristi Marrethunk</span> passes to <span style='color: #fc1cdc'>Weslyn Yuk</span>. <br />Chance of scoring: low (3)</p>
+
+    <p ><span style='color: #fc1cdc'>Weslyn Yuk</span> passes to <span style='color: #fc1cdc'>Veristi Marrethunk</span>. <br />Chance of scoring: low (4)</p>
+
+    <p ><span style='color: #fc1cdc'>Veristi Marrethunk</span> takes a shot... <br /><span style='color: #73937c'>Lia Mine</span> blocks the shot and takes the puck! <br /><span style='color: #73937c'>Sleepers</span> have possession. <br />Chance of scoring: none (0)</p>
+
+    <p ><span style='color: #73937c'>Lia Mine</span> passes to <span style='color: #73937c'>Zacinadeld Asa</span>. <br />Chance of scoring: none (1)</p>
+
+    <p ><span style='color: #73937c'>Zacinadeld Asa</span> passes to <span style='color: #73937c'>Lia Mine</span>... <br />Intercepted by <span style='color: #fc1cdc'>Samuele Todran</span>! <br /><span style='color: #fc1cdc'>Baden Hallucinations</span> have possession. <br />Chance of scoring: none (2)</p>
+
+    <p ><span style='color: #73937c'>Zacinadeld Asa</span> hits <span style='color: #fc1cdc'>Samuele Todran</span></p>
+
+    <p ><span style='color: #fc1cdc'>Samuele Todran</span> passes to <span style='color: #fc1cdc'>Weslyn Yuk</span>... <br />Intercepted by <span style='color: #73937c'>Bargelean Kathonespi</span>! <br /><span style='color: #73937c'>Sleepers</span> have possession. <br />Chance of scoring: none (1)</p>
+
+    <p ><span style='color: #73937c'>Bargelean Kathonespi</span> passes to <span style='color: #73937c'>Zacinadeld Asa</span>. <br />Chance of scoring: none (2)</p>
+
+    <p ><span style='color: #73937c'>Zacinadeld Asa</span> passes to <span style='color: #73937c'>Lia Mine</span>. <br />Chance of scoring: low (3)</p>
+
+    <p ><span style='color: #73937c'>Lia Mine</span> passes to <span style='color: #73937c'>Bargelean Kathonespi</span>. <br />Chance of scoring: low (4)</p>
+
+    <p ><span style='color: #73937c'>Bargelean Kathonespi</span> passes to <span style='color: #73937c'>Lia Mine</span>. <br />Chance of scoring: medium (5)</p>
+
+    <p ><span style='color: #fc1cdc'>Samuele Todran</span> hits <span style='color: #73937c'>Lia Mine</span> and takes the puck! <br /><span style='color: #fc1cdc'>Baden Hallucinations</span> have possession. <br />Chance of scoring: none (0)</p>
+
+    <p ><span style='color: #fc1cdc'>Samuele Todran</span> passes to <span style='color: #fc1cdc'>Afiela Ba</span>... <br />Intercepted by <span style='color: #73937c'>Zacinadeld Asa</span>! <br /><span style='color: #73937c'>Sleepers</span> have possession. <br />Chance of scoring: low (3)</p>
+
+    <p ><span style='color: #73937c'>Zacinadeld Asa</span> passes to <span style='color: #73937c'>Onisa Elsikeeder</span>. <br />Chance of scoring: low (4)</p>
+
+<p ><span style='color: #73937c'>Zacinadeld Asa</span> chickened out! <br /><span style='color: #73937c'>Onisa Elsikeeder</span> replaces them for the rest of the game.</p>
+
+    <p ><span style='color: #73937c'>Onisa Elsikeeder</span> passes to <span style='color: #73937c'>Bargelean Kathonespi</span>. <br />Chance of scoring: medium (5)</p>
+
+    <p ><span style='color: #73937c'>Bargelean Kathonespi</span> takes a shot... <br /><span style='color: #fc1cdc'>Domienie Arma</span> blocks the shot and takes the puck! <br /><span style='color: #fc1cdc'>Baden Hallucinations</span> have possession. <br />Chance of scoring: none (0)</p>
+
+    <p ><span style='color: #fc1cdc'>Domienie Arma</span> passes to <span style='color: #fc1cdc'>Weslyn Yuk</span>... <br />Intercepted by <span style='color: #73937c'>Lia Mine</span>! <br /><span style='color: #73937c'>Sleepers</span> have possession. <br />Chance of scoring: low (3)</p>
+
+    <p ><span style='color: #73937c'>Lia Mine</span> passes to <span style='color: #73937c'>Onisa Elsikeeder</span>... <br />Intercepted by <span style='color: #fc1cdc'>Veristi Marrethunk</span>! <br /><span style='color: #fc1cdc'>Baden Hallucinations</span> have possession. <br />Chance of scoring: none (0)</p>
+
+    <p ><span style='color: #fc1cdc'>Veristi Marrethunk</span> passes to <span style='color: #fc1cdc'>Samuele Todran</span>. <br />Chance of scoring: none (1)</p>
+
+    <p ><span style='color: #73937c'>Bargelean Kathonespi</span> hits <span style='color: #fc1cdc'>Samuele Todran</span></p>
+
+    <p ><span style='color: #fc1cdc'>Samuele Todran</span> passes to <span style='color: #fc1cdc'>Weslyn Yuk</span>... <br />Intercepted by <span style='color: #73937c'>Bargelean Kathonespi</span>! <br /><span style='color: #73937c'>Sleepers</span> have possession. <br />Chance of scoring: none (2)</p>
+
+    <p ><span style='color: #73937c'>Bargelean Kathonespi</span> passes to <span style='color: #73937c'>Lia Mine</span>. <br />Chance of scoring: low (3)</p>
+
+    <p ><span style='color: #73937c'>Lia Mine</span> passes to <span style='color: #73937c'>Zacinadeld Asa</span>. <br />Chance of scoring: low (4)</p>
+
+    <p ><span style='color: #73937c'>Zacinadeld Asa</span> passes to <span style='color: #73937c'>Bargelean Kathonespi</span>. <br />Chance of scoring: medium (5)</p>
+
+    <p ><span style='color: #73937c'>Bargelean Kathonespi</span> passes to <span style='color: #73937c'>Onisa Elsikeeder</span>. <br />Chance of scoring: medium (6)</p>
+
+    <p ><span style='color: #73937c'>Onisa Elsikeeder</span> takes a shot and scores! <br /><span style='color: #73937c'>Sleepers</span> 1, <span style='color: #fc1cdc'>Baden Hallucinations</span> 0</p>
+
+    <p ><span style='color: #73937c'>Valorgerie Phy</span> and <span style='color: #fc1cdc'>Samuele Todran</span> start fighting!</p>
+
+    <p ><span style='color: #73937c'>Valorgerie Phy</span> punches <span style='color: #fc1cdc'>Samuele Todran</span>!</p>
+
+    <p ><span style='color: #fc1cdc'>Samuele Todran</span> punches <span style='color: #73937c'>Valorgerie Phy</span>! <br /><span style='color: #73937c'>Valorgerie Phy</span> blocks the punch!</p>
+
+    <p ><span style='color: #fc1cdc'>Samuele Todran</span> punches <span style='color: #73937c'>Valorgerie Phy</span>! <br /><span style='color: #73937c'>Valorgerie Phy</span> blocks the punch!</p>
+
+    <p ><span style='color: #73937c'>Valorgerie Phy</span> punches <span style='color: #fc1cdc'>Samuele Todran</span>! <br /><span style='color: #fc1cdc'>Samuele Todran</span> blocks the punch!</p>
+
+    <p ><span style='color: #fc1cdc'>Veristi Marrethunk</span> from <span style='color: #fc1cdc'>Baden Hallucinations</span> joins the fight!</p>
+
+    <p ><span style='color: #73937c'>Lia Mine</span> from <span style='color: #73937c'>Sleepers</span> joins the fight!</p>
+
+    <p ><span style='color: #fc1cdc'>Domienie Arma</span> from <span style='color: #fc1cdc'>Baden Hallucinations</span> joins the fight!</p>
+
+    <p ><span style='color: #73937c'>Lia Mine</span> punches <span style='color: #fc1cdc'>Veristi Marrethunk</span>!</p>
+
+    <p ><span style='color: #fc1cdc'>Lildee Mel</span> from <span style='color: #fc1cdc'>Baden Hallucinations</span> joins the fight!</p>
+
+    <p ><span style='color: #73937c'>Valorgerie Phy</span> punches <span style='color: #fc1cdc'>Veristi Marrethunk</span>! <br /><span style='color: #fc1cdc'>Veristi Marrethunk</span> blocks the punch!</p>
+
+    <p >The fight has ended.</p>
+
+    <p ><span style='color: #73937c'>Sleepers</span> gains 0.2 morale.</p>
+
+    <p ><span style='color: #fc1cdc'>Baden Hallucinations</span> loses 0.2 morale.</p>
+
+    <p ><span style='color: #73937c'>Onisa Elsikeeder</span> wins the faceoff! <br /><span style='color: #73937c'>Sleepers</span> have possession.</p>
+
+    <p ><span style='color: #73937c'>Onisa Elsikeeder</span> passes to <span style='color: #73937c'>Bargelean Kathonespi</span>. <br />Chance of scoring: low (3)</p>
+
+    <p ><span style='color: #73937c'>Bargelean Kathonespi</span> passes to <span style='color: #73937c'>Lia Mine</span>. <br />Chance of scoring: low (4)</p>
+
+    <p ><span style='color: #fc1cdc'>Afiela Ba</span> hits <span style='color: #73937c'>Lia Mine</span></p>
+
+    <p ><span style='color: #73937c'>Lia Mine</span> passes to <span style='color: #73937c'>Zacinadeld Asa</span>. <br />Chance of scoring: medium (5)</p>
+
+    <p ><span style='color: #73937c'>Zacinadeld Asa</span> passes to <span style='color: #73937c'>Onisa Elsikeeder</span>. <br />Chance of scoring: medium (6)</p>
+
+    <p ><span style='color: #73937c'>Onisa Elsikeeder</span> passes to <span style='color: #73937c'>Valorgerie Phy</span>. <br />Chance of scoring: high (7)</p>
+
+    <p ><span style='color: #73937c'>Valorgerie Phy</span> takes a shot... <br /><span style='color: #fc1cdc'>Domienie Arma</span> blocks the shot and takes the puck! <br /><span style='color: #fc1cdc'>Baden Hallucinations</span> have possession. <br />Chance of scoring: none (0)</p>
+
+    <p ><span style='color: #fc1cdc'>Domienie Arma</span> passes to <span style='color: #fc1cdc'>Afiela Ba</span>... <br />Intercepted by <span style='color: #73937c'>Onisa Elsikeeder</span>! <br /><span style='color: #73937c'>Sleepers</span> have possession. <br />Chance of scoring: low (3)</p>
+
+    <p ><span style='color: #73937c'>Onisa Elsikeeder</span> passes to <span style='color: #73937c'>Bargelean Kathonespi</span>... <br />Intercepted by <span style='color: #fc1cdc'>Afiela Ba</span>! <br /><span style='color: #fc1cdc'>Baden Hallucinations</span> have possession. <br />Chance of scoring: none (0)</p>
+
+    <p ><span style='color: #fc1cdc'>Afiela Ba</span> passes to <span style='color: #fc1cdc'>Veristi Marrethunk</span>. <br />Chance of scoring: none (1)</p>
+
+    <p ><span style='color: #fc1cdc'>Veristi Marrethunk</span> passes to <span style='color: #fc1cdc'>Afiela Ba</span>... <br />Intercepted by <span style='color: #73937c'>Bargelean Kathonespi</span>! <br /><span style='color: #73937c'>Sleepers</span> have possession. <br />Chance of scoring: none (2)</p>
+
+    <p ><span style='color: #73937c'>Bargelean Kathonespi</span> passes to <span style='color: #73937c'>Onisa Elsikeeder</span>... <br />Intercepted by <span style='color: #fc1cdc'>Afiela Ba</span>! <br /><span style='color: #fc1cdc'>Baden Hallucinations</span> have possession. <br />Chance of scoring: none (1)</p>
+
+    <p ><span style='color: #fc1cdc'>Afiela Ba</span> passes to <span style='color: #fc1cdc'>Lildee Mel</span>. <br />Chance of scoring: none (2)</p>
+
+    <p ><span style='color: #fc1cdc'>Lildee Mel</span> passes to <span style='color: #fc1cdc'>Veristi Marrethunk</span>. <br />Chance of scoring: low (3)</p>
+
+    <p ><span style='color: #fc1cdc'>Veristi Marrethunk</span> takes a shot and scores! <br /><span style='color: #73937c'>Sleepers</span> 1, <span style='color: #fc1cdc'>Baden Hallucinations</span> 1</p>
+
+    <p ><span style='color: #73937c'>Onisa Elsikeeder</span> wins the faceoff! <br /><span style='color: #73937c'>Sleepers</span> have possession.</p>
+
+    <p ><span style='color: #73937c'>Onisa Elsikeeder</span> passes to <span style='color: #73937c'>Bargelean Kathonespi</span>. <br />Chance of scoring: low (3)</p>
+
+    <p ><span style='color: #73937c'>Bargelean Kathonespi</span> takes a shot... <br /><span style='color: #fc1cdc'>Weslyn Yuk</span> blocks the shot! <br />Chance of scoring: low (4)</p>
+
+    <p ><span style='color: #73937c'>Bargelean Kathonespi</span> passes to <span style='color: #73937c'>Lia Mine</span>. <br />Chance of scoring: medium (5)</p>
+
+    <p ><span style='color: #73937c'>Lia Mine</span> takes a shot and scores! <br /><span style='color: #73937c'>Sleepers</span> 2, <span style='color: #fc1cdc'>Baden Hallucinations</span> 1</p>
+
+    <p >The stars align for <span style='color: #73937c'>Sleepers</span>. They get half a goal.</p>
+
+    <p >End of period 1. <br /><span style='color: #73937c'>Sleepers</span> 2.5, <span style='color: #fc1cdc'>Baden Hallucinations</span> 1</p>
+
+    <p >Start of period 2.</p>
+
+    <p ><span style='color: #73937c'>Onisa Elsikeeder</span> wins the faceoff! <br /><span style='color: #73937c'>Sleepers</span> have possession.</p>
+
+    <p ><span style='color: #73937c'>Onisa Elsikeeder</span> passes to <span style='color: #73937c'>Lia Mine</span>. <br />Chance of scoring: low (3)</p>
+
+    <p ><span style='color: #73937c'>Lia Mine</span> passes to <span style='color: #73937c'>Zacinadeld Asa</span>. <br />Chance of scoring: low (4)</p>
+
+    <p ><span style='color: #73937c'>Zacinadeld Asa</span> passes to <span style='color: #73937c'>Bargelean Kathonespi</span>. <br />Chance of scoring: medium (5)</p>
+
+    <p ><span style='color: #fc1cdc'>Afiela Ba</span> hits <span style='color: #73937c'>Bargelean Kathonespi</span> and takes the puck! <br /><span style='color: #fc1cdc'>Baden Hallucinations</span> have possession. <br />Chance of scoring: none (0)</p>
+
+    <p ><span style='color: #fc1cdc'>Afiela Ba</span> passes to <span style='color: #fc1cdc'>Samuele Todran</span>. <br />Chance of scoring: none (1)</p>
+
+    <p ><span style='color: #fc1cdc'>Samuele Todran</span> passes to <span style='color: #fc1cdc'>Weslyn Yuk</span>. <br />Chance of scoring: none (2)</p>
+
+    <p ><span style='color: #fc1cdc'>Weslyn Yuk</span> passes to <span style='color: #fc1cdc'>Lildee Mel</span>. <br />Chance of scoring: low (3)</p>
+
+    <p ><span style='color: #fc1cdc'>Lildee Mel</span> passes to <span style='color: #fc1cdc'>Weslyn Yuk</span>. <br />Chance of scoring: low (4)</p>
+
+    <p ><span style='color: #fc1cdc'>Weslyn Yuk</span> takes a shot... <br /><span style='color: #73937c'>Lia Mine</span> blocks the shot! <br />Chance of scoring: medium (5)</p>
+
+    <p ><span style='color: #fc1cdc'>Weslyn Yuk</span> passes to <span style='color: #fc1cdc'>Afiela Ba</span>. <br />Chance of scoring: medium (6)</p>
+
+    <p ><span style='color: #fc1cdc'>Afiela Ba</span> takes a shot and scores! <br /><span style='color: #73937c'>Sleepers</span> 2.5, <span style='color: #fc1cdc'>Baden Hallucinations</span> 2</p>
+
+    <p ><span style='color: #fc1cdc'>Veristi Marrethunk</span> wins the faceoff! <br /><span style='color: #fc1cdc'>Baden Hallucinations</span> have possession.</p>
+
+    <p ><span style='color: #fc1cdc'>Veristi Marrethunk</span> passes to <span style='color: #fc1cdc'>Lildee Mel</span>. <br />Chance of scoring: low (3)</p>
+
+    <p ><span style='color: #fc1cdc'>Lildee Mel</span> passes to <span style='color: #fc1cdc'>Afiela Ba</span>... <br />Intercepted by <span style='color: #73937c'>Onisa Elsikeeder</span>! <br /><span style='color: #73937c'>Sleepers</span> have possession. <br />Chance of scoring: none (0)</p>
+
+    <p ><span style='color: #73937c'>Onisa Elsikeeder</span> passes to <span style='color: #73937c'>Lia Mine</span>. <br />Chance of scoring: none (1)</p>
+
+    <p ><span style='color: #73937c'>Lia Mine</span> passes to <span style='color: #73937c'>Onisa Elsikeeder</span>. <br />Chance of scoring: none (2)</p>
+
+    <p ><span style='color: #73937c'>Onisa Elsikeeder</span> passes to <span style='color: #73937c'>Bargelean Kathonespi</span>. <br />Chance of scoring: low (3)</p>
+
+    <p ><span style='color: #73937c'>Bargelean Kathonespi</span> passes to <span style='color: #73937c'>Valorgerie Phy</span>. <br />Chance of scoring: low (4)</p>
+
+    <p ><span style='color: #73937c'>Valorgerie Phy</span> passes to <span style='color: #73937c'>Zacinadeld Asa</span>... <br />Intercepted by <span style='color: #fc1cdc'>Afiela Ba</span>! <br /><span style='color: #fc1cdc'>Baden Hallucinations</span> have possession. <br />Chance of scoring: none (0)</p>
+
+    <p ><span style='color: #fc1cdc'>Afiela Ba</span> passes to <span style='color: #fc1cdc'>Veristi Marrethunk</span>. <br />Chance of scoring: none (1)</p>
+
+    <p ><span style='color: #73937c'>Onisa Elsikeeder</span> hits <span style='color: #fc1cdc'>Veristi Marrethunk</span> and takes the puck! <br /><span style='color: #73937c'>Sleepers</span> have possession. <br />Chance of scoring: none (2)</p>
+
+    <p ><span style='color: #73937c'>Onisa Elsikeeder</span> passes to <span style='color: #73937c'>Zacinadeld Asa</span>. <br />Chance of scoring: low (3)</p>
+
+    <p ><span style='color: #73937c'>Zacinadeld Asa</span> passes to <span style='color: #73937c'>Lia Mine</span>. <br />Chance of scoring: low (4)</p>
+
+    <p ><span style='color: #73937c'>Lia Mine</span> passes to <span style='color: #73937c'>Onisa Elsikeeder</span>. <br />Chance of scoring: medium (5)</p>
+
+    <p ><span style='color: #73937c'>Onisa Elsikeeder</span> passes to <span style='color: #73937c'>Bargelean Kathonespi</span>. <br />Chance of scoring: medium (6)</p>
+
+    <p ><span style='color: #73937c'>Bargelean Kathonespi</span> takes a shot and scores! <br /><span style='color: #73937c'>Sleepers</span> 3.5, <span style='color: #fc1cdc'>Baden Hallucinations</span> 2</p>
+
+    <p ><span style='color: #73937c'>Zacinadeld Asa</span> and <span style='color: #fc1cdc'>Veristi Marrethunk</span> start fighting!</p>
+
+    <p ><span style='color: #fc1cdc'>Veristi Marrethunk</span> punches <span style='color: #73937c'>Zacinadeld Asa</span>!</p>
+
+    <p ><span style='color: #fc1cdc'>Veristi Marrethunk</span> punches <span style='color: #73937c'>Zacinadeld Asa</span>! <br /><span style='color: #73937c'>Zacinadeld Asa</span> blocks the punch!</p>
+
+    <p ><span style='color: #73937c'>Zacinadeld Asa</span> punches <span style='color: #fc1cdc'>Veristi Marrethunk</span>!</p>
+
+    <p ><span style='color: #73937c'>Zacinadeld Asa</span> punches <span style='color: #fc1cdc'>Veristi Marrethunk</span>!</p>
+
+    <p ><span style='color: #fc1cdc'>Veristi Marrethunk</span> punches <span style='color: #73937c'>Zacinadeld Asa</span>!</p>
+
+    <p ><span style='color: #fc1cdc'>Veristi Marrethunk</span> punches <span style='color: #73937c'>Zacinadeld Asa</span>! <br /><span style='color: #73937c'>Zacinadeld Asa</span> blocks the punch!</p>
+
+    <p ><span style='color: #73937c'>Lia Mine</span> from <span style='color: #73937c'>Sleepers</span> joins the fight!</p>
+
+    <p ><span style='color: #73937c'>Lia Mine</span> punches <span style='color: #fc1cdc'>Veristi Marrethunk</span>!</p>
+
+    <p ><span style='color: #73937c'>Onisa Elsikeeder</span> from <span style='color: #73937c'>Sleepers</span> joins the fight!</p>
+
+    <p >The fight has ended.</p>
+
+    <p ><span style='color: #73937c'>Sleepers</span> gains 0.1 morale.</p>
+
+    <p ><span style='color: #fc1cdc'>Baden Hallucinations</span> loses 0.1 morale.</p>
+
+    <p ><span style='color: #fc1cdc'>Veristi Marrethunk</span> wins the faceoff! <br /><span style='color: #fc1cdc'>Baden Hallucinations</span> have possession.</p>
+
+    <p ><span style='color: #fc1cdc'>Veristi Marrethunk</span> passes to <span style='color: #fc1cdc'>Afiela Ba</span>. <br />Chance of scoring: low (3)</p>
+
+    <p ><span style='color: #fc1cdc'>Afiela Ba</span> passes to <span style='color: #fc1cdc'>Samuele Todran</span>. <br />Chance of scoring: low (4)</p>
+
+    <p ><span style='color: #fc1cdc'>Samuele Todran</span> takes a shot... <br /><span style='color: #73937c'>Valorgerie Phy</span> blocks the shot and takes the puck! <br /><span style='color: #73937c'>Sleepers</span> have possession. <br />Chance of scoring: none (0)</p>
+
+    <p ><span style='color: #73937c'>Valorgerie Phy</span> passes to <span style='color: #73937c'>Bargelean Kathonespi</span>. <br />Chance of scoring: none (1)</p>
+
+    <p ><span style='color: #73937c'>Bargelean Kathonespi</span> passes to <span style='color: #73937c'>Lia Mine</span>. <br />Chance of scoring: none (2)</p>
+
+    <p ><span style='color: #73937c'>Lia Mine</span> passes to <span style='color: #73937c'>Valorgerie Phy</span>. <br />Chance of scoring: low (3)</p>
+
+    <p ><span style='color: #73937c'>Valorgerie Phy</span> passes to <span style='color: #73937c'>Zacinadeld Asa</span>... <br />Intercepted by <span style='color: #fc1cdc'>Samuele Todran</span>! <br /><span style='color: #fc1cdc'>Baden Hallucinations</span> have possession. <br />Chance of scoring: none (0)</p>
+
+    <p ><span style='color: #fc1cdc'>Samuele Todran</span> passes to <span style='color: #fc1cdc'>Lildee Mel</span>. <br />Chance of scoring: none (1)</p>
+
+    <p ><span style='color: #fc1cdc'>Lildee Mel</span> passes to <span style='color: #fc1cdc'>Weslyn Yuk</span>. <br />Chance of scoring: none (2)</p>
+
+    <p ><span style='color: #73937c'>Bargelean Kathonespi</span> hits <span style='color: #fc1cdc'>Weslyn Yuk</span></p>
+
+    <p ><span style='color: #73937c'>Zacinadeld Asa</span> hits <span style='color: #fc1cdc'>Weslyn Yuk</span> and takes the puck! <br /><span style='color: #73937c'>Sleepers</span> have possession. <br />Chance of scoring: none (1)</p>
+
+    <p ><span style='color: #73937c'>Zacinadeld Asa</span> passes to <span style='color: #73937c'>Valorgerie Phy</span>. <br />Chance of scoring: none (2)</p>
+
+    <p ><span style='color: #73937c'>Valorgerie Phy</span> passes to <span style='color: #73937c'>Onisa Elsikeeder</span>. <br />Chance of scoring: low (3)</p>
+
+    <p ><span style='color: #73937c'>Onisa Elsikeeder</span> passes to <span style='color: #73937c'>Lia Mine</span>... <br />Intercepted by <span style='color: #fc1cdc'>Samuele Todran</span>! <br /><span style='color: #fc1cdc'>Baden Hallucinations</span> have possession. <br />Chance of scoring: none (0)</p>
+
+    <p ><span style='color: #fc1cdc'>Samuele Todran</span> passes to <span style='color: #fc1cdc'>Lildee Mel</span>. <br />Chance of scoring: none (1)</p>
+
+    <p ><span style='color: #73937c'>Onisa Elsikeeder</span> hits <span style='color: #fc1cdc'>Lildee Mel</span> and takes the puck! <br /><span style='color: #73937c'>Sleepers</span> have possession. <br />Chance of scoring: none (2)</p>
+
+    <p ><span style='color: #73937c'>Onisa Elsikeeder</span> passes to <span style='color: #73937c'>Valorgerie Phy</span>. <br />Chance of scoring: low (3)</p>
+
+    <p ><span style='color: #fc1cdc'>Samuele Todran</span> hits <span style='color: #73937c'>Valorgerie Phy</span></p>
+
+    <p ><span style='color: #73937c'>Valorgerie Phy</span> takes a shot... <br /><span style='color: #fc1cdc'>Weslyn Yuk</span> blocks the shot and takes the puck! <br /><span style='color: #fc1cdc'>Baden Hallucinations</span> have possession. <br />Chance of scoring: none (0)</p>
+
+    <p ><span style='color: #fc1cdc'>Weslyn Yuk</span> passes to <span style='color: #fc1cdc'>Veristi Marrethunk</span>. <br />Chance of scoring: none (1)</p>
+
+    <p ><span style='color: #fc1cdc'>Veristi Marrethunk</span> passes to <span style='color: #fc1cdc'>Lildee Mel</span>. <br />Chance of scoring: none (2)</p>
+
+    <p >The stars align for <span style='color: #73937c'>Sleepers</span>. They get half a goal.</p>
+
+    <p >End of period 2. <br /><span style='color: #73937c'>Sleepers</span> 4.0, <span style='color: #fc1cdc'>Baden Hallucinations</span> 2</p>
+
+    <p >Start of period 3.</p>
+
+    <p ><span style='color: #73937c'>Onisa Elsikeeder</span> wins the faceoff! <br /><span style='color: #73937c'>Sleepers</span> have possession.</p>
+
+    <p ><span style='color: #73937c'>Onisa Elsikeeder</span> passes to <span style='color: #73937c'>Lia Mine</span>. <br />Chance of scoring: low (3)</p>
+
+    <p ><span style='color: #73937c'>Lia Mine</span> passes to <span style='color: #73937c'>Onisa Elsikeeder</span>... <br />Intercepted by <span style='color: #fc1cdc'>Afiela Ba</span>! <br /><span style='color: #fc1cdc'>Baden Hallucinations</span> have possession. <br />Chance of scoring: none (0)</p>
+
+    <p ><span style='color: #fc1cdc'>Afiela Ba</span> passes to <span style='color: #fc1cdc'>Samuele Todran</span>. <br />Chance of scoring: none (1)</p>
+
+    <p ><span style='color: #fc1cdc'>Samuele Todran</span> passes to <span style='color: #fc1cdc'>Veristi Marrethunk</span>. <br />Chance of scoring: none (2)</p>
+
+    <p ><span style='color: #fc1cdc'>Veristi Marrethunk</span> passes to <span style='color: #fc1cdc'>Weslyn Yuk</span>. <br />Chance of scoring: low (3)</p>
+
+    <p ><span style='color: #73937c'>Bargelean Kathonespi</span> hits <span style='color: #fc1cdc'>Weslyn Yuk</span></p>
+
+    <p ><span style='color: #fc1cdc'>Weslyn Yuk</span> passes to <span style='color: #fc1cdc'>Afiela Ba</span>. <br />Chance of scoring: low (4)</p>
+
+    <p ><span style='color: #73937c'>Lia Mine</span> hits <span style='color: #fc1cdc'>Afiela Ba</span> and takes the puck! <br /><span style='color: #73937c'>Sleepers</span> have possession. <br />Chance of scoring: none (0)</p>
+
+    <p ><span style='color: #73937c'>Lia Mine</span> passes to <span style='color: #73937c'>Onisa Elsikeeder</span>. <br />Chance of scoring: none (1)</p>
+
+    <p ><span style='color: #73937c'>Onisa Elsikeeder</span> passes to <span style='color: #73937c'>Zacinadeld Asa</span>. <br />Chance of scoring: none (2)</p>
+
+    <p ><span style='color: #73937c'>Zacinadeld Asa</span> passes to <span style='color: #73937c'>Lia Mine</span>. <br />Chance of scoring: low (3)</p>
+
+    <p ><span style='color: #fc1cdc'>Afiela Ba</span> hits <span style='color: #73937c'>Lia Mine</span> and takes the puck! <br /><span style='color: #fc1cdc'>Baden Hallucinations</span> have possession. <br />Chance of scoring: none (0)</p>
+
+    <p ><span style='color: #fc1cdc'>Afiela Ba</span> passes to <span style='color: #fc1cdc'>Samuele Todran</span>... <br />Intercepted by <span style='color: #73937c'>Bargelean Kathonespi</span>! <br /><span style='color: #73937c'>Sleepers</span> have possession. <br />Chance of scoring: low (3)</p>
+
+    <p ><span style='color: #73937c'>Bargelean Kathonespi</span> passes to <span style='color: #73937c'>Onisa Elsikeeder</span>. <br />Chance of scoring: low (4)</p>
+
+    <p ><span style='color: #73937c'>Onisa Elsikeeder</span> passes to <span style='color: #73937c'>Zacinadeld Asa</span>... <br />Intercepted by <span style='color: #fc1cdc'>Samuele Todran</span>! <br /><span style='color: #fc1cdc'>Baden Hallucinations</span> have possession. <br />Chance of scoring: none (0)</p>
+
+    <p ><span style='color: #fc1cdc'>Samuele Todran</span> passes to <span style='color: #fc1cdc'>Lildee Mel</span>. <br />Chance of scoring: none (1)</p>
+
+    <p ><span style='color: #fc1cdc'>Lildee Mel</span> passes to <span style='color: #fc1cdc'>Weslyn Yuk</span>. <br />Chance of scoring: none (2)</p>
+
+    <p ><span style='color: #fc1cdc'>Weslyn Yuk</span> passes to <span style='color: #fc1cdc'>Lildee Mel</span>. <br />Chance of scoring: low (3)</p>
+
+    <p ><span style='color: #fc1cdc'>Lildee Mel</span> takes a shot... <br /><span style='color: #73937c'>Valorgerie Phy</span> blocks the shot and takes the puck! <br /><span style='color: #73937c'>Sleepers</span> have possession. <br />Chance of scoring: none (0)</p>
+
+    <p ><span style='color: #73937c'>Valorgerie Phy</span> passes to <span style='color: #73937c'>Zacinadeld Asa</span>. <br />Chance of scoring: none (1)</p>
+
+    <p ><span style='color: #73937c'>Zacinadeld Asa</span> passes to <span style='color: #73937c'>Lia Mine</span>... <br />Intercepted by <span style='color: #fc1cdc'>Lildee Mel</span>! <br /><span style='color: #fc1cdc'>Baden Hallucinations</span> have possession. <br />Chance of scoring: none (2)</p>
+
+    <p ><span style='color: #fc1cdc'>Lildee Mel</span> passes to <span style='color: #fc1cdc'>Afiela Ba</span>. <br />Chance of scoring: low (3)</p>
+
+    <p ><span style='color: #fc1cdc'>Afiela Ba</span> passes to <span style='color: #fc1cdc'>Samuele Todran</span>... <br />Intercepted by <span style='color: #73937c'>Bargelean Kathonespi</span>! <br /><span style='color: #73937c'>Sleepers</span> have possession. <br />Chance of scoring: none (0)</p>
+
+    <p ><span style='color: #73937c'>Bargelean Kathonespi</span> passes to <span style='color: #73937c'>Valorgerie Phy</span>. <br />Chance of scoring: none (1)</p>
+
+    <p ><span style='color: #73937c'>Valorgerie Phy</span> passes to <span style='color: #73937c'>Bargelean Kathonespi</span>. <br />Chance of scoring: none (2)</p>
+
+    <p ><span style='color: #73937c'>Bargelean Kathonespi</span> passes to <span style='color: #73937c'>Lia Mine</span>. <br />Chance of scoring: low (3)</p>
+
+    <p ><span style='color: #fc1cdc'>Veristi Marrethunk</span> hits <span style='color: #73937c'>Lia Mine</span></p>
+
+    <p ><span style='color: #73937c'>Lia Mine</span> takes a shot... <br /><span style='color: #fc1cdc'>Domienie Arma</span> blocks the shot and takes the puck! <br /><span style='color: #fc1cdc'>Baden Hallucinations</span> have possession. <br />Chance of scoring: none (0)</p>
+
+    <p ><span style='color: #fc1cdc'>Domienie Arma</span> passes to <span style='color: #fc1cdc'>Afiela Ba</span>. <br />Chance of scoring: none (1)</p>
+
+    <p ><span style='color: #fc1cdc'>Afiela Ba</span> passes to <span style='color: #fc1cdc'>Veristi Marrethunk</span>. <br />Chance of scoring: none (2)</p>
+
+    <p ><span style='color: #fc1cdc'>Veristi Marrethunk</span> passes to <span style='color: #fc1cdc'>Lildee Mel</span>. <br />Chance of scoring: low (3)</p>
+
+    <p ><span style='color: #fc1cdc'>Lildee Mel</span> passes to <span style='color: #fc1cdc'>Afiela Ba</span>. <br />Chance of scoring: low (4)</p>
+
+    <p ><span style='color: #fc1cdc'>Afiela Ba</span> passes to <span style='color: #fc1cdc'>Veristi Marrethunk</span>. <br />Chance of scoring: medium (5)</p>
+
+    <p ><span style='color: #fc1cdc'>Veristi Marrethunk</span> passes to <span style='color: #fc1cdc'>Lildee Mel</span>... <br />Intercepted by <span style='color: #73937c'>Zacinadeld Asa</span>! <br /><span style='color: #73937c'>Sleepers</span> have possession. <br />Chance of scoring: none (0)</p>
+
+    <p ><span style='color: #73937c'>Zacinadeld Asa</span> passes to <span style='color: #73937c'>Bargelean Kathonespi</span>. <br />Chance of scoring: none (1)</p>
+
+    <p ><span style='color: #fc1cdc'>Samuele Todran</span> hits <span style='color: #73937c'>Bargelean Kathonespi</span></p>
+
+    <p ><span style='color: #fc1cdc'>Veristi Marrethunk</span> hits <span style='color: #73937c'>Bargelean Kathonespi</span> and takes the puck! <br /><span style='color: #fc1cdc'>Baden Hallucinations</span> have possession. <br />Chance of scoring: none (2)</p>
+
+    <p ><span style='color: #73937c'>Bargelean Kathonespi</span> hits <span style='color: #fc1cdc'>Veristi Marrethunk</span></p>
+
+    <p ><span style='color: #fc1cdc'>Veristi Marrethunk</span> passes to <span style='color: #fc1cdc'>Samuele Todran</span>. <br />Chance of scoring: low (3)</p>
+
+    <p ><span style='color: #fc1cdc'>Samuele Todran</span> passes to <span style='color: #fc1cdc'>Afiela Ba</span>... <br />Intercepted by <span style='color: #73937c'>Lia Mine</span>! <br /><span style='color: #73937c'>Sleepers</span> have possession. <br />Chance of scoring: none (0)</p>
+
+    <p ><span style='color: #73937c'>Lia Mine</span> passes to <span style='color: #73937c'>Onisa Elsikeeder</span>... <br />Intercepted by <span style='color: #fc1cdc'>Lildee Mel</span>! <br /><span style='color: #fc1cdc'>Baden Hallucinations</span> have possession. <br />Chance of scoring: low (3)</p>
+
+    <p ><span style='color: #73937c'>Valorgerie Phy</span> hits <span style='color: #fc1cdc'>Lildee Mel</span></p>
+
+    <p ><span style='color: #fc1cdc'>Lildee Mel</span> passes to <span style='color: #fc1cdc'>Weslyn Yuk</span>... <br />Intercepted by <span style='color: #73937c'>Bargelean Kathonespi</span>! <br /><span style='color: #73937c'>Sleepers</span> have possession. <br />Chance of scoring: none (0)</p>
+
+    <p ><span style='color: #73937c'>Bargelean Kathonespi</span> passes to <span style='color: #73937c'>Zacinadeld Asa</span>. <br />Chance of scoring: none (1)</p>
+
+    <p ><span style='color: #73937c'>Zacinadeld Asa</span> passes to <span style='color: #73937c'>Onisa Elsikeeder</span>... <br />Intercepted by <span style='color: #fc1cdc'>Lildee Mel</span>! <br /><span style='color: #fc1cdc'>Baden Hallucinations</span> have possession. <br />Chance of scoring: none (2)</p>
+
+    <p ><span style='color: #fc1cdc'>Lildee Mel</span> passes to <span style='color: #fc1cdc'>Veristi Marrethunk</span>... <br />Intercepted by <span style='color: #73937c'>Zacinadeld Asa</span>! <br /><span style='color: #73937c'>Sleepers</span> have possession. <br />Chance of scoring: none (1)</p>
+
+    <p ><span style='color: #73937c'>Zacinadeld Asa</span> passes to <span style='color: #73937c'>Valorgerie Phy</span>. <br />Chance of scoring: none (2)</p>
+
+    <p ><span style='color: #fc1cdc'>Lildee Mel</span> hits <span style='color: #73937c'>Valorgerie Phy</span> and takes the puck! <br /><span style='color: #fc1cdc'>Baden Hallucinations</span> have possession. <br />Chance of scoring: none (1)</p>
+
+    <p ><span style='color: #fc1cdc'>Lildee Mel</span> passes to <span style='color: #fc1cdc'>Weslyn Yuk</span>. <br />Chance of scoring: none (2)</p>
+
+    <p ><span style='color: #fc1cdc'>Weslyn Yuk</span> passes to <span style='color: #fc1cdc'>Samuele Todran</span>... <br />Intercepted by <span style='color: #73937c'>Zacinadeld Asa</span>! <br /><span style='color: #73937c'>Sleepers</span> have possession. <br />Chance of scoring: none (1)</p>
+
+    <p ><span style='color: #fc1cdc'>Samuele Todran</span> hits <span style='color: #73937c'>Zacinadeld Asa</span> and takes the puck! <br /><span style='color: #fc1cdc'>Baden Hallucinations</span> have possession. <br />Chance of scoring: none (2)</p>
+
+    <p ><span style='color: #fc1cdc'>Samuele Todran</span> passes to <span style='color: #fc1cdc'>Afiela Ba</span>... <br />Intercepted by <span style='color: #73937c'>Bargelean Kathonespi</span>! <br /><span style='color: #73937c'>Sleepers</span> have possession. <br />Chance of scoring: none (1)</p>
+
+    <p ><span style='color: #73937c'>Bargelean Kathonespi</span> passes to <span style='color: #73937c'>Valorgerie Phy</span>. <br />Chance of scoring: none (2)</p>
+
+    <p ><span style='color: #73937c'>Valorgerie Phy</span> passes to <span style='color: #73937c'>Lia Mine</span>. <br />Chance of scoring: low (3)</p>
+
+    <p ><span style='color: #fc1cdc'>Afiela Ba</span> hits <span style='color: #73937c'>Lia Mine</span> and takes the puck! <br /><span style='color: #fc1cdc'>Baden Hallucinations</span> have possession. <br />Chance of scoring: none (0)</p>
+
+    <p ><span style='color: #fc1cdc'>Afiela Ba</span> passes to <span style='color: #fc1cdc'>Samuele Todran</span>. <br />Chance of scoring: none (1)</p>
+
+    <p ><span style='color: #fc1cdc'>Samuele Todran</span> passes to <span style='color: #fc1cdc'>Afiela Ba</span>... <br />Intercepted by <span style='color: #73937c'>Onisa Elsikeeder</span>! <br /><span style='color: #73937c'>Sleepers</span> have possession. <br />Chance of scoring: none (2)</p>
+
+    <p ><span style='color: #fc1cdc'>Lildee Mel</span> hits <span style='color: #73937c'>Onisa Elsikeeder</span> and takes the puck! <br /><span style='color: #fc1cdc'>Baden Hallucinations</span> have possession. <br />Chance of scoring: none (1)</p>
+
+    <p >The stars align for <span style='color: #73937c'>Sleepers</span>. They get half a goal.</p>
+
+    <p >End of period 3. <br /><span style='color: #73937c'>Sleepers</span> 4.5, <span style='color: #fc1cdc'>Baden Hallucinations</span> 2</p>
+
+    <p >Game over. <br /><span style='color: #73937c'>Sleepers</span> win!</p>
+
+</div>
+
+<a class="button" href="#">go to top</a>
+
+
+
+<a id="#"></a>
+
+
+    </div>
+  </body>
+</html>
