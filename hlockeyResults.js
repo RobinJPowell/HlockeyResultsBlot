@@ -113,6 +113,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 findTeam(channelID, parameters.toLowerCase());
                 break;
             case '!stats':
+            case '!stat':
                 if (StatsUpdateInProgress) {
                     bot.sendMessage({
                         to: channelID,
@@ -798,6 +799,8 @@ async function getStats(parameters) {
                         playoffStats = true;
                     } else if (element == 'teams') {
                         teamName = element;
+                    } else if (element == 'team') {
+                        teamName = element + 's';
                     } else {
                         let foundTeam = false;
 
@@ -817,6 +820,100 @@ async function getStats(parameters) {
                 switch (resource) {
                     case '':
                         await getBasicStats(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                            stats = resolve;
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'offence':
+                    case 'offense':
+                        await getOffensiveStats(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                            stats = resolve;
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'defence':
+                    case 'defense':
+                        await getDefensiveStats(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                            stats = resolve;
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'games':
+                        await getGameStats(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                            stats = resolve;
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'overtime':
+                        await getOvertimeStats(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                            stats = resolve;
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'faceoffs':
+                    case 'faceoff':
+                        await getFaceoffStats(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                            stats = resolve;
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'passing':
+                        await getPassingStats(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                            stats = resolve;
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'interceptions':
+                    case 'interception':
+                        await getInterceptionStats(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                            stats = resolve;
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'hits':
+                        await getHitStats(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                            stats = resolve;
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'retention':
+                        await getRetentionStats(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                            stats = resolve;
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'scoring':
+                        await getScoringStats(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                            stats = resolve;
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'saves':
+                    case 'save':
+                        if (teamName == 'teams') {
+                            stats.push('That collection is not available for teams');                            
+                        } else {
+                            await getSaveStats(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                                stats = resolve;
+                            }).catch((reject) => {
+                                return Promise.reject(reject);
+                            });
+                        }
+                        break;
+                    case 'blocks':
+                    case 'block':
+                        await getBlockStats(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
                             stats = resolve;
                         }).catch((reject) => {
                             return Promise.reject(reject);
@@ -980,7 +1077,7 @@ async function getStats(parameters) {
                             stats.push(resolve);
                         }).catch((reject) => {
                             return Promise.reject(reject);
-                        })
+                        });
                         break;
                     case 'hitspergame':
                         await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { hitsPerGame: sort, gamesPlayed: sort }, count, teamName,
@@ -1015,12 +1112,12 @@ async function getStats(parameters) {
                         });
                         break;
                     case 'pucklostpercentage':
-                        await getFloatStatWithSecondaryStatAndFilter(statsCollection, season, playoffStats, { puckLostPercentage: -sort, hitsTaken: -sort }, { hitsTaken: { $gte: 10 } }, count, teamName,
+                        await getFloatStatWithSecondaryStatAndFilter(statsCollection, season, playoffStats, { puckLostPercentage: -sort, hitsTaken: sort }, { hitsTaken: { $gte: 10 } }, count, teamName,
                                                                      'puckLostPercentage', 'hitsTaken', '**Puck Lost Percentage** (Hits Taken)').then((resolve) => {
                             stats.push(resolve);
                         }).catch((reject) => {
                             return Promise.reject(reject);
-                        })
+                        });
                         break;
                     case 'hitstakenpergame':
                         await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { hitsTakenPerGame: sort, gamesPlayed: sort }, count, teamName,
@@ -1040,7 +1137,7 @@ async function getStats(parameters) {
                         break;
                     case 'shotstaken':
                         await getStat(statsCollection, season, playoffStats, { shotsTaken: sort }, count, teamName,
-                                      'shotsTaken', '**Shots Taken**').then(async (resolve) => {
+                                      'shotsTaken', '**Shots Taken**').then((resolve) => {
                             stats.push(resolve);
                         }).catch((reject) => {
                             return Promise.reject(reject);
@@ -1093,6 +1190,247 @@ async function getStats(parameters) {
                             return Promise.reject(reject);
                         });
                         break;
+                    case 'shotsblockedgoalie':
+                        if (teamName == 'teams') {
+                            stats.push('That stat is not available for teams');                            
+                        } else {
+                            await getStatWithSecondaryFloatStat(statsCollection, season, playoffStats, { shotsBlockedGoalie: sort, savePercentage: sort }, count, teamName,
+                                                                'shotsBlockedGoalie', 'savePercentage', '**Shots Blocked in Goal** (Save Percentage)').then((resolve) => {
+                                stats.push(resolve);
+                            }).catch((reject) => {
+                                return Promise.reject(reject);
+                            });
+                        }
+                        break;
+                    case 'savepercentage':
+                        if (teamName == 'teams') {
+                            stats.push('That stat is not available for teams');                            
+                        } else {
+                            await getFloatStatWithSecondaryStatAndFilter(statsCollection, season, playoffStats, { savePercentage: sort, shotsFaced: sort }, { shotsFaced: { $gte: 10 } }, count, teamName,
+                                                                        'savePercentage', 'shotsFaced', '**Save Percentage** (Shots Faced)').then((resolve) => {
+                                stats.push(resolve);
+                            }).catch((reject) => {
+                                return Promise.reject(reject);
+                            });
+                        }
+                        break;
+                    case 'shotsfacedpergame':
+                        await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { shotsFacedPerGame: sort, gamesPlayed: sort }, count, teamName,
+                                                            'shotsFacedPerGame', 'gamesPlayed', '**Shots Faced Per Game** (Games Played)').then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'savespergame':
+                        if (teamName == 'teams') {
+                            stats.push('That stat is not available for teams');
+                        } else {
+                            await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { savesPerGame: sort, gamesPlayed: sort }, count, teamName,
+                                                                'savesPerGame', 'gamesPlayed', '**Saves Per Game** (Games Played)').then((resolve) => {
+                                stats.push(resolve);
+                            }).catch((reject) => {
+                                return Promise.reject(reject);
+                            });
+                        }
+                        break;
+                    case 'shotsblockeddefence':
+                    case 'shotsblockeddefense':
+                        if (teamName == 'teams') {
+                            stats.push('That stat is not available for teams');
+                        } else {
+                            await getStat(statsCollection, season, playoffStats, { shotsBlockedDefence: sort }, count, teamName,
+                                          'shotsBlockedDefence', '**Shots Blocked in Defence**').then((resolve) => {
+                                stats.push(resolve);
+                            }).catch((reject) => {
+                                return Promise.reject(reject);
+                            });
+                        }
+                        break;
+                    case 'shotsblocked':
+                        if (teamName == 'teams') {
+                            await getStat(statsCollection, season, playoffStats, { shotsBlocked: sort }, count, teamName,
+                                          'shotsBlocked', '**Shots Blocked**').then((resolve) => {
+                                stats.push(resolve);
+                            }).catch((reject) => {
+                                return Promise.reject(reject);
+                            });
+                        } else {
+                            stats.push('That stat is only available for teams');
+                        }
+                        break;
+                    case 'shotsblockedpercentage':
+                        if (teamName == 'teams') {
+                            await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { shotsBlockedPercentage: sort, shotsFaced: sort }, count, teamName,
+                                                                'shotsBlockedPercentage', 'shotsFaced', '**Shots Blocked Percentage** (Shots Faced)').then((resolve) => {
+                                stats.push(resolve);
+                            }).catch((reject) => {
+                                return Promise.reject(reject);
+                            });
+                        } else {
+                            stats.push('That stat is only available for teams');
+                        }
+                        break;
+                    case 'shotsblockedpergame':
+                        await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { shotsBlockedPerGame: sort, gamesPlayed: sort }, count, teamName,
+                                                            'shotsBlockedPerGame', 'gamesPlayed', '**Shots Blocked Per Game** (Games Played)').then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'goalsconcededpergame':
+                        await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { goalsConcededPerGame: sort, gamesPlayed: sort }, count, teamName,
+                                                            'goalsConcededPerGame', 'gamesPlayed', '**Goals Conceded Per Game** (Games Played)').then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'fights':
+                        await getStat(statsCollection, season, playoffStats, { fights: sort }, count, teamName,
+                                      'fights', '**Fights**').then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'fightswon':
+                        await getStatWithSecondaryFloatStat(statsCollection, season, playoffStats, { fightsWon: sort, fightWinPercentage: sort }, count, teamName,
+                                                            'fightsWon', 'fightWinPercentage', '**Fights Won** (Fight Win Percentage)').then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'fightwinpercentage':
+                        await getFloatStatWithSecondaryStatAndFilter(statsCollection, season, playoffStats, { fightWinPercentage: sort, fights: sort }, { fights: { $gte: 5 } }, count, teamName,
+                                                                     'fightWinPercentage', 'fights', '**Fight Win Percentage** (Fights)').then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'fightspergame':
+                        await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { fightsPerGame: sort, gamesPlayed: sort }, count, teamName,
+                                                            'fightsPerGame', 'gamesPlayed', '**Fights Per Game** (Games Played)').then((resolve) => {
+                            stats.push(resolve);                            
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'fightwinspergame':
+                        await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { fightWinsPerGame: sort, gamesPlayed: sort }, count, teamName,
+                                                            'fightWinsPerGame', 'gamesPlayed', '**Fights Wins Per Game** (Games Played)').then((resolve) => {
+                            stats.push(resolve);                            
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'punchesthrown':
+                        await getStat(statsCollection, season, playoffStats, { punchesThrown: sort }, count, teamName,
+                                      'punchesThrown', '**Punches Thrown**').then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'puncheslanded':
+                        await getStatWithSecondaryFloatStat(statsCollection, season, playoffStats, { punchesLanded: sort, punchLandedPercentage: sort }, count, teamName,
+                                                            'punchesLanded', 'punchLandedPercentage', '**Punches Landed** (Punch Landed Percentage)').then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'punchlandedpercentage':
+                        await getFloatStatWithSecondaryStatAndFilter(statsCollection, season, playoffStats, { punchLandedPercentage: sort, punchesThrown: sort }, { punchesThrown: { $gte: 10 } }, count, teamName,
+                                                                     'punchLandedPercentage', 'punchesThrown', '**Punches Landed Percentage** (Punches Thrown)').then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'punchesthrownpergame':
+                        await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { punchesThrownPerGame: sort, gamesPlayed: sort }, count, teamName,
+                                                            'punchesThrownPerGame', 'gamesPlayed', '**Punches Thrown Per Game** (Games Played)').then((resolve) => {
+                            stats.push(resolve);                            
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'puncheslandedpergame':
+                        await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { punchesLandedPerGame: sort, gamesPlayed: sort }, count, teamName,
+                                                            'punchesLandedPerGame', 'gamesPlayed', '**Punches Landed Per Game** (Games Played)').then((resolve) => {
+                            stats.push(resolve);                            
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'punchestaken':
+                        await getStat(statsCollection, season, playoffStats, { punchesTaken: sort }, count, teamName,
+                                      'punchesTaken', '**Punches Taken**').then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'punchesblocked':
+                        await getStatWithSecondaryFloatStat(statsCollection, season, playoffStats, { punchesBlocked: sort, punchBlockedPercentage: sort }, count, teamName,
+                                                            'punchesBlocked', 'punchBlockedPercentage', '**Punches Blocked** (Punch Blocked Percentage)').then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'punchblockedpercentage':
+                        await getFloatStatWithSecondaryStatAndFilter(statsCollection, season, playoffStats, { punchBlockedPercentage: sort, punchesTaken: sort }, { punchesTaken: { $gte: 10 } }, count, teamName,
+                                                                     'punchBlockedPercentage', 'punchesTaken', '**Punches Blocked Percentage** (Punches Taken)').then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'punchestakenpergame':
+                        await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { punchesTakenPerGame: sort, gamesPlayed: sort }, count, teamName,
+                                                            'punchesTakenPerGame', 'gamesPlayed', '**Punches Taken Per Game** (Games Played)').then((resolve) => {
+                            stats.push(resolve);                            
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'punchesblockedpergame':
+                        await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { punchesBlockedPerGame: sort, gamesPlayed: sort }, count, teamName,
+                                                            'punchesBlockedPerGame', 'gamesPlayed', '**Punches Blocked Per Game** (Games Played)').then((resolve) => {
+                            stats.push(resolve);                            
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'timessweptaway':
+                        if (teamName == 'teams') {
+                            stats.push('That stat is not available for teams');
+                        } else {
+                            await getStat(statsCollection, season, playoffStats, { timesSweptAway: sort }, count, teamName,
+                                         'timesSweptAway', '**Times Swept Away**').then((resolve) => {
+                                stats.push(resolve);
+                            }).catch((reject) => {
+                                return Promise.reject(reject);
+                            });
+                        }
+                        break;
+                    case 'timeschickenedout':
+                        if (teamName == 'teams') {
+                            stats.push('That stat is not available for teams');
+                        } else {
+                            await getStat(statsCollection, season, playoffStats, { timesChickenedOut: sort }, count, teamName,
+                                         'timesChickenedOut', '**Times Chickened Out**').then((resolve) => {
+                                stats.push(resolve);
+                            }).catch((reject) => {
+                                return Promise.reject(reject);
+                            });
+                        }
+                        break;
                     default:
                         stats.push('I\'m sorry, I have no idea what you want from me');                        
                 }
@@ -1118,7 +1456,47 @@ async function getBasicStats(statsCollection, season, playoffStats, sort, count,
                     stats.push(resolve);
 
                     await getStat(statsCollection, season, playoffStats, { interceptions: sort }, count, teamName,
-                                  'interceptions', '**Interceptions**').then((resolve) => {
+                                  'interceptions', '**Interceptions**').then(async (resolve) => {
+                        stats.push(resolve);
+
+                        await getStatWithSecondaryFloatStat(statsCollection, season, playoffStats, { takeaways: sort, takeawayPercentage: sort }, count, teamName,
+                                                            'takeaways', 'takeawayPercentage', '**Takeaways** (Takeaway Percentage)').then((resolve)=> {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                    }).catch((reject) => {
+                        return Promise.reject(reject);
+                    });
+                }).catch((reject) => {
+                    return Promise.reject(reject);
+                });
+            }).catch((reject) => {
+                return Promise.reject(reject);
+            });
+
+            return resolve(stats);
+        } catch (error) {
+            return reject(error);
+        }
+    });
+}
+
+async function getOffensiveStats(statsCollection, season, playoffStats, sort, count, teamName) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let stats = [];
+
+            await getStatWithSecondaryFloatStat(statsCollection, season, playoffStats, { faceoffsWon: sort, faceoffWinPercentage: sort }, count, teamName,
+                                                'faceoffsWon', 'faceoffWinPercentage', '**Faceoffs Won** (Faceoff Win Percentage)').then(async (resolve) => {
+                stats.push(resolve);
+
+                await getStatWithSecondaryFloatStat(statsCollection, season, playoffStats, { passesCompleted: sort, passCompletionPercentage: sort }, count, teamName,
+                                                    'passesCompleted', 'passCompletionPercentage', '**Passes Completed** (Pass Completion Percentage)').then(async (resolve) => {
+                    stats.push(resolve);
+
+                    await getStatWithSecondaryFloatStat(statsCollection, season, playoffStats, { goalsScored: sort, scoringPercentage: sort }, count, teamName,
+                                                        'goalsScored', 'scoringPercentage', '**Goals Scored** (Goal Scoring Percentage)').then((resolve) => {
                         stats.push(resolve);
                     }).catch((reject) => {
                         return Promise.reject(reject);
@@ -1129,6 +1507,505 @@ async function getBasicStats(statsCollection, season, playoffStats, sort, count,
             }).catch((reject) => {
                 return Promise.reject(reject);
             });
+
+            return resolve(stats);
+        } catch (error) {
+            return reject(error);
+        }
+    });
+}
+
+async function getDefensiveStats(statsCollection, season, playoffStats, sort, count, teamName) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let stats = [];
+
+            await getStat(statsCollection, season, playoffStats, { interceptions: sort }, count, teamName,
+                          'interceptions', '**Interceptions**').then(async (resolve) => {
+                stats.push(resolve);
+
+                await getStat(statsCollection, season, playoffStats, { hits: sort }, count, teamName,
+                              'hits', '**Hits**').then(async (resolve) => {
+                    stats.push(resolve);
+
+                    await getStatWithSecondaryFloatStat(statsCollection, season, playoffStats, { takeaways: sort, takeawayPercentage: sort }, count, teamName,
+                                                        'takeaways', 'takeawayPercentage', '**Takeaways** (Takeaway Percentage)').then(async (resolve)=> {
+                        stats.push(resolve);
+
+                        await getGoalsConceded(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                    }).catch((reject) => {
+                        return Promise.reject(reject);
+                    });
+                }).catch((reject) => {
+                    return Promise.reject(reject);
+                });
+            }).catch((reject) => {
+                return Promise.reject(reject);
+            });
+
+            return resolve(stats);
+        } catch (error) {
+            return reject(error);
+        }
+    });
+}
+
+async function getGameStats(statsCollection, season, playoffStats, sort, count, teamName) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let stats = [];
+                
+            await getStat(statsCollection, season, playoffStats, { gamesPlayed: sort }, count, teamName,
+                          'gamesPlayed', '**Games Played**').then(async (resolve) => {
+                stats.push(resolve);
+
+                await getStatWithSecondaryFloatStat(statsCollection, season, playoffStats, { gamesWon: sort, winPercentage: sort }, count, teamName,
+                                                    'gamesWon', 'winPercentage', '**Games Won** (Win Percentage)').then(async (resolve) => {
+                    stats.push(resolve);
+
+                    await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { winPercentage: sort, gamesWon: sort }, count, teamName,
+                                                        'winPercentage', 'gamesWon', '**Win Percentage** (Games Won)').then((resolve) => {
+                        stats.push(resolve);
+                    }).catch((reject) => {
+                        return Promise.reject(reject);
+                    });
+                }).catch((reject) => {
+                    return Promise.reject(reject);
+                });
+            }).catch((reject) => {
+                return Promise.reject(reject);
+            });
+
+            return resolve(stats);
+        } catch (error) {
+            return reject(error);
+        }
+    });
+}
+
+async function getOvertimeStats(statsCollection, season, playoffStats, sort, count, teamName) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let stats = [];
+
+            await getStat(statsCollection, season, playoffStats, { overtimeGames: sort }, count, teamName,
+                          'overtimeGames', '**Overtime Games Played**').then(async (resolve) => {
+                stats.push(resolve);
+
+                await getStatWithSecondaryFloatStat(statsCollection, season, playoffStats, { overtimeGamesWon: sort, overtimeWinPercentage: sort }, count, teamName,
+                                                    'overtimeGamesWon', 'overtimeWinPercentage', '**Overtime Games Won** (Overtime Win Percentage)').then(async (resolve) => {
+                    stats.push(resolve);
+
+                    await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { overtimeWinPercentage: sort, overtimeGames: sort }, count, teamName,
+                                                        'overtimeWinPercentage', 'overtimeGames', '**Overtime Win Percentage** (Overtime Games Played)').then(async (resolve) => {
+                        stats.push(resolve);
+
+                        await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { overtimeGamesPercentage: sort, gamesPlayed: sort }, count, teamName,
+                                                            'overtimeGamesPercentage', 'gamesPlayed', '**Overtime Games Percentage** (Games Played)').then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                    }).catch((reject) => {
+                        return Promise.reject(reject);
+                    });
+                }).catch((reject) => {
+                    return Promise.reject(reject);
+                });
+            }).catch((reject) => {
+                return Promise.reject(reject);
+            });                        
+
+            return resolve(stats);
+        } catch (error) {
+            return reject(error);
+        }
+    });
+}
+
+async function getFaceoffStats(statsCollection, season, playoffStats, sort, count, teamName) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let stats = [];
+
+            await getStat(statsCollection, season, playoffStats, { faceoffsTaken: sort }, count, teamName,
+                          'faceoffsTaken', '**Faceoffs Taken**').then(async (resolve) => {
+                stats.push(resolve);
+
+                await getStatWithSecondaryFloatStat(statsCollection, season, playoffStats, { faceoffsWon: sort, faceoffWinPercentage: sort }, count, teamName,
+                                                    'faceoffsWon', 'faceoffWinPercentage', '**Faceoffs Won** (Faceoff Win Percentage)').then(async (resolve) => {
+                    stats.push(resolve);
+
+                    await getFloatStatWithSecondaryStatAndFilter(statsCollection, season, playoffStats, { faceoffWinPercentage: sort, faceoffsTaken: sort }, { faceoffsTaken: { $gte: 10 } }, count, teamName,
+                                                                 'faceoffWinPercentage', 'faceoffsTaken', '**Faceoff Win Percentage** (Faceoffs Taken)').then((resolve) => {
+                        stats.push(resolve);
+                    }).catch((reject) => {
+                        return Promise.reject(reject);
+                    });
+                }).catch((reject) => {
+                    return Promise.reject(reject);
+                });
+            }).catch((reject) => {
+                return Promise.reject(reject);
+            });
+
+            return resolve(stats);
+        } catch (error) {
+            return reject(error);
+        }
+    });
+}
+
+async function getPassingStats(statsCollection, season, playoffStats, sort, count, teamName) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let stats = [];
+
+            await getStat(statsCollection, season, playoffStats, { passesAttempted: sort }, count, teamName,
+                          'passesAttempted', '**Passes Attempted**').then(async (resolve) => {
+                stats.push(resolve);
+
+                await getStatWithSecondaryFloatStat(statsCollection, season, playoffStats, { passesCompleted: sort, passCompletionPercentage: sort }, count, teamName,
+                                                    'passesCompleted', 'passCompletionPercentage', '**Passes Completed** (Pass Completion Percentage)').then(async (resolve) => {
+                    stats.push(resolve);
+
+                    await getFloatStatWithSecondaryStatAndFilter(statsCollection, season, playoffStats, { passCompletionPercentage: sort, passesAttempted: sort }, { passesAttempted: { $gte: 10 } }, count, teamName,
+                                                                 'passCompletionPercentage', 'passesAttempted', '**Pass Completion Percentage** (Passes Attempted)').then(async (resolve) => {
+                        stats.push(resolve);
+
+                        await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { passesAttemptedPerGame: sort, gamesPlayed: sort }, count, teamName,
+                                                            'passesAttemptedPerGame', 'gamesPlayed', '**Passes Attempted Per Game** (Games Played)').then(async (resolve) => {
+                            stats.push(resolve);
+
+                            await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { passesCompletedPerGame: sort, gamesPlayed: sort }, count, teamName,
+                                                                'passesCompletedPerGame', 'gamesPlayed', '**Passes Completed Per Game** (Games Played)').then((resolve) => {
+                                stats.push(resolve);
+                            }).catch((reject) => {
+                                return Promise.reject(reject);
+                            });
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                    }).catch((reject) => {
+                        return Promise.reject(reject);
+                    });
+                }).catch((reject) => {
+                    return Promise.reject(reject);
+                });
+            }).catch((reject) => {
+                return Promise.reject(reject);
+            });
+
+            return resolve(stats);
+        } catch (error) {
+            return reject(error);
+        }
+    });
+}
+
+async function getInterceptionStats(statsCollection, season, playoffStats, sort, count, teamName) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let stats = [];
+            
+            await getStat(statsCollection, season, playoffStats, { interceptions: sort }, count, teamName,
+                          'interceptions', '**Interceptions**').then(async (resolve) => {
+                stats.push(resolve);
+
+                await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { interceptionsPerGame: sort, gamesPlayed: sort }, count, teamName,
+                                                    'interceptionsPerGame', 'gamesPlayed', '**Interceptions Per Game** (Games Played)').then((resolve) => {
+                    stats.push(resolve);
+                }).catch((reject) => {
+                    return Promise.reject(reject);
+                });
+            }).catch((reject) => {
+                return Promise.reject(reject);
+            });                        
+
+            return resolve(stats);
+        } catch (error) {
+            return reject(error);
+        }
+    });
+}
+
+async function getHitStats(statsCollection, season, playoffStats, sort, count, teamName) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let stats = [];
+
+            await getStat(statsCollection, season, playoffStats, { hits: sort }, count, teamName,
+                          'hits', '**Hits**').then(async (resolve) => {
+                stats.push(resolve);
+
+                await getStatWithSecondaryFloatStat(statsCollection, season, playoffStats, { takeaways: sort, takeawayPercentage: sort }, count, teamName,
+                                                    'takeaways', 'takeawayPercentage', '**Takeaways** (Takeaway Percentage)').then(async (resolve)=> {
+                    stats.push(resolve);
+
+                    await getFloatStatWithSecondaryStatAndFilter(statsCollection, season, playoffStats, { takeawayPercentage: sort, hits: sort }, { hits: { $gte: 10 } }, count, teamName,
+                                                                 'takeawayPercentage', 'hits', '**Takeaway Percentage** (Hits)').then(async (resolve) => {
+                        stats.push(resolve);
+
+                        await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { hitsPerGame: sort, gamesPlayed: sort }, count, teamName,
+                                                            'hitsPerGame', 'gamesPlayed', '**Hits Per Game** (Games Played)').then(async (resolve) => {
+                            stats.push(resolve);
+
+                            await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { takeawaysPerGame: sort, gamesPlayed: sort }, count, teamName,
+                                                                'takeawaysPerGame', 'gamesPlayed', '**Takeaways Per Game** (Games Played)').then((resolve) => {
+                                stats.push(resolve);
+                            }).catch((reject) => {
+                                return Promise.reject(reject);
+                            }); 
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                    }).catch((reject) => {
+                        return Promise.reject(reject);
+                    });
+                }).catch((reject) => {
+                    return Promise.reject(reject);
+                });
+            }).catch((reject) => {
+                return Promise.reject(reject);
+            });                          
+
+            return resolve(stats);
+        } catch (error) {
+            return reject(error);
+        }
+    });
+}
+
+async function getRetentionStats(statsCollection, season, playoffStats, sort, count, teamName) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let stats = [];
+
+            await getStat(statsCollection, season, playoffStats, { hitsTaken: sort }, count, teamName,
+                          'hitsTaken', '**Hits Taken**').then(async (resolve) => {
+                stats.push(resolve);
+
+                await getStatWithSecondaryFloatStatAndFilter(statsCollection, season, playoffStats, { pucksLost: -sort, puckLostPercentage: -sort }, { hitsTaken: { $gte: 10 } }, count, teamName,
+                                                             'pucksLost', 'puckLostPercentage', '**Pucks Lost** (Puck Lost Percentage)').then(async (resolve)=> {
+                    stats.push(resolve);
+
+                    await getFloatStatWithSecondaryStatAndFilter(statsCollection, season, playoffStats, { puckLostPercentage: -sort, hitsTaken: sort }, { hitsTaken: { $gte: 10 } }, count, teamName,
+                                                                 'puckLostPercentage', 'hitsTaken', '**Puck Lost Percentage** (Hits Taken)').then(async (resolve) => {
+                        stats.push(resolve);
+
+                        await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { hitsTakenPerGame: sort, gamesPlayed: sort }, count, teamName,
+                                                            'hitsTakenPerGame', 'gamesPlayed', '**Hits Taken Per Game** (Games Played)').then(async (resolve) => {
+                            stats.push(resolve);
+
+                            await getFloatStatWithSecondaryStatAndFilter(statsCollection, season, playoffStats, { pucksLostPerGame: -sort, gamesPlayed: sort }, { hitsTaken: { $gte: 10 } }, count, teamName,
+                                                                         'pucksLostPerGame', 'gamesPlayed', '**Pucks Lost Per Game** (Games Played)').then((resolve) => {
+                                stats.push(resolve);
+                            }).catch((reject) => {
+                                return Promise.reject(reject);
+                            });
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                    }).catch((reject) => {
+                        return Promise.reject(reject);
+                    });
+                }).catch((reject) => {
+                    return Promise.reject(reject);
+                });
+            }).catch((reject) => {
+                return Promise.reject(reject);
+            });                                    
+
+            return resolve(stats);
+        } catch (error) {
+            return reject(error);
+        }
+    });
+}
+
+async function getScoringStats(statsCollection, season, playoffStats, sort, count, teamName) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let stats = [];
+
+            await getStat(statsCollection, season, playoffStats, { shotsTaken: sort }, count, teamName,
+                          'shotsTaken', '**Shots Taken**').then(async (resolve) => {
+                stats.push(resolve);
+
+                await getStatWithSecondaryFloatStat(statsCollection, season, playoffStats, { goalsScored: sort, scoringPercentage: sort }, count, teamName,
+                                                    'goalsScored', 'scoringPercentage', '**Goals Scored** (Goal Scoring Percentage)').then(async (resolve) => {
+                    stats.push(resolve);
+
+                    await getFloatStatWithSecondaryStatAndFilter(statsCollection, season, playoffStats, { scoringPercentage: sort, shotsTaken: sort }, { shotsTaken: {$gte: 10} }, count, teamName,
+                                                                 'scoringPercentage', 'shotsTaken', '**Scoring Percentage** (Shots Taken)').then(async (resolve) => {
+                        stats.push(resolve);
+
+                        await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { goalsPerGame: sort, gamesPlayed: sort }, count, teamName,
+                                                            'goalsPerGame', 'gamesPlayed', '**Goals Scored Per Game** (Games Played)').then(async (resolve) => {
+                            stats.push(resolve);
+
+                            await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { shotsPerGame: sort, gamesPlayed: sort }, count, teamName,
+                                                                'shotsPerGame', 'gamesPlayed', '**Shots Per Game** (Games Played)').then((resolve) => {
+                                stats.push(resolve);
+                            }).catch((reject) => {
+                                return Promise.reject(reject);
+                            }); 
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                    }).catch((reject) => {
+                        return Promise.reject(reject);
+                    });
+                }).catch((reject) => {
+                    return Promise.reject(reject);
+                });
+            }).catch((reject) => {
+                return Promise.reject(reject);
+            });                                               
+
+            return resolve(stats);
+        } catch (error) {
+            return reject(error);
+        }
+    });
+}
+
+async function getSaveStats(statsCollection, season, playoffStats, sort, count, teamName) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let stats = [];
+
+            await getGoalsConceded(statsCollection, season, playoffStats, sort, count, teamName).then(async (resolve) => {
+                stats.push(resolve);
+
+                await getStat(statsCollection, season, playoffStats, { shotsFaced: sort }, count, teamName,
+                              'shotsFaced', '**Shots Faced**').then(async (resolve) => {
+                    stats.push(resolve);
+
+                    await getStatWithSecondaryFloatStat(statsCollection, season, playoffStats, { shotsBlockedGoalie: sort, savePercentage: sort }, count, teamName,
+                                                        'shotsBlockedGoalie', 'savePercentage', '**Shots Blocked in Goal** (Save Percentage)').then(async (resolve) => {
+                        stats.push(resolve);
+
+                        await getFloatStatWithSecondaryStatAndFilter(statsCollection, season, playoffStats, { savePercentage: sort, shotsFaced: sort }, { shotsFaced: { $gte: 10 } }, count, teamName,
+                                                                     'savePercentage', 'shotsFaced', '**Save Percentage** (Shots Faced)').then(async (resolve) => {
+                            stats.push(resolve);
+
+                            await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { shotsFacedPerGame: sort, gamesPlayed: sort }, count, teamName,
+                                                                'shotsFacedPerGame', 'gamesPlayed', '**Shots Faced Per Game** (Games Played)').then(async (resolve) => {
+                                stats.push(resolve);
+
+                                await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { savesPerGame: sort, gamesPlayed: sort }, count, teamName,
+                                                                    'savesPerGame', 'gamesPlayed', '**Saves Per Game** (Games Played)').then(async (resolve) => {
+                                    stats.push(resolve);
+
+                                    await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { goalsConcededPerGame: sort, gamesPlayed: sort }, count, teamName,
+                                                                        'goalsConcededPerGame', 'gamesPlayed', '**Goals Conceded Per Game** (Games Played)').then((resolve) => {
+                                        stats.push(resolve);
+                                    }).catch((reject) => {
+                                        return Promise.reject(reject);
+                                    });
+                                }).catch((reject) => {
+                                    return Promise.reject(reject);
+                                });
+                            }).catch((reject) => {
+                                return Promise.reject(reject);
+                            });
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                    }).catch((reject) => {
+                        return Promise.reject(reject);
+                    });
+                }).catch((reject) => {
+                    return Promise.reject(reject);
+                });
+            }).catch((reject) => {
+                return Promise.reject(reject);
+            });                                          
+
+            return resolve(stats);
+        } catch (error) {
+            return reject(error);
+        }
+    });
+}
+
+async function getBlockStats(statsCollection, season, playoffStats, sort, count, teamName) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let stats = [];
+
+            await getGoalsConceded(statsCollection, season, playoffStats, sort, count, teamName).then(async (resolve) => {
+                if (teamName == 'teams') {
+                    stats.push(resolve);
+                }
+
+                await getStat(statsCollection, season, playoffStats, { shotsFaced: sort }, count, teamName,
+                              'shotsFaced', '**Shots Faced**').then(async (resolve) => {
+          
+                    if (teamName == 'teams') {
+                        stats.push(resolve);
+                    }
+
+                    await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { shotsFacedPerGame: sort, gamesPlayed: sort }, count, teamName,
+                                                        'shotsFacedPerGame', 'gamesPlayed', '**Shots Faced Per Game** (Games Played)').then(async (resolve) => {
+                        if (teamName == 'teams') {
+                            stats.push(resolve);
+                        }
+
+                        await getStat(statsCollection, season, playoffStats, { shotsBlockedDefence: sort }, count, teamName,
+                                      'shotsBlockedDefence', '**Shots Blocked in Defence**').then(async (resolve) => {
+                            if (teamName != 'teams') {
+                                stats.push(resolve);
+                            }
+
+                            await getStat(statsCollection, season, playoffStats, { shotsBlocked: sort }, count, teamName,
+                                          'shotsBlocked', '**Shots Blocked**').then(async (resolve) => {
+                                if (teamName == 'teams') {
+                                    stats.push(resolve);
+                                }
+
+                                await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { shotsBlockedPercentage: sort, shotsFaced: sort }, count, teamName,
+                                                                    'shotsBlockedPercentage', 'shotsFaced', '**Shots Blocked Percentage** (Shots Faced)').then(async (resolve) => {
+                                    if (teamName == 'teams') {
+                                        stats.push(resolve);
+                                    }
+
+                                    await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { shotsBlockedPerGame: sort, gamesPlayed: sort }, count, teamName,
+                                                                        'shotsBlockedPerGame', 'gamesPlayed', '**Shots Blocked Per Game** (Games Played)').then(async (resolve) => {
+                                        stats.push(resolve);
+
+                                        await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { goalsConcededPerGame: sort, gamesPlayed: sort }, count, teamName,
+                                                                            'goalsConcededPerGame', 'gamesPlayed', '**Goals Conceded Per Game** (Games Played)').then((resolve) => {
+                                            stats.push(resolve);
+                                        }).catch((reject) => {
+                                            return Promise.reject(reject);
+                                        });
+                                    }).catch((reject) => {
+                                        return Promise.reject(reject);
+                                    });
+                                }).catch((reject) => {
+                                    return Promise.reject(reject);
+                                });
+                            }).catch((reject) => {
+                                return Promise.reject(reject);
+                            });                            
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                    }).catch((reject) => {
+                        return Promise.reject(reject);
+                    });
+                }).catch((reject) => {
+                    return Promise.reject(reject);
+                });
+            }).catch((reject) => {
+                return Promise.reject(reject);
+            });                                             
 
             return resolve(stats);
         } catch (error) {
