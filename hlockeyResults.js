@@ -3401,7 +3401,7 @@ async function updateCalculatedStats(statsCollection, teamsArray, playersArray, 
                                                             faceoffWinPercentage: faceoffWinPercentage,
                                                             passCompletionPercentage: passCompletionPercentage,
                                                             takeawayPercentage: takeawayPercentage,
-                                                            s: s,
+                                                            puckLossPercentage: puckLossPercentage,
                                                             scoringPercentage: scoringPercentage,
                                                             shotsBlockedPercentage: shotsBlockedPercentage,
                                                             fightWinPercentage: fightWinPercentage,
@@ -3437,7 +3437,7 @@ async function updateCalculatedStats(statsCollection, teamsArray, playersArray, 
         let faceoffWinPercentage = 0.00;
         let passCompletionPercentage = 0.00;
         let takeawayPercentage = 0.00;
-        let s = 0.00;
+        let puckLossPercentage = 0.00;
         let scoringPercentage = 0.00;
         let savePercentage = 0.00;
         let fightWinPercentage = 0.00;
@@ -3523,7 +3523,7 @@ async function updateCalculatedStats(statsCollection, teamsArray, playersArray, 
                                                             faceoffWinPercentage: faceoffWinPercentage,
                                                             passCompletionPercentage: passCompletionPercentage,
                                                             takeawayPercentage: takeawayPercentage,
-                                                            s: s,
+                                                            puckLossPercentage: puckLossPercentage,
                                                             scoringPercentage: scoringPercentage,
                                                             savePercentage: savePercentage,
                                                             fightWinPercentage: fightWinPercentage,
@@ -3561,7 +3561,7 @@ async function createPlayerStats(player, statsCollection, seasonNumber, playoffS
                                       takeawaysPerGame: 0.00,
                                       hitsTaken: 0,
                                       pucksLost: 0,
-                                      s: 0.00,
+                                      puckLossPercentage: 0.00,
                                       hitsTakenPerGame: 0.00,
                                       pucksLostPerGame: 0.00,
                                       goalsScored: 0,
@@ -3626,7 +3626,7 @@ async function createTeamStats(team, statsCollection, seasonNumber, playoffStats
                                       takeawaysPerGame: 0.00,
                                       hitsTaken: 0,
                                       pucksLost: 0,
-                                      s: 0.00,
+                                      puckLossPercentage: 0.00,
                                       hitsTakenPerGame: 0.00,
                                       pucksLostPerGame: 0.00,
                                       goalsScored: 0,
