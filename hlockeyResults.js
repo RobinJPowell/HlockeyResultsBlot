@@ -870,15 +870,14 @@ async function getStats(parameters) {
                             return Promise.reject(reject);
                         });
                         break;
-                    case 'interceptions':
-                    case 'interception':
+                    case 'intercepting':
                         await getInterceptionStats(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
                             stats = resolve;
                         }).catch((reject) => {
                             return Promise.reject(reject);
                         });
                         break;
-                    case 'hits':
+                    case 'hitting':
                         await getHitStats(statsCollection, season, playoffStats, sort, count, teamName).then((resolve) => {
                             stats = resolve;
                         }).catch((reject) => {
@@ -1311,8 +1310,8 @@ async function getStats(parameters) {
                         });
                         break;
                     case 'goalsconcededpergame':
-                        await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { goalsConcededPerGame: sort, gamesPlayed: sort }, count, teamName,
-                                                            'goalsConcededPerGame', 'gamesPlayed', '**Goals Conceded Per Game** (Games Played)').then((resolve) => {
+                        await getFloatStatWithSecondaryStatAndFilter(statsCollection, season, playoffStats, { goalsConcededPerGame: -sort, gamesPlayed: sort }, { shotsFaced: { $gte: 10 } }, count, teamName,
+                                                                     'goalsConcededPerGame', 'gamesPlayed', '**Goals Conceded Per Game** (Games Played)').then((resolve) => {
                             stats.push(resolve);
                         }).catch((reject) => {
                             return Promise.reject(reject);
@@ -1933,8 +1932,8 @@ async function getSaveStats(statsCollection, season, playoffStats, sort, count, 
                                                                     'savesPerGame', 'gamesPlayed', '**Saves Per Game** (Games Played)').then(async (resolve) => {
                                     stats.push(resolve);
 
-                                    await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { goalsConcededPerGame: sort, gamesPlayed: sort }, count, teamName,
-                                                                        'goalsConcededPerGame', 'gamesPlayed', '**Goals Conceded Per Game** (Games Played)').then((resolve) => {
+                                    await getFloatStatWithSecondaryStatAndFilter(statsCollection, season, playoffStats, { goalsConcededPerGame: -sort, gamesPlayed: sort }, { shotsFaced: { $gte: 10 } }, count, teamName,
+                                                                                 'goalsConcededPerGame', 'gamesPlayed', '**Goals Conceded Per Game** (Games Played)').then((resolve) => {
                                         stats.push(resolve);
                                     }).catch((reject) => {
                                         return Promise.reject(reject);
@@ -2010,9 +2009,11 @@ async function getBlockingStats(statsCollection, season, playoffStats, sort, cou
                                                                         'shotsBlockedPerGame', 'gamesPlayed', '**Shots Blocked Per Game** (Games Played)').then(async (resolve) => {
                                         stats.push(resolve);
 
-                                        await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { goalsConcededPerGame: sort, gamesPlayed: sort }, count, teamName,
+                                        await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { goalsConcededPerGame: -sort, gamesPlayed: sort }, count, teamName,
                                                                             'goalsConcededPerGame', 'gamesPlayed', '**Goals Conceded Per Game** (Games Played)').then((resolve) => {
-                                            stats.push(resolve);
+                                            if (teamName == 'teams') {
+                                                stats.push(resolve);
+                                            }
                                         }).catch((reject) => {
                                             return Promise.reject(reject);
                                         });
