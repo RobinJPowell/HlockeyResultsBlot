@@ -3103,7 +3103,7 @@ async function updateFightingStats(fightArray, rostersCollection, statsCollectio
             } else if (element.toLowerCase().includes('punches')) {
                 let blocked = false;
 
-                if (!(fightArray.length === undefined)) {
+                if (!(fightArray[index + 1] === undefined)) {
                     blocked = fightArray[index + 1].toLowerCase().includes('blocks');
                 }
 
