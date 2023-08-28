@@ -2671,12 +2671,33 @@ async function finishStatsUpdate(weatherReportArray, miscCollection, statsCollec
 
                 if (walCarineGamesWithoutAFight > 0) {
                     weatherReport += `\nIt has been ${walCarineGamesWithoutAFight} games since Wal Carine has had a fight`;
-                }
+                }                
+                    
+                // Discord limits messages to 2000 characters, so need to split this up
+                if (weatherReport.length > 2000) {
+                    const weatherReportArray = weatherReport.trim().split('\n');
+                    weatherReport = '';
 
-                bot.sendMessage({
-                    to: WatchChannel,
-                    message: `${weatherReport.trim()}`
-                });                
+                    weatherReportArray.forEach((element, index) => {
+                        // Discord limits bot message posting speed, so slow it down
+                        setTimeout(() => {
+                            weatherReport += `${element}\n`                                            
+
+                            if ((index % 15) == 0 || weatherReportArray.length == (index + 1)) {                                                
+                                bot.sendMessage({
+                                    to: WatchChannel,
+                                    message: `${weatherReport.trim()}`
+                                }); 
+                                weatherReport = '';
+                            }
+                        }, 100 * index);
+                    })
+                } else {
+                    bot.sendMessage({
+                        to: WatchChannel,
+                        message: `${weatherReport.trim()}`
+                    });  
+                }                             
             }
         });
     }
