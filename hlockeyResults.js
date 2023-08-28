@@ -2606,6 +2606,8 @@ async function statsGatherer () {
                     if (walCarineStats) {
                         walCarineFights = walCarineStats.fights;
                     }
+
+                    let gamesParsed = 0;
                     
                     games.each(async (index, element) => {
                         await Axios.get(`${GamesUrl}/${index.toString()}`).then(async (resolve) => {
@@ -2615,7 +2617,6 @@ async function statsGatherer () {
                             const resultRaw = $games(element).find('.scoreboard').text();
                             const resultArray = resultRaw.trim().replaceAll('\n','').replace(WhitespaceRegex,'|').split('|');
                             const teamsArray = [`${resultArray[0]}`,`${resultArray[2]}`];
-                            let gamesParsed = 0;
 
                             parseGameLog(gameLog, seasonNumber, playoffStats, teamsArray, weatherReportArray).then(async () => {
                                 gamesParsed++;
@@ -3139,7 +3140,7 @@ async function updateFightingStats(fightArray, rostersCollection, statsCollectio
                     await statsCollection.updateOne(findPunchedTeam, { $set: { punchesTaken: punchedTeamStats.punchesTaken + 1 } });    
                 }
             } else if (element.toLowerCase().includes('ended')) {
-                if (fightArray[index + 1].toLowerCase().includes('morale')) {
+                if (!(fightArray[index + 1] === undefined) && fightArray[index + 1].toLowerCase().includes('morale')) {
                     let teamName = ''
                     let winningTeam = '';
                     let i = 0;
