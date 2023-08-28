@@ -2750,7 +2750,9 @@ function parseGameLog(gameLog, seasonNumber, playoffStats, teamsArray, weatherRe
                                 || gameLog[index + i].toLowerCase().includes('washed away')
                                 || gameLog[index + i].toLowerCase().includes('chickened')
                                 || gameLog[index + i].toLowerCase().includes('replaces')
-                                || gameLog[index + i].toLowerCase().includes('audacious'))
+                                || gameLog[index + i].toLowerCase().includes('audacious')
+                                || gameLog[index + i].toLowerCase().includes('blocks')
+                                || gameLog[index + i].toLowerCase().includes('scoring'));
 
                         // After the fight is over we get morale changes for each team
                         fightArray.push(gameLog[index + i + 1].replace(/[\.!]/g,''));
