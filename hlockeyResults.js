@@ -2615,15 +2615,18 @@ async function statsGatherer () {
                             const resultRaw = $games(element).find('.scoreboard').text();
                             const resultArray = resultRaw.trim().replaceAll('\n','').replace(WhitespaceRegex,'|').split('|');
                             const teamsArray = [`${resultArray[0]}`,`${resultArray[2]}`];
+                            let gamesParsed = 0;
 
                             parseGameLog(gameLog, seasonNumber, playoffStats, teamsArray, weatherReportArray).then(async () => {
-                                if (games.length == (index + 1)) {
+                                gamesParsed++;
+                                if (games.length == gamesParsed) {
                                     finishStatsUpdate(weatherReportArray, miscCollection, statsCollection, walCarineFights, findWalCarine);
                                 }
                             }).catch((reject) => {
+                                gamesParsed++;
                                 Logger.error(`Error parsing stats for ${teamsArray[0]} vs ${teamsArray[1]}: ${reject}`);
                                 
-                                if (games.length == (index + 1)) {
+                                if (games.length == gamesParsed) {
                                     finishStatsUpdate(weatherReportArray, miscCollection, statsCollection, walCarineFights, findWalCarine);
                                 }
                             });
@@ -2660,7 +2663,7 @@ async function finishStatsUpdate(weatherReportArray, miscCollection, statsCollec
                 }
                                             
                 if (!walCarineStats || walCarineStats.fights == walCarineFights) {
-                    walCarineGamesWithoutAFight = walCarineGamesWithoutAFightRecord.fights + 1;
+                    walCarineGamesWithoutAFight = walCarineGamesWithoutAFightRecord.games + 1;
                 }
 
                 await miscCollection.updateOne({ name: 'walCarineGamesWithoutAFight' }, { $set: { games: walCarineGamesWithoutAFight } });
