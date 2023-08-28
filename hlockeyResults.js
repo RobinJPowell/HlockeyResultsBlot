@@ -2574,7 +2574,7 @@ async function statsGatherer () {
                 games = $games('#content').find('.game');
         
                 games.each((index, element) => {                    
-                    if ($(element).text().indexOf('game in progress') > 0) {
+                    if ($games(element).text().indexOf('game in progress') > 0) {
                         gamesInProgress = true;
                     }
                 });
@@ -3101,7 +3101,11 @@ async function updateFightingStats(fightArray, rostersCollection, statsCollectio
                     fightingPlayerStats = await statsCollection.findOne(findfightingPlayer);
                 }
             } else if (element.toLowerCase().includes('punches')) {
-                const blocked = fightArray[index + 1].toLowerCase().includes('blocks');
+                let blocked = false;
+
+                if (!(fightArray.length === undefined)) {
+                    blocked = fightArray[index + 1].toLowerCase().includes('blocks');
+                }
 
                 const punchingPlayer = `${fightLineArray[0]} ${fightLineArray[1]}`;
                 const punchedPlayer = `${fightLineArray[3]} ${fightLineArray[4]}`;
