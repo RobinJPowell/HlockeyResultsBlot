@@ -26,7 +26,7 @@ const Teams = ['Antalya Pirates', 'Baden Hallucinations', 'Kópavogur Seals', 'L
                'Dawson City Impostors', 'Erlangen Ohms', 'Pompei Eruptions', 'Rio de Janeiro Directors', 'Wyrzysk Rockets',
                'Cape Town Transplants', 'Manbij Fish', 'Nagqu Paint', 'Nice Backflippers', 'Orcadas Base Fog',
                'Baghdad Abacuses', 'Jakarta Architects', 'Kyoto Payphones', 'Stony Brook Reapers', 'Sydney Thinkers',
-               'Sleepers'];
+               'Sleepersz'];
 
 let StatsUpdateInProgress = false;
 
