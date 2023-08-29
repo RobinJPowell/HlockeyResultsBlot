@@ -3251,7 +3251,14 @@ async function updateGameRosterChanges(gameLogLineArray, swappedPlayerLineArray,
     if (waves) {
         await statsCollection.updateOne(findLeavingPlayer, { $set: { timesSweptAway: leavingPlayerStats.timesSweptAway + 1 } });
         await rostersCollection.updateOne({ name: arrivingPlayer }, { $set: { position: leavingPlayerRoster.position } });
-        await rostersCollection.updateOne({ name: leavingPlayer }, { $set: { position: 'Shadows' } });        
+        await rostersCollection.updateOne({ name: leavingPlayer }, { $set: { position: 'Shadows' } });
+
+        if (gameWeatherArray[teamIndex] == '') {
+            gameWeatherArray[teamIndex] = `${TeamEmoji.get(leavingPlayerRoster.team)}**${leavingPlayerRoster.team}**\n:white_sun_rain_cloud:**Waves**\n\n`
+        }
+        
+        gameWeatherArray[teamIndex] += `> ${leavingPlayer} was swept away from ${leavingPlayerRoster.position} into the Shadows\n`
+        gameWeatherArray[teamIndex] += `> ${arrivingPlayer} emerged from the Shadows to take ${leavingPlayerRoster.position}\n`
     } else {
         await statsCollection.updateOne(findLeavingPlayer, { $set: { timesChickenedOut: leavingPlayerStats.timesChickenedOut + 1 } });
         
@@ -3261,14 +3268,7 @@ async function updateGameRosterChanges(gameLogLineArray, swappedPlayerLineArray,
         } else if (leavingPlayerRoster.position == 'Center') {
             temporaryCenters[teamIndex] = arrivingPlayer;
         }
-    }
-
-    if (gameWeatherArray[teamIndex] == '') {
-        gameWeatherArray[teamIndex] = `${TeamEmoji.get(leavingPlayerRoster.team)}**${leavingPlayerRoster.team}**\n:white_sun_rain_cloud:**${waves ? 'Waves' : 'Chicken'}**\n\n`
-    }
-    
-    gameWeatherArray[teamIndex] += `> ${leavingPlayer} ${waves ? 'was swept away from' : 'ran away from'} ${leavingPlayerRoster.position} into the Shadows\n`
-    gameWeatherArray[teamIndex] += `> ${arrivingPlayer} emerged from the Shadows to take ${leavingPlayerRoster.position}\n`
+    }    
 }
 
 async function updatePlayedStats(victoryLine, rostersCollection, statsCollection, teamsArray, playersArray, seasonNumber, playoffStats, overtime) {
