@@ -2672,7 +2672,7 @@ async function finishStatsUpdate(weatherReportArray, miscCollection, statsCollec
                 if (walCarineGamesWithoutAFight > 0) {
                     weatherReport += `\nIt has been ${walCarineGamesWithoutAFight} games since Wal Carine has had a fight`;
                 } else {
-                    weatherReport += 'Wal Carine\'s bloodlust has been sated';
+                    weatherReport += '\nWal Carine\'s bloodlust has been sated';
                 }               
                     
                 // Discord limits messages to 2000 characters, so need to split this up
