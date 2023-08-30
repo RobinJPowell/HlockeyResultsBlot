@@ -2645,7 +2645,22 @@ async function statsGatherer () {
 }
 
 async function finishStatsUpdate(weatherReportArray, miscCollection, statsCollection, walCarineFights, findWalCarine) {
-    StatsUpdateInProgress = false;    
+    StatsUpdateInProgress = false;
+    
+    let walCarineStats = await statsCollection.findOne(findWalCarine); 
+    let walCarineGamesWithoutAFightRecord = await miscCollection.findOne({ name: 'walCarineGamesWithoutAFight' });
+    let walCarineGamesWithoutAFight = 0;
+
+    if (!walCarineGamesWithoutAFightRecord) {
+        await miscCollection.insertOne({ name: 'walCarineGamesWithoutAFight',  games: 0 });
+        walCarineGamesWithoutAFightRecord = await miscCollection.findOne({ name: 'walCarineGamesWithoutAFight' });
+    }
+                                            
+    if (!walCarineStats || walCarineStats.fights == walCarineFights) {
+        walCarineGamesWithoutAFight = walCarineGamesWithoutAFightRecord.games + 1;
+    }
+
+    await miscCollection.updateOne({ name: 'walCarineGamesWithoutAFight' }, { $set: { games: walCarineGamesWithoutAFight } });
 
     if (weatherReportArray.length > 0) {
         let weatherReport = `Greetings splorts fans! With all games concluded it\'s time for the Hlockey Weather Report, brought to you by ${Sponsors[Math.floor(Math.random()*Sponsors.length)]}\n`;
@@ -2654,20 +2669,7 @@ async function finishStatsUpdate(weatherReportArray, miscCollection, statsCollec
             weatherReport += `\n${element}`;
 
             if (weatherReportArray.length == (index + 1)) {
-                let walCarineStats = await statsCollection.findOne(findWalCarine); 
-                let walCarineGamesWithoutAFightRecord = await miscCollection.findOne({ name: 'walCarineGamesWithoutAFight' });
-                let walCarineGamesWithoutAFight = 0;
-
-                if (!walCarineGamesWithoutAFightRecord) {
-                    await miscCollection.insertOne({ name: 'walCarineGamesWithoutAFight',  games: 0 });
-                    walCarineGamesWithoutAFightRecord = await miscCollection.findOne({ name: 'walCarineGamesWithoutAFight' });
-                }
-                                            
-                if (!walCarineStats || walCarineStats.fights == walCarineFights) {
-                    walCarineGamesWithoutAFight = walCarineGamesWithoutAFightRecord.games + 1;
-                }
-
-                await miscCollection.updateOne({ name: 'walCarineGamesWithoutAFight' }, { $set: { games: walCarineGamesWithoutAFight } });
+                
 
                 if (walCarineGamesWithoutAFight > 0) {
                     weatherReport += `\nIt has been ${walCarineGamesWithoutAFight} games since Wal Carine has had a fight`;
