@@ -2554,6 +2554,15 @@ async function statsGatherer () {
     try {
         const lastStatsHourRecord = await miscCollection.findOne({ name: 'lastStatsHour' });
         
+        // Every few hours, the bot stops reading messages from Discord. It is still running,
+        // it still sends messages to Discord sucessfully, still does all of this background processing,
+        // and there are no errors. Restarting fixes this. The bot runs from a batch file which automatically
+        // restarts it if it encounters an unexpected error or shuts down for any reason, so exiting every hour
+        // will force that restart and prevent me having to manually restart it all the time.
+        if (now.getMinutes() == 0) {
+            process.exit();
+        }
+        
         if (lastStatsHourRecord) {
             lastStatsHour = lastStatsHourRecord.hour;
         } else {
