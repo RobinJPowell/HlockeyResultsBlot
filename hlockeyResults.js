@@ -264,14 +264,19 @@ async function getResults(channelID) {
             const afterResults = $(element).text().substring($(element).text().indexOf('Weather:'));
             const weather = afterResults.substring(9,afterResults.indexOf('\n'));
             const afterWeather = afterResults.substring(afterResults.indexOf('\n') + 1).trim();
-            const stadium = afterWeather.substring(9,afterWeather.indexOf('\n'));
+            let stadium = afterWeather.substring(9,afterWeather.indexOf('\n'));
             const afterStadium = afterWeather.substring(afterWeather.indexOf('\n') + 1).trim();
             const status = afterStadium.substring(0,afterStadium.indexOf('\n')).trim();
+
+            // If the stadium has a nickname, use it
+            if (stadium.includes('("')) {
+                stadium = stadium.substring(stadium.indexOf('("') + 2,stadium.indexOf('")'));
+            }
 
             const resultArray = resultRaw.trim().replaceAll('\n','').replace(WhitespaceRegex,'|').split('|');
             const result = `${TeamEmoji.get(resultArray[0])} ${resultArray[0]}  **${resultArray[1]} - ${resultArray[3]}**  ${resultArray[2]} ${TeamEmoji.get(resultArray[2])}`
 
-            results += `> ${result.trim()}\n> :white_sun_rain_cloud: ${weather}     ${(status == 'game in progress' ? '**Game In Progress**' : 'Game Over')}\n\n`;
+            results += `> ${result.trim()}\n> :stadium: ${stadium}\n> :white_sun_rain_cloud: ${weather}     ${(status == 'game in progress' ? '**Game In Progress**' : 'Game Over')}\n\n`;
             gamesProcessed ++;
 
             if (gamesProcessed == totalGames) {
