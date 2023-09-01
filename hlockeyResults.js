@@ -370,6 +370,7 @@ async function playoffPicture(channelID) {
         let contentionLeadersMap = new Map([]);
         let contentionTeamsMap = new Map([]);
         let eliminatedTeamsMap = new Map([]);
+        let potentialDivisionWinnersArray = [];
         let qualifiedTeams = '';
         let contentionTeams = '';
         let eliminatedTeams = '';
@@ -384,7 +385,7 @@ async function playoffPicture(channelID) {
             divisionsArray.forEach((element, index) => {
                 if (element.includes('Wet') || element.includes('Dry') || element.includes('Sleepy')) {
                     if (teams != []) {
-                        divisionLeadersCalculator(teams, wins, losses, qualifiedLeadersMap, contentionLeadersMap, contentionTeamsMap);
+                        divisionLeadersCalculator(teams, wins, losses, qualifiedLeadersMap, contentionLeadersMap, contentionTeamsMap, potentialDivisionWinnersArray);
 
                         teams = [];
                         wins = [];
@@ -418,7 +419,7 @@ async function playoffPicture(channelID) {
                     const fifthPlaceMaximumWins = parseInt(fifthPlaceTeam.substring(fifthPlaceTeam.indexOf('|') + 1));
                     
                     qualifiedLeadersCaclulator(contentionLeadersMap, qualifiedLeadersMap, fifthPlaceMaximumWins);
-                    bestOfTheRestCalculator(contentionTeamsMap, qualifiedTeamsMap, eliminatedTeamsMap, fourthPlaceWins, fifthPlaceMaximumWins);
+                    bestOfTheRestCalculator(contentionTeamsMap, qualifiedTeamsMap, eliminatedTeamsMap, fourthPlaceWins, fifthPlaceMaximumWins, potentialDivisionWinnersArray);
                     
                     // Sort each map by their key (wins)
                     qualifiedLeadersMap = new Map([...qualifiedLeadersMap.entries()].sort((a, b) => b[0] - a[0]));
@@ -464,7 +465,9 @@ async function playoffPicture(channelID) {
 };
 
 // Calculate if the leader of a division has won and made the playoffs
-function divisionLeadersCalculator(teams, wins, losses, qualifiedLeadersMap, contentionLeadersMap, contentionTeamsMap) {
+function divisionLeadersCalculator(teams, wins, losses, qualifiedLeadersMap, contentionLeadersMap, contentionTeamsMap, potentialDivisionWinnersArray) {
+    const leaderWinsCount = parseInt(wins[0]);
+    
     teams.forEach((element, index) => {        
         // Ignore Sleepers, they have no playoff impact
         if (element != 'Sleepers') {
@@ -491,6 +494,11 @@ function divisionLeadersCalculator(teams, wins, losses, qualifiedLeadersMap, con
                     winCount -= .01;
                 }
                 contentionTeamsMap.set(winCount,`${TeamEmoji.get(element)} ${element} **${wins[index]}-${losses[index]}**|${maximumWins}`);
+
+                // If a team can still catch the leader, add them as a potential division winner
+                if (leaderWinsCount <= (GamesPerSeason - parseInt(losses[index]))) {
+                    potentialDivisionWinnersArray.push(`${TeamEmoji.get(element)} ${element} **${wins[index]}-${losses[index]}**|${maximumWins}`);
+                }
             }
         }
     });
@@ -511,7 +519,7 @@ function qualifiedLeadersCaclulator(contentionLeadersMap, qualifiedLeadersMap, f
 }
 
 // Calculate which of the rest of the teams have qualified and which have been eliminated
-function bestOfTheRestCalculator(contentionTeamsMap, qualifiedTeamsMap, eliminatedTeamsMap, fourthPlaceWins, fifthPlaceMaximumWins) {    
+function bestOfTheRestCalculator(contentionTeamsMap, qualifiedTeamsMap, eliminatedTeamsMap, fourthPlaceWins, fifthPlaceMaximumWins, potentialDivisionWinnersArray) {    
     let position = 0;
     
     contentionTeamsMap.forEach((value, key) => {        
@@ -531,8 +539,8 @@ function bestOfTheRestCalculator(contentionTeamsMap, qualifiedTeamsMap, eliminat
         } else {
             const maximumWins = parseInt(value.substring(value.indexOf('|') + 1));
 
-            // Everyone else is eliminated as soon as they can't catch 4th place
-            if (maximumWins < fourthPlaceWins) {
+            // Everyone else is eliminated as soon as they can't catch 4th place unless they can potentially win their division
+            if (maximumWins < fourthPlaceWins && !(potentialDivisionWinnersArray.includes(value))) {
                 contentionTeamsMap.delete(key);
                 while (eliminatedTeamsMap.get(key)) {
                     key -= .01;
