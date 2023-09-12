@@ -8,6 +8,7 @@ const MongoDB = require('mongodb').MongoClient;
 const Auth = require('./auth.json');
 const Axios = require('axios');
 const Cheerio = require('cheerio');
+const NodeDir = require('node-dir');
 
 const GamesUrl = 'https://hlockey.onrender.com/league/games';
 const StandingsUrl = 'https://hlockey.onrender.com/league/standings';
@@ -1348,9 +1349,41 @@ async function getStats(parameters) {
                             return Promise.reject(reject);
                         });
                         break;
+                    case 'fightsdrawn':
+                        await getStatWithSecondaryFloatStat(statsCollection, season, playoffStats, { fightsDrawn: sort, fightDrawPercentage: sort }, count, teamName,
+                                                            'fightsDrawn', 'fightDrawPercentage', '**Fights Drawn** (Fight Draw Percentage)').then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'fightslost':
+                        await getStatWithSecondaryFloatStat(statsCollection, season, playoffStats, { fightsLost: sort, fightLossPercentage: sort }, count, teamName,
+                                                            'fightsLost', 'fightLossPercentage', '**Fights Lost** (Fight Loss Percentage)').then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
                     case 'fightwinpercentage':
                         await getFloatStatWithSecondaryStatAndFilter(statsCollection, season, playoffStats, { fightWinPercentage: sort, fights: sort }, { fights: { $gte: 5 } }, count, teamName,
                                                                      'fightWinPercentage', 'fights', '**Fight Win Percentage** (Fights)').then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'fightdrawpercentage':
+                        await getFloatStatWithSecondaryStatAndFilter(statsCollection, season, playoffStats, { fightDrawPercentage: sort, fights: sort }, { fights: { $gte: 5 } }, count, teamName,
+                                                                     'fightDrawPercentage', 'fights', '**Fight Draw Percentage** (Fights)').then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'fightlosspercentage':
+                        await getFloatStatWithSecondaryStatAndFilter(statsCollection, season, playoffStats, { fightLossPercentage: sort, fights: sort }, { fights: { $gte: 5 } }, count, teamName,
+                                                                     'fightLossPercentage', 'fights', '**Fight Loss Percentage** (Fights)').then((resolve) => {
                             stats.push(resolve);
                         }).catch((reject) => {
                             return Promise.reject(reject);
@@ -1366,8 +1399,38 @@ async function getStats(parameters) {
                         break;
                     case 'fightwinspergame':
                         await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { fightWinsPerGame: sort, gamesPlayed: sort }, count, teamName,
-                                                            'fightWinsPerGame', 'gamesPlayed', '**Fights Wins Per Game** (Games Played)').then((resolve) => {
+                                                            'fightWinsPerGame', 'gamesPlayed', '**Fight Wins Per Game** (Games Played)').then((resolve) => {
                             stats.push(resolve);                            
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'fightdrawspergame':
+                        await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { fightDrawsPerGame: sort, gamesPlayed: sort }, count, teamName,
+                                                            'fightDrawsPerGame', 'gamesPlayed', '**Fights Drawn Per Game** (Games Played)').then((resolve) => {
+                            stats.push(resolve);                            
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'fightlossespergame':
+                        await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { fightLossesPerGame: sort, gamesPlayed: sort }, count, teamName,
+                                                            'fightLossesPerGame', 'gamesPlayed', '**Fight Losses Per Game** (Games Played)').then((resolve) => {
+                            stats.push(resolve);                            
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'fightrecord':
+                        await getFightRecord(statsCollection, season, playoffStats, { fightsWon: sort, fightsLost: -sort, fights: sort }, count, teamName).then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
+                    case 'fightpercentagerecord':
+                        await getFightPercentageRecord(statsCollection, season, playoffStats, { fightWinPercentage: sort, fightLossPercentage: -sort, fights: sort }, count, teamName).then((resolve) => {
+                            stats.push(resolve);
                         }).catch((reject) => {
                             return Promise.reject(reject);
                         });
@@ -2070,12 +2133,10 @@ async function getFightingStats(statsCollection, season, playoffStats, sort, cou
                           'fights', '**Fights**').then(async (resolve) => {
                 stats.push(resolve);
 
-                await getStatWithSecondaryFloatStat(statsCollection, season, playoffStats, { fightsWon: sort, fightWinPercentage: sort }, count, teamName,
-                                                    'fightsWon', 'fightWinPercentage', '**Fights Won** (Fight Win Percentage)').then(async (resolve) => {
+                await getFightRecord(statsCollection, season, playoffStats, { fightsWon: sort, fights: sort }, count, teamName).then(async (resolve) => {
                     stats.push(resolve);
 
-                    await getFloatStatWithSecondaryStatAndFilter(statsCollection, season, playoffStats, { fightWinPercentage: sort, fights: sort }, { fights: { $gte: 5 } }, count, teamName,
-                                                                 'fightWinPercentage', 'fights', '**Fight Win Percentage** (Fights)').then(async (resolve) => {
+                    await getFightPercentageRecord(statsCollection, season, playoffStats, { fightWinPercentage: sort, fights: sort }, count, teamName).then(async (resolve) => {
                         stats.push(resolve);
 
                         await getFloatStatWithSecondaryStat(statsCollection, season, playoffStats, { fightsPerGame: sort, gamesPlayed: sort }, count, teamName,
@@ -2260,6 +2321,92 @@ async function getGoalsConceded(statsCollection, season, playoffStats, sort, cou
         } catch (error) {
             return reject(error);
         }
+    });
+}
+
+async function getFightRecord(statsCollection, season, playoffStats, sortQuery, count, teamName) {
+    return new Promise(async (resolve, reject) => {
+        let findStat = null;
+
+        if (teamName == 'teams') {
+            findStat = { ...season, playoffs: playoffStats, team: '' };
+        } else if (teamName != '') {
+            findStat = { ...season, playoffs: playoffStats, team: teamName };
+        } else {
+            findStat = { ...season, playoffs: playoffStats, team: { $ne: '' } };
+        }
+
+        const cursor = await statsCollection.find(findStat).sort({ ...sortQuery });
+        const statArray = await cursor.toArray();
+        let i = 0;
+        let index = 0;
+
+        if (count == 0) {
+            i -= statArray.length;
+        } else if (count > statArray.length) {
+            return reject(`Not enough records to return ${count} fight records ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
+        }
+
+        let statReturn = `\nFight Record (W-L-D)\n`;
+
+        do {
+            let name = '';
+
+            if (teamName == 'teams') {
+                name = `${TeamEmoji.get(statArray[index].name)} ${statArray[index].name}`;
+            } else {
+                name = `${TeamEmoji.get(statArray[index].team)} ${statArray[index].name}`;
+            }
+
+            statReturn += `> **${index + 1}.** ${name}  -  **${statArray[index]['fightsWon']}-${statArray[index]['fightsLost']}-${statArray[index]['fightsDrawn']}**\n`
+            i++;
+            index++;
+        } while (i < count);
+
+        return resolve(statReturn);
+    });
+}
+
+async function getFightPercentageRecord(statsCollection, season, playoffStats, sortQuery, count, teamName) {
+    return new Promise(async (resolve, reject) => {
+        let findStat = null;
+
+        if (teamName == 'teams') {
+            findStat = { ...season, playoffs: playoffStats, team: '' };
+        } else if (teamName != '') {
+            findStat = { ...season, playoffs: playoffStats, team: teamName };
+        } else {
+            findStat = { ...season, playoffs: playoffStats, team: { $ne: '' } };
+        }
+
+        const cursor = await statsCollection.find(findStat).sort({ ...sortQuery });
+        const statArray = await cursor.toArray();
+        let i = 0;
+        let index = 0;
+
+        if (count == 0) {
+            i -= statArray.length;
+        } else if (count > statArray.length) {
+            return reject(`Not enough records to return ${count} fight percentage records ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
+        }
+
+        let statReturn = `\nFight Percentage Record (W%-L%-D%)\n`;
+
+        do {
+            let name = '';
+
+            if (teamName == 'teams') {
+                name = `${TeamEmoji.get(statArray[index].name)} ${statArray[index].name}`;
+            } else {
+                name = `${TeamEmoji.get(statArray[index].team)} ${statArray[index].name}`;
+            }
+
+            statReturn += `> **${index + 1}.** ${name}  -  **${statArray[index]['fightWinPercentage'].toFixed(2)}-${statArray[index]['fightLossPercentage'].toFixed(2)}-${statArray[index]['fightDrawPercentage'].toFixed(2)}**\n`
+            i++;
+            index++;
+        } while (i < count);
+
+        return resolve(statReturn);
     });
 }
 
@@ -2524,11 +2671,25 @@ async function populateRosters () {
 
 // Admin function to manually load a log.txt file
 async function loadStats(parameters) {
-    const gameLog = Fs.readFileSync('./log.txt').toString().split(/\n/g);
-    const parametersArray = parameters.split(' ');
-    let teamsArray = [];
-    let weatherReportArray = [];
-    await parseGameLog(gameLog, parametersArray[0], (parametersArray[1] == 'true'), teamsArray, weatherReportArray);
+    NodeDir.files('gameLogs', function (error, files) {
+        files.forEach(async (element) => {
+            if (element.includes('\\log.txt')) {
+                const gameLog = Fs.readFileSync(element).toString().split(/\n/g);
+                const parametersArray = parameters.split(' ');
+                let teamsArray = [];
+                let weatherReportArray = [];
+
+                // If reading folders from the seasonal stats dump, top level folder contains the team names
+                if (element.includes(' vs ')) {
+                    let matchup = element.substring(0,element.lastIndexOf('\\'));
+                    matchup = matchup.substring(matchup.lastIndexOf('\\') + 1);
+                    teamsArray = matchup.split(' vs ');
+                }
+
+                await parseGameLog(gameLog, parametersArray[0], (parametersArray[1] == 'true'), teamsArray, weatherReportArray);
+            }
+        });
+    });
 }
 
 // Admin function to force re-calculation of all calculatedstats
@@ -3033,7 +3194,7 @@ async function updateShootingStats(gameLogLineArray, blockedArray, rostersCollec
             concedingTeam = teamsArray[0];
             temporaryGoalie = temporaryGoalies[0];
         }
-
+        
         if (temporaryGoalie == '') {
             concedingPlayerRoster = await rostersCollection.findOne({ team: concedingTeam, position: 'Goalie' });            
         } else {
@@ -3189,18 +3350,20 @@ async function updateFightingStats(fightArray, rostersCollection, statsCollectio
                     await statsCollection.updateOne(findPunchedTeam, { $set: { punchesTaken: punchedTeamStats.punchesTaken + 1 } });    
                 }
             } else if (element.toLowerCase().includes('ended')) {
-                if (!(fightArray[index + 1] === undefined) && fightArray[index + 1].toLowerCase().includes('morale')) {
-                    let teamName = ''
-                    let winningTeam = '';
-                    let i = 0;
+                let teamName = '';
+                let winningTeam = '';
+                let i = 0;
 
+                if (!(fightArray[index + 1] === undefined) && fightArray[index + 1].toLowerCase().includes('morale')) {
+                    const moraleLineArray = fightArray[index + 1].split(' ');
+                    
                     do {
-                        teamName += `${fightLineArray[i]} `;
+                        teamName += `${moraleLineArray[i]} `;
                         i++
-                    } while (i < (fightArray[index + 1].toLowerCase().indexOf('morale') - 2));
-                    
-                    teamName.trim();
-                    
+                    } while (moraleLineArray[i] != 'gains' && moraleLineArray[i] != 'loses');
+                        
+                    teamName = teamName.trim();
+                      
                     if (fightArray[index + 1].toLowerCase().includes('gains')) {
                         winningTeam = teamName;                        
                     } else {
@@ -3212,32 +3375,42 @@ async function updateFightingStats(fightArray, rostersCollection, statsCollectio
                             winningTeam = teamsArray[0];        
                         }
                     }
-
-                    fightingPlayers.forEach(async (element) => {
-                        const playerRoster = await rostersCollection.findOne({ name: element });
-                        const findPlayer = { name: element, season: seasonNumber, playoffs: playoffStats };
-                        const playerStats = await statsCollection.findOne(findPlayer);
-
-                        if (playerRoster.team == winningTeam) {
-                            await statsCollection.updateOne(findPlayer, { $set: { fights: playerStats.fights + 1,
-                                                                                  fightsWon: playerStats.fightsWon + 1 } });
-                        } else {
-                            await statsCollection.updateOne(findPlayer, { $set: { fights: playerStats.fights + 1 } });
-                        }
-                    })
-
-                    teamsArray.forEach(async (element) => {
-                        const findTeam = { name: element, season: seasonNumber, playoffs: playoffStats }; 
-                        const teamStats = await statsCollection.findOne(findTeam);
-
-                        if (element == winningTeam) {
-                            await statsCollection.updateOne(findTeam, { $set: { fights: teamStats.fights + 1,
-                                                                                  fightsWon: teamStats.fightsWon + 1 } }); 
-                        } else {
-                            await statsCollection.updateOne(findTeam, { $set: { fights: teamStats.fights + 1 } });
-                        }
-                    });
                 }
+
+                fightingPlayers.forEach(async (element) => {
+                    const playerRoster = await rostersCollection.findOne({ name: element });
+                    const findPlayer = { name: element, season: seasonNumber, playoffs: playoffStats };
+                    const playerStats = await statsCollection.findOne(findPlayer);
+
+                    if (winningTeam == '') {
+                        await statsCollection.updateOne(findPlayer, { $set: { fights: playerStats.fights + 1,
+                                                                              fightsDrawn: playerStats.fightsDrawn + 1 } });
+                    }
+                    else if (playerRoster.team == winningTeam) {
+                        await statsCollection.updateOne(findPlayer, { $set: { fights: playerStats.fights + 1,
+                                                                              fightsWon: playerStats.fightsWon + 1 } });
+                    } else {
+                        await statsCollection.updateOne(findPlayer, { $set: { fights: playerStats.fights + 1,
+                                                                              fightsLost: playerStats.fightsLost + 1 } });
+                    }
+                })
+
+                teamsArray.forEach(async (element) => {
+                    const findTeam = { name: element, season: seasonNumber, playoffs: playoffStats }; 
+                    const teamStats = await statsCollection.findOne(findTeam);
+
+                    if (winningTeam == '') {
+                        await statsCollection.updateOne(findTeam, { $set: { fights: teamStats.fights + 1,
+                                                                            fightsDrawn: teamStats.fightsDrawn + 1 } });
+                    }
+                    else if (element == winningTeam) {
+                        await statsCollection.updateOne(findTeam, { $set: { fights: teamStats.fights + 1,
+                                                                            fightsWon: teamStats.fightsWon + 1 } }); 
+                    } else {
+                        await statsCollection.updateOne(findTeam, { $set: { fights: teamStats.fights + 1,
+                                                                            fightsLost: teamStats.fightsLost + 1 } });
+                    }
+                });
             }
         }, index * interval);
     });
@@ -3296,7 +3469,7 @@ async function updateGameRosterChanges(gameLogLineArray, swappedPlayerLineArray,
 }
 
 async function updatePlayedStats(victoryLine, rostersCollection, statsCollection, teamsArray, playersArray, seasonNumber, playoffStats, overtime) {
-    // 2 separate replace operations as lines from the log file will have !, and lines from the website won't
+    // 2 separate replace operations as lines from the log file may have !, and lines from the website won't
     const winningTeam = victoryLine.replace(' win','').replace('!','');
 
     teamsArray.forEach(async (element) => {
@@ -3368,7 +3541,9 @@ async function updateCalculatedStats(statsCollection, teamsArray, playersArray, 
         let shotsBlockedPerGame = 0.00;
         let goalsConcededPerGame = 0.00;
         let fightsPerGame = 0.00;
-        let fightWinsPerGame = 0.00;        
+        let fightWinsPerGame = 0.00;
+        let fightDrawsPerGame = 0.00;
+        let fightLossesPerGame = 0.00;
         let punchesThrownPerGame = 0.00;
         let punchesLandedPerGame = 0.00;
         let punchesTakenPerGame = 0.00;
@@ -3381,6 +3556,8 @@ async function updateCalculatedStats(statsCollection, teamsArray, playersArray, 
         let scoringPercentage = 0.00;
         let shotsBlockedPercentage = 0.00;
         let fightWinPercentage = 0.00;
+        let fightDrawPercentage = 0.00;
+        let fightLossPercentage = 0.00;
         let punchLandedPercentage = 0.00;
         let punchBlockedPercentage = 0.00;
         
@@ -3401,6 +3578,8 @@ async function updateCalculatedStats(statsCollection, teamsArray, playersArray, 
             goalsConcededPerGame = teamStats.goalsConceded / teamStats.gamesPlayed;
             fightsPerGame = teamStats.fights / teamStats.gamesPlayed;
             fightWinsPerGame = teamStats.fightsWon / teamStats.gamesPlayed;
+            fightDrawsPerGame = teamStats.fightsDrawn / teamStats.gamesPlayed;
+            fightLossesPerGame = teamStats.fightsLost / teamStats.gamesPlayed;
             punchesThrownPerGame = teamStats.punchesThrown / teamStats.gamesPlayed;
             punchesLandedPerGame = teamStats.punchesLanded / teamStats.gamesPlayed;
             punchesTakenPerGame = teamStats.punchesTaken / teamStats.gamesPlayed;
@@ -3429,6 +3608,8 @@ async function updateCalculatedStats(statsCollection, teamsArray, playersArray, 
         }
         if (teamStats.fights > 0) {
             fightWinPercentage = (teamStats.fightsWon / teamStats.fights) * 100;
+            fightDrawPercentage = (teamStats.fightsDrawn / teamStats.fights) * 100;
+            fightLossPercentage = (teamStats.fightsLost / teamStats.fights) * 100;
         }
         if (teamStats.punchesThrown > 0) {
             punchLandedPercentage = (teamStats.punchesLanded / teamStats.punchesThrown) * 100;
@@ -3453,6 +3634,8 @@ async function updateCalculatedStats(statsCollection, teamsArray, playersArray, 
                                                             goalsConcededPerGame: goalsConcededPerGame,
                                                             fightsPerGame: fightsPerGame,
                                                             fightWinsPerGame: fightWinsPerGame,
+                                                            fightDrawsPerGame: fightDrawsPerGame,
+                                                            fightLossesPerGame: fightLossesPerGame,
                                                             punchesThrownPerGame: punchesThrownPerGame,
                                                             punchesLandedPerGame: punchesLandedPerGame,
                                                             punchesTakenPerGame: punchesTakenPerGame,
@@ -3465,6 +3648,8 @@ async function updateCalculatedStats(statsCollection, teamsArray, playersArray, 
                                                             scoringPercentage: scoringPercentage,
                                                             shotsBlockedPercentage: shotsBlockedPercentage,
                                                             fightWinPercentage: fightWinPercentage,
+                                                            fightDrawPercentage: fightDrawPercentage,
+                                                            fightLossPercentage: fightLossPercentage,
                                                             punchLandedPercentage: punchLandedPercentage,
                                                             punchBlockedPercentage: punchBlockedPercentage } });
     });
@@ -3640,9 +3825,15 @@ async function createPlayerStats(player, statsCollection, seasonNumber, playoffS
                                       goalsConcededPerGame: 0.00,
                                       fights: 0,
                                       fightsWon: 0,
+                                      fightsDrawn: 0,
+                                      fightsLost: 0,
                                       fightWinPercentage: 0.00,
+                                      fightDrawPercentage: 0.00,
+                                      fightLossPercentage: 0.00,
                                       fightsPerGame: 0.00,
                                       fightWinsPerGame: 0.00,
+                                      fightDrawsPerGame: 0.00,
+                                      fightLossesPerGame: 0.00,
                                       punchesThrown: 0,
                                       punchesLanded: 0,
                                       punchLandedPercentage: 0.00,
@@ -3703,9 +3894,15 @@ async function createTeamStats(team, statsCollection, seasonNumber, playoffStats
                                       goalsConcededPerGame: 0.00,
                                       fights: 0,
                                       fightsWon: 0,
+                                      fightsDrawn: 0,
+                                      fightsLost: 0,
                                       fightWinPercentage: 0.00,
+                                      fightDrawPercentage: 0.00,
+                                      fightLossPercentage: 0.00,
                                       fightsPerGame: 0.00,
                                       fightWinsPerGame: 0.00,
+                                      fightDrawsPerGame: 0.00,
+                                      fightLossesPerGame: 0.00,
                                       punchesThrown: 0,
                                       punchesLanded: 0,
                                       punchLandedPercentage: 0.00,
