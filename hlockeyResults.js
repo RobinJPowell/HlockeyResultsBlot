@@ -2733,7 +2733,7 @@ async function statsGatherer () {
         // and there are no errors. Restarting fixes this. The bot runs from a batch file which automatically
         // restarts it if it encounters an unexpected error or shuts down for any reason, so exiting every hour
         // will force that restart and prevent me having to manually restart it all the time.
-        if (now.getMinutes() == 0) {
+        if (now.getMinutes() == 14) {
             process.exit();
         }
         
@@ -2904,6 +2904,7 @@ function parseGameLog(gameLog, seasonNumber, playoffStats, teamsArray, weatherRe
         let gameWeatherArray = ['',''];
         let temporaryCenters = ['',''];
         let temporaryGoalies = ['',''];
+        let gameOver = false;
         
         try {
             gameLog.forEach((element, index) => {
@@ -2914,7 +2915,12 @@ function parseGameLog(gameLog, seasonNumber, playoffStats, teamsArray, weatherRe
                     element = element.replace(/[\.!]/g,'');
                     const elementArray = element.split(' ');
                     
-                    if (teamsArray.length == 0 && index == 0) {
+                    if (gameOver) {
+                        // Do nothing
+                        // There is a bug in the creation of the season archive log files which means sometimes once a game has finished
+                        // a partial log of another game appears underneath it in the file.  Should be fixed soo, but for now so I can
+                        // get on with things, this is here.
+                    } else if (teamsArray.length == 0 && index == 0) {
                         // First line is always team names when loading from a log file
                         teamsArray = element.split(' vs ');
                     } else if (element.toLowerCase().includes('period')) {
@@ -2974,6 +2980,7 @@ function parseGameLog(gameLog, seasonNumber, playoffStats, teamsArray, weatherRe
                         updateGameRosterChanges(elementArray, swappedLineArray, rostersCollection, statsCollection, teamsArray, playersArray, gameWeatherArray, temporaryCenters, temporaryGoalies, seasonNumber, playoffStats);
                     } else if (element.toLowerCase().includes('game over')) {
                         const victoryLine = gameLog[index + 1];
+                        gameOver = true;
 
                         updatePlayedStats(victoryLine, rostersCollection, statsCollection, teamsArray, playersArray, seasonNumber, playoffStats, overtime);
                     }
