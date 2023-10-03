@@ -2672,23 +2672,49 @@ async function populateRosters () {
 // Admin function to manually load a log.txt file
 async function loadStats(parameters) {
     NodeDir.files('gameLogs', function (error, files) {
-        files.forEach(async (element) => {
-            if (element.includes('\\log.txt')) {
-                const gameLog = Fs.readFileSync(element).toString().split(/\n/g);
-                const parametersArray = parameters.split(' ');
-                let teamsArray = [];
-                let weatherReportArray = [];
+        let runNo = 0;
+        
+        for (let dayNo = 1; dayNo <= 50; dayNo++) {
+            setTimeout (() => {
+                for (let roundNo = 1; roundNo <= 5; roundNo++) {
+                    setTimeout (() => {
+                        let foundLogs = false;
+                        files.forEach(async (element, index) => {
+                            if (element.includes(`Day ${String(dayNo).padStart(2,'0')}`) && element.includes(`Round ${String(roundNo)}`) && element.includes('\\log.txt')) {                    
+                                foundLogs = true;
+                            }
 
-                // If reading folders from the seasonal stats dump, top level folder contains the team names
-                if (element.includes(' vs ')) {
-                    let matchup = element.substring(0,element.lastIndexOf('\\'));
-                    matchup = matchup.substring(matchup.lastIndexOf('\\') + 1);
-                    teamsArray = matchup.split(' vs ');
+                            if (files.length == index + 1) {
+                                if (foundLogs) {                        
+                                    setTimeout (() => {
+                                        Logger.debug(`loadStats parsing Day ${String(dayNo).padStart(2,'0')} Round ${String(roundNo)}`);
+                                        files.forEach(async (element) => {
+                                            if (element.includes(`Day ${String(dayNo).padStart(2,'0')}`) && element.includes(`Round ${String(roundNo)}`) && element.includes('\\log.txt')) {
+                                                const gameLog = Fs.readFileSync(element).toString().split(/\n/g);
+                                                const parametersArray = parameters.split(' ');
+                                                let teamsArray = [];
+                                                let weatherReportArray = [];
+                        
+                                                // If reading folders from the seasonal stats dump, top level folder contains the team names
+                                                if (element.includes(' vs ')) {
+                                                    let matchup = element.substring(0,element.lastIndexOf('\\'));
+                                                    matchup = matchup.substring(matchup.lastIndexOf('\\') + 1);
+                                                    teamsArray = matchup.split(' vs ');
+                                                }
+                        
+                                                await parseGameLog(gameLog, parametersArray[0], (parametersArray[1] == 'true'), teamsArray, weatherReportArray);
+                                            }
+                                        });
+                                    }, 300000 * runNo);
+                        
+                                    runNo++;
+                                }
+                            }
+                        });
+                    }, 100 * roundNo);
                 }
-
-                await parseGameLog(gameLog, parametersArray[0], (parametersArray[1] == 'true'), teamsArray, weatherReportArray);
-            }
-        });
+            }, 600 * dayNo);
+        }
     });
 }
 
