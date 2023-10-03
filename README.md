@@ -52,7 +52,7 @@ Or how many punches the players of the Sydney Thinkers have thrown:
 - scoring - Returns shotsTaken, goalsScored, scoringPercentage, goalsPerGame and shotsPerGame.
 - saves - Returns goalsConceded, shotsFaced, shotsBlockedGoalie, savePercentage, shotsFacedPerGame, savesPerGame and goalsConcededPerGame.  This collection is only available for players, not teams.
 - blocking - Returns goalsConceded, shotsFaced, shotsFacedPerGame, shotsBlockedDefence, shotsBlocked, shotsBlockedPercentage, shotsBlockedPerGame and goalsConcededPerGame.  This collection will only return shotsBlockedDefence and shotsBlockedPerGame for players, and will return all stats except shotsBlockedDefence for teams.
-- fighting - Returns fights, fightsWon, fightWinPercentage, fightsPerGame and fightWinsPerGame.
+- fighting - Returns fights, fightRecord, fightPercentageRecord, fightsPerGame and fightWinsPerGame.
 - punching - Returns punchesThrown, punchesLanded, punchLandedPercentage, punchesThrownPerGame and punchesLandedPerGame.
 - punched - Returns punchesTaken, punchesBlocked, punchBlockedPercentage, punchesTakenPerGame and punchesBlockedPerGame.
 - weather - Returns timesSweptAway and timesChickenedOut.  This collection is only available for players, not teams.
@@ -103,9 +103,17 @@ Or how many punches the players of the Sydney Thinkers have thrown:
 - goalsConcededPerGame - Returns the number of goals conceded per game played, with the number of games played alongside it, with lower numbers considered better.  Only the Goalie position is considered able to concede a goal, and a player must have faced at least 10 shots for their goals conceded per game to be counted.
 - fights - Returns the number of fights joined.
 - fightsWon - Returns the number of fights won, with the percentage of fights won alongside it.
-- fightWinPercentage - Returns the percentage of fights that were won, with the number of fights joins alongside it.  A player must have joined at least 5 fights for fight win percentage to be counted.
+- fightsDrawn - Returns the number of fights which were a draw, with the percentage of fights drawn alongside it.
+- fightsLost - Returns the number of fights lost, with the percentage of fights lost alongside it.
+- fightWinPercentage - Returns the percentage of fights that were won, with the number of fights joined alongside it.  A player must have joined at least 5 fights for fight win percentage to be counted.
+- fightDrawPercentage - Returns the percentage of fights that were a draw, with the number of fights joined alongside it.  A player must have joined at least 5 fights for fight draw percentage to be counted.
+- fightLossPercentage - Returns the percentage of fights that were lost, with the number of fights joined alongside it.    A player must have joined at least 5 fights for fight loss percentage to be counted.
 - fightsPerGame - Returns the number of fights joined per game played, with the number of games played alongside it.
 - fightWinsPerGame - Returns the number of fights won per game played, with the number of games played alongside it.
+- fightDrawsPerGame - Returns the number of fights that were a draw per game played, with the number of games played alongside it.
+- fightLossesPerGame - Returns the number of fights that were lost per game played, with the number of games played alongside it.
+- fightRecord - Returns the Win-Loss-Draw record for fights.
+- fightPercentageRecord - Returns the Win-Loss-Draw percentage record for fights.  Note these figures are rounded so may not add up to exactly 100%.
 - punchesThrown - Returns the number of punches thrown in fights.
 - punchesLanded - Returns the number of punches which hit the opponent, with the percentage of punches landed alongside it.
 - punchLandedPercentage - Returns the percentage of punches thrown which hit the opponent, with the number of punches thrown alongside it.  A player must have thrown at least 10 punches for punch landed percentage to be counted.
