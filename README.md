@@ -7,7 +7,7 @@ A Discord bot to allow you to request infomation about Hlockey.
 - !results - Returns the most recent game results.
 - !standings - Returns the current standings.
 - !playoffs - Returns the playoff picture during the regular season, and playoff standings during the playoffs.
-- !team [teamName] - Works with partial matches, so "!team nice" would return the roster of the Nice Backflippers.  When executed without a team name from a team's chat channel on the official Hlockey Discord, returns that team's roster.
+- !team [teamName] - Returns a team's roster.  Works with partial matches, so "!team nice" would return the roster of the Nice Backflippers.  When executed without a team name from a team's chat channel on the official Hlockey Discord, returns that team's roster.
 - !stats - Returns the top 5 players in some basic stats (goalsScored, goalsConceded, interceptions, takeaways).  The stats command has a lot of options, so has its own section below.  This command has the potential to return a lot of data, so will only work within the nominated stats channels.
 
 ### The !stats Command
@@ -16,13 +16,13 @@ The !stats command can be run with a number of options:
 
     !stats [stat/statCategory] [teams/teamName] [topX/bottomX/all] [season] [playoffs]
 
-Firstly you can supply the stat that you want, or a category of stats.  Categories of stats return multiple stats together, or just the single stat you are after.  Full lists of all stat categories and stats, as well as any restrictions which apply to them, are below.
+Firstly you can supply the stat that you want, or a category of stats.  Categories of stats return multiple individual stats together.  Full lists of all stat categories and stats, as well as any restrictions which apply to them, are below.
 
-By default the stats returned are for players.  If you want to see the stats for teams, simply supply "teams".  Or, if you want to see the stats of players within a particular team, supply the team name.  Like the !team command, this works on partial matches, you don't need to type "Dawson City Imposters", just "city" will do.
+By default the stats returned are for players.  If you want to see the stats for teams, simply supply "teams".  If you want to see the stats of players within a particular team, supply the team name.  Like the !team command this works on partial matches, you don't need to type "Dawson City Imposters", just "city" will do.
 
 By default the stats returned are a top 5.  You can have as many results returned as you like, and can also see the worst performers as well as the best, by using "topX" or "bottomX".  So if you wanted a top 10, simply supply "top10", or a bottom 13, "bottom13".  If you ask for more records than are available, you will get an error back.  "top123456" will never work, if you just want everything use "all" instead.  Be warned, "all" has the potential to return a lot of data.
 
-By default the stats returned are for the current season.  If you wish to see stats for a different season, just supply the season number.  Currently stats are only available from season 5 onwards.
+By default the stats returned are for the current season.  If you wish to see stats for a different season, just supply the season number.  Currently stats are only available from season 4 onwards.
 
 By default the stats returned are for the regular season.  To see stats for the playoffs, just supply the word "playoffs".
 
@@ -131,7 +131,7 @@ Or how many punches the players of the Sydney Thinkers have thrown:
 
 These commands can only be executed by users who have been added to the list of admin user IDs.
 
-- !loadstats [seasonNumber] [playoffs] - Loads a log.txt game log file from the root directory into the stats table for the supplied season number.  If the game is from the playoffs supply "true", otherwise "false".
+- !loadstats [seasonNumber] [playoffs] - Loads log.txt game log files from the gameLogs directory into the stats table for the supplied season number.  The log files must be in the folder structure used by the season archive zip file available from the Hlockey Discord.  If the games are from the playoffs supply "true", otherwise "false".
 - !populaterosters - Deletes all team rosters from the database and replaces them with whatever is present on the Hlockey website.  Should be run at the start of every season as offseason roster changes cannot be tracked by the bot, and if rosters in the database get out of line with the site for any reason.
 - !recalculatestats [seasonNumber] [playoffs] - Recalculates calculated stats for the supplied season number. If you need to recalculate playoff stats supply "true", otherwise "false".  Should be run if any of the percentage stats go wonky.
 
