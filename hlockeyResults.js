@@ -2363,7 +2363,7 @@ async function getFightRecord(statsCollection, season, playoffStats, sortQuery, 
         if (count == 0) {
             i -= statArray.length;
         } else if (count > statArray.length) {
-            return reject(`Not enough records to return ${count} fight records ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
+            return reject(getNotEnoughRecordsMessage('fight records', count, teamName));
         }
 
         let statReturn = `\nFight Record (W-L-D)\n`;
@@ -2406,7 +2406,7 @@ async function getFightPercentageRecord(statsCollection, season, playoffStats, s
         if (count == 0) {
             i -= statArray.length;
         } else if (count > statArray.length) {
-            return reject(`Not enough records to return ${count} fight percentage records ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
+            return reject(getNotEnoughRecordsMessage('fight percentage records', count, teamName));
         }
 
         let statReturn = `\nFight Percentage Record (W%-L%-D%)\n`;
@@ -2449,7 +2449,7 @@ async function getStat(statsCollection, season, playoffStats, sortQuery, count, 
         if (count == 0) {
             i -= statArray.length;
         } else if (count > statArray.length) {
-            return reject(`Not enough records to return ${count} ${statName} ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
+            return reject(getNotEnoughRecordsMessage(statName, count, teamName));
         }
 
         let statReturn = `\n${title}\n`;
@@ -2492,7 +2492,7 @@ async function getStatWithSecondaryFloatStat(statsCollection, season, playoffSta
         if (count == 0) {
             i -= statArray.length;
         } else if (count > statArray.length) {
-            return reject(`Not enough records to return ${count} ${mainStat} ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
+            return reject(getNotEnoughRecordsMessage(mainStat, count, teamName));
         }
 
         let statReturn = `\n${title}\n`;
@@ -2535,7 +2535,7 @@ async function getStatWithSecondaryFloatStatAndFilter(statsCollection, season, p
         if (count == 0) {
             i -= statArray.length;
         } else if (count > statArray.length) {
-            return reject(`Not enough records to return ${count} ${mainStat} ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
+            return reject(getNotEnoughRecordsMessage(mainStat, count, teamName));
         }
 
         let statReturn = `\n${title}\n`;
@@ -2578,7 +2578,7 @@ async function getFloatStatWithSecondaryStat(statsCollection, season, playoffSta
         if (count == 0) {
             i -= statArray.length;
         } else if (count > statArray.length) {
-            return reject(`Not enough records to return ${count} ${mainStat} ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
+            return reject(getNotEnoughRecordsMessage(mainStat, count, teamName));
         }
 
         let statReturn = `\n${title}\n`;
@@ -2621,7 +2621,7 @@ async function getFloatStatWithSecondaryStatAndFilter(statsCollection, season, p
         if (count == 0) {
             i -= statArray.length;
         } else if (count > statArray.length) {
-            return reject(`Not enough records to return ${count} ${mainStat} ${(teamName != '') ? (teamName =='teams') ? 'by team' : `for the ${teamName}` : 'by player' }`);
+            return reject(getNotEnoughRecordsMessage(mainStat, count, teamName));
         }
 
         let statReturn = `\n${title}\n`;
@@ -2642,6 +2642,20 @@ async function getFloatStatWithSecondaryStatAndFilter(statsCollection, season, p
 
         return resolve(statReturn);
     });
+}
+
+function getNotEnoughRecordsMessage(statName, count, teamName) {
+    let teamOrPlayerMessage = '';
+    
+    if (teamName == 'teams') {
+        teamOrPlayerMessage = 'by team';
+    } else if (teamName != '') {
+        teamOrPlayerMessage = `for the ${teamName}`
+    } else {
+        teamOrPlayerMessage = 'by player';
+    }
+
+    return `Not enough records to return ${count} ${statName} ${teamOrPlayerMessage}`;
 }
 
 // Admin function to populate rosters in the DB
