@@ -3321,8 +3321,8 @@ async function updateFightingStats(fightArray, rostersCollection, statsCollectio
                 const fightingPlayer2Roster = await rostersCollection.findOne({ name: fightingPlayer2 });
                 const findfightingPlayer1 = { name: fightingPlayer1, season: seasonNumber, playoffs: playoffStats };
                 const findfightingPlayer2 = { name: fightingPlayer2, season: seasonNumber, playoffs: playoffStats };
-                let fightingPlayer1Stats = await statsCollection.findOne(findfightingPlayer1);
-                let fightingPlayer2Stats = await statsCollection.findOne(findfightingPlayer2);
+                const fightingPlayer1Stats = await statsCollection.findOne(findfightingPlayer1);
+                const fightingPlayer2Stats = await statsCollection.findOne(findfightingPlayer2);
                 
                 if (!fightingPlayer1Stats) {
                     await createPlayerStats(fightingPlayer1Roster, statsCollection, seasonNumber, playoffStats);
@@ -3362,8 +3362,20 @@ async function updateFightingStats(fightArray, rostersCollection, statsCollectio
                 const findPunchedPlayer = { name: punchedPlayer, season: seasonNumber, playoffs: playoffStats };
                 const findPunchingTeam = { name: punchingPlayerRoster.team, season: seasonNumber, playoffs: playoffStats };
                 const findPunchedTeam = { name: punchedPlayerRoster.team, season: seasonNumber, playoffs: playoffStats };
-                const punchingPlayerStats = await statsCollection.findOne(findPunchingPlayer);
-                const punchedPlayerStats = await statsCollection.findOne(findPunchedPlayer);
+                let punchingPlayerStats = await statsCollection.findOne(findPunchingPlayer);
+                let punchedPlayerStats = await statsCollection.findOne(findPunchedPlayer);
+
+                // This seems like it shouldn't be needed as the "joins" section above should cover everything,
+                // but if a player is replaced by weather mid-fight, they start in the fight despite never joining it
+                if (!punchingPlayerStats) {
+                    await createPlayerStats(punchingPlayerRoster, statsCollection, seasonNumber, playoffStats);
+                    punchingPlayerStats = await statsCollection.findOne(findPunchingPlayer);
+                }
+                if (!punchedPlayerStats) {
+                    await createPlayerStats(punchedPlayerRoster, statsCollection, seasonNumber, playoffStats);
+                    punchedPlayerStats = await statsCollection.findOne(findPunchedPlayer);
+                }
+
                 const punchingTeamStats = await statsCollection.findOne(findPunchingTeam);
                 const punchedTeamStats = await statsCollection.findOne(findPunchedTeam);
 
