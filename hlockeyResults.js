@@ -247,7 +247,7 @@ async function isOffSeason(result) {
 function sleeping(channelID) {
     bot.sendMessage({
         to: channelID,
-        message: `It\'s the offseason. Shhhhhh, James is getting some sleep\n${SleepyGifs[Math.floor(Math.random()*SleepyGifs.length)]}`
+        message: `It's the offseason. Shhhhhh, James is getting some sleep\n${SleepyGifs[Math.floor(Math.random()*SleepyGifs.length)]}`
     });    
 }
 
@@ -2821,7 +2821,7 @@ async function statsGatherer () {
                     games.each(async (index, element) => {
                         await Axios.get(`${GamesUrl}/${index.toString()}`).then(async (resolve) => {
                             const $ = Cheerio.load(resolve.data);
-                            const gameLog = $('#messages').text().replace(/[\.!]/g,' ').split(WhitespaceRegex);
+                            const gameLog = $('#messages').text().replace(/[.!]/g,' ').split(WhitespaceRegex);
 
                             const resultRaw = $games(element).find('.scoreboard').text();
                             const resultArray = resultRaw.trim().replaceAll('\n','').replace(WhitespaceRegex,'|').split('|');
@@ -2872,7 +2872,7 @@ async function finishStatsUpdate(weatherReportArray, miscCollection, statsCollec
     await miscCollection.updateOne({ name: 'walCarineGamesWithoutAFight' }, { $set: { games: walCarineGamesWithoutAFight } });
 
     if (weatherReportArray.length > 0) {
-        let weatherReport = `Greetings splorts fans! With all games concluded it\'s time for the Hlockey Weather Report, brought to you by ${Sponsors[Math.floor(Math.random()*Sponsors.length)]}\n`;
+        let weatherReport = `Greetings splorts fans! With all games concluded it's time for the Hlockey Weather Report, brought to you by ${Sponsors[Math.floor(Math.random()*Sponsors.length)]}\n`;
 
         weatherReportArray.forEach(async (element, index) => {
             weatherReport += `\n${element}`;
@@ -2938,7 +2938,7 @@ function parseGameLog(gameLog, seasonNumber, playoffStats, teamsArray, weatherRe
                 setTimeout(async () => {
                     // When coming from a log file many lines end in either . or !
                     // Remove this, it can mess things up
-                    element = element.replace(/[\.!]/g,'');
+                    element = element.replace(/[.!]/g,'');
                     const elementArray = element.split(' ');
                     
                     if (gameOver) {
@@ -2960,7 +2960,7 @@ function parseGameLog(gameLog, seasonNumber, playoffStats, teamsArray, weatherRe
 
                         // Interceptions will be on the next line
                         if (gameLog[index + 1].toLowerCase().includes('intercepted')) {
-                            const interceptionLine = gameLog[index + 1].replace(/[\.!]/g,'');
+                            const interceptionLine = gameLog[index + 1].replace(/[.!]/g,'');
                             interceptionArray = interceptionLine.split(' ');
                         }
 
@@ -2972,7 +2972,7 @@ function parseGameLog(gameLog, seasonNumber, playoffStats, teamsArray, weatherRe
 
                         // Blocked shots will be on the next line
                         if (gameLog[index + 1].toLowerCase().includes('blocks')) {
-                            const blockedLine = gameLog[index + 1].replace(/[\.!]/g,'');
+                            const blockedLine = gameLog[index + 1].replace(/[.!]/g,'');
                             blockedArray = blockedLine.split(' ');
                         }
 
@@ -2983,7 +2983,7 @@ function parseGameLog(gameLog, seasonNumber, playoffStats, teamsArray, weatherRe
 
                         // Get the whole fight, weather can occur mid-fight
                         do {
-                            fightArray.push(gameLog[index + i].replace(/[\.!]/g,''));
+                            fightArray.push(gameLog[index + i].replace(/[.!]/g,''));
                             i++
                         } while (gameLog[index + i].toLowerCase().includes('punch')
                                 || gameLog[index + i].toLowerCase().includes('fight')
@@ -2995,12 +2995,12 @@ function parseGameLog(gameLog, seasonNumber, playoffStats, teamsArray, weatherRe
                                 || gameLog[index + i].toLowerCase().includes('scoring'));
 
                         // After the fight is over we get morale changes for each team
-                        fightArray.push(gameLog[index + i + 1].replace(/[\.!]/g,''));
-                        fightArray.push(gameLog[index + i + 2].replace(/[\.!]/g,''));
+                        fightArray.push(gameLog[index + i + 1].replace(/[.!]/g,''));
+                        fightArray.push(gameLog[index + i + 2].replace(/[.!]/g,''));
 
                         updateFightingStats(fightArray, rostersCollection, statsCollection, teamsArray, playersArray, seasonNumber, playoffStats);
                     } else if (element.toLowerCase().includes('washed away') || element.toLowerCase().includes('chickened')) {
-                        const swappedLine = gameLog[index + 1].replace(/[\.!]/g,'');
+                        const swappedLine = gameLog[index + 1].replace(/[.!]/g,'');
                         const swappedLineArray = swappedLine.split(' ');
                         
                         updateGameRosterChanges(elementArray, swappedLineArray, rostersCollection, statsCollection, teamsArray, playersArray, gameWeatherArray, temporaryCenters, temporaryGoalies, seasonNumber, playoffStats);
