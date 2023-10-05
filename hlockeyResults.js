@@ -3770,7 +3770,7 @@ async function updateCalculatedStats(statsCollection, teamsArray, playersArray, 
             takeawayPercentage = (playerStats.takeaways / playerStats.hits) * 100;
         }
         if (playerStats.hitsTaken > 0) {
-            s = (playerStats.pucksLost / playerStats.hitsTaken) * 100;
+            puckLossPercentage = (playerStats.pucksLost / playerStats.hitsTaken) * 100;
         }
         if (playerStats.shotsTaken > 0) {
             scoringPercentage = (playerStats.goalsScored / playerStats.shotsTaken) * 100;
