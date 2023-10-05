@@ -84,34 +84,50 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 
         switch (command.toLowerCase()) {
             case '!results':
-                isOffSeason((result) => {
-                    if (result) {
-                        sleeping(channelID);
-                    } else {
-                        getResults(channelID);
-                    }
-                });
-                break;
             case '!standings':
-                isOffSeason((result) => {
-                    if (result) {
-                        sleeping(channelID);
-                    } else {
-                        getStandings(channelID, false);
-                    }
-                });
-                break;
             case '!playoffs':
-                isOffSeason((result) => {
-                    if (result) {
-                        sleeping(channelID);
-                    } else {
-                        playoffPicture(channelID);
-                    }
-                });
+                inSeasonCommands(command.toLowerCase(), channelID);
                 break;
             case '!team':
-                findTeam(channelID, parameters.toLowerCase());
+            case '!stats':
+            case '!stat':
+                anytimeCommands(command.toLowerCase(), parameters.toLowerCase());
+                break;
+            case '!loadstats':
+            case '!populaterosters':
+            case '!recalculatestats':
+                if (userID == AdminUser) {
+                    adminCommands(command.toLowerCase(), parameters.toLowerCase());
+                }
+                break;
+        }
+    }
+});
+
+function inSeasonCommands(command, channelID) {
+    isOffSeason((result) => {
+        if (result) {
+            sleeping(channelID);
+        } else {
+            switch (command) {
+                case '!results':
+                    getResults(channelID);
+                    break;
+                case '!standings':
+                    getStandings(channelID, false);
+                    break;
+                case '!playoffs':
+                    playoffPicture(channelID);
+                    break;
+            }
+        }
+    });
+}
+
+function anytimeCommands(command, parameters) {
+    switch(command) {
+        case '!team':
+                findTeam(channelID, parameters);
                 break;
             case '!stats':
             case '!stat':
@@ -121,45 +137,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                         message: 'I am currently updating my notes, please try again later'
                     }); 
                 } else if (channelID == StatsChannel) {
-                    getStats(parameters.toLowerCase()).then((resolve) => {
-                        let statsReturn = '';
-                        resolve.forEach((element, index) => {
-                            statsReturn += element;
-                            
-                            if (resolve.length == (index + 1)) {
-                                // Discord limits messages to 2000 characters, so need to split this up
-                                if (statsReturn.length > 2000) {
-                                    const statsReturnArray = statsReturn.trim().split('\n');
-                                    statsReturn = '';
-
-                                    statsReturnArray.forEach((element, index) => {
-                                        // Discord limits bot message posting speed, so slow it down
-                                        setTimeout(() => {
-                                            statsReturn += `${element}\n`                                            
-
-                                            if ((index % 25) == 0 || statsReturnArray.length == (index + 1)) {                                                
-                                                bot.sendMessage({
-                                                    to: StatsChannel,
-                                                    message: statsReturn.trim()
-                                                });
-                                                statsReturn = '';
-                                            }
-                                        }, 100 * index);
-                                    })
-                                } else {
-                                    bot.sendMessage({
-                                        to: StatsChannel,
-                                        message: statsReturn.trim()
-                                    });
-                                }
-                            }
-                        });
-                    }).catch((reject) => {
-                        bot.sendMessage({
-                            to: StatsChannel,
-                            message: reject
-                        });
-                    });
+                    returnStats(parameters)                    
                 } else {
                     bot.sendMessage({
                         to: channelID,
@@ -167,24 +145,22 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                     }); 
                 }
                 break;
-            case '!loadstats':
-                if (userID == AdminUser) {
-                    loadStats(parameters.toLowerCase());
-                }
-                break;
-            case '!populaterosters':
-                if (userID == AdminUser) {
-                    populateRosters();
-                }
-                break;
-            case '!recalculatestats':
-                if (userID == AdminUser) {
-                    recalculateStats(parameters.toLowerCase());
-                }
-                break;
-        }
     }
-});
+}
+
+function adminCommands(command, parameters) {   
+    switch (command) {    
+        case '!loadstats':
+            loadStats(parameters);
+            break;
+        case '!populaterosters':
+            populateRosters();
+            break;
+         case '!recalculatestats':
+            recalculateStats(parameters);
+            break;
+    }
+}
 
 function setEmoji() {
     TeamEmoji.set(Teams[0], ':ocean:');
@@ -767,7 +743,50 @@ function calculateElectionStats(player, offence, defence, agility, electionStats
             (bestDefence.length == 0) ? electionStats[4] : bestDefence]
 }
 
-// Return requested season stats to the user
+// Return requested season stats to the stats channel
+function returnStats(parameters) {
+    getStats(parameters.toLowerCase()).then((resolve) => {
+        let statsReturn = '';
+        resolve.forEach((element, index) => {
+            statsReturn += element;
+            
+            if (resolve.length == (index + 1)) {
+                // Discord limits messages to 2000 characters, so need to split this up
+                if (statsReturn.length > 2000) {
+                    const statsReturnArray = statsReturn.trim().split('\n');
+                    statsReturn = '';
+
+                    statsReturnArray.forEach((element, index) => {
+                        // Discord limits bot message posting speed, so slow it down
+                        setTimeout(() => {
+                            statsReturn += `${element}\n`                                            
+
+                            if ((index % 25) == 0 || statsReturnArray.length == (index + 1)) {                                                
+                                bot.sendMessage({
+                                    to: StatsChannel,
+                                    message: statsReturn.trim()
+                                });
+                                statsReturn = '';
+                            }
+                        }, 100 * index);
+                    })
+                } else {
+                    bot.sendMessage({
+                        to: StatsChannel,
+                        message: statsReturn.trim()
+                    });
+                }
+            }
+        });
+    }).catch((reject) => {
+        bot.sendMessage({
+            to: StatsChannel,
+            message: reject
+        });
+    });
+}
+
+// Get requested season stats
 async function getStats(parameters) {
     return new Promise(async (resolve, reject) => {
         try {
