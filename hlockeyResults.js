@@ -91,7 +91,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
             case '!team':
             case '!stats':
             case '!stat':
-                anytimeCommands(command.toLowerCase(), parameters.toLowerCase());
+                anytimeCommands(command.toLowerCase(), parameters.toLowerCase(), channelID);
                 break;
             case '!loadstats':
             case '!populaterosters':
@@ -124,7 +124,7 @@ function inSeasonCommands(command, channelID) {
     });
 }
 
-function anytimeCommands(command, parameters) {
+function anytimeCommands(command, parameters, channelID) {
     switch(command) {
         case '!team':
                 findTeam(channelID, parameters);
