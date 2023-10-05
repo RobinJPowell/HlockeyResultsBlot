@@ -69,7 +69,7 @@ bot.on('ready', function (evt) {
 });
 bot.on('message', function (user, userID, channelID, message, evt) {
     // Bot listens for messages that start with `!`
-    if (message.substring(0, 1) == '!') {
+    if (message.startsWith('!')) {
         Logger.debug('Command ' + message + ' from ' + userID + ' in channel ' + channelID);
 
         let command = '';
@@ -557,7 +557,7 @@ function bestOfTheRestCalculator(contentionTeamsMap, qualifiedTeamsMap, eliminat
 function findTeam(channelID, teamName) {
     const teamChannel = isTeamChannel(channelID);
 
-    if (teamName == '' && teamChannel[0] == true) {
+    if (teamName == '' && teamChannel[0]) {
         teamName = teamChannel[1].toLowerCase();
     }
 
@@ -612,10 +612,10 @@ function isTeamChannel(channelID) {
     if (parentChannelIndex > 13) {
         const parentChannelID = thisChannel.substring(parentChannelIndex,parentChannelIndex + 19);
         const parentChannel = channels.substring(channels.indexOf(parentChannelID));        
-        const parentChannelNameStart = parentChannel.substring(parentChannel.indexOf('\"name":"') + 8);
+        const parentChannelNameStart = parentChannel.substring(parentChannel.indexOf('"name":"') + 8);
         const parentChannelName = parentChannelNameStart.substring(0,parentChannelNameStart.indexOf('"'));
         
-        TeamEmoji.forEach((value,key) => {
+        TeamEmoji.forEach((value, key) => {
             if (teamName == '' && parentChannelName.match(key)) {
                 teamName = key;
             }
@@ -3341,16 +3341,15 @@ async function updateFightingStats(fightArray, rostersCollection, statsCollectio
 
                 const fightingPlayerRoster = await rostersCollection.findOne({ name: fightingPlayer });
                 const findfightingPlayer = { name: fightingPlayer, season: seasonNumber, playoffs: playoffStats };
-                let fightingPlayerStats = await statsCollection.findOne(findfightingPlayer);
+                const fightingPlayerStats = await statsCollection.findOne(findfightingPlayer);
                 
                 if (!fightingPlayerStats) {
                     await createPlayerStats(fightingPlayerRoster, statsCollection, seasonNumber, playoffStats);
-                    fightingPlayerStats = await statsCollection.findOne(findfightingPlayer);
                 }
             } else if (element.toLowerCase().includes('punches')) {
                 let blocked = false;
 
-                if (!(fightArray[index + 1] === undefined)) {
+                if (fightArray[index + 1] !== undefined) {
                     blocked = fightArray[index + 1].toLowerCase().includes('blocks');
                 }
 
@@ -3399,7 +3398,7 @@ async function updateFightingStats(fightArray, rostersCollection, statsCollectio
                 let winningTeam = '';
                 let i = 0;
 
-                if (!(fightArray[index + 1] === undefined) && fightArray[index + 1].toLowerCase().includes('morale')) {
+                if (fightArray[index + 1] !== undefined && fightArray[index + 1].toLowerCase().includes('morale')) {
                     const moraleLineArray = fightArray[index + 1].split(' ');
                     
                     do {
@@ -3531,13 +3530,11 @@ async function updatePlayedStats(victoryLine, rostersCollection, statsCollection
                 await statsCollection.updateOne(findTeam, { $set: { gamesPlayed: teamStats.gamesPlayed + 1,
                                                                     gamesWon: teamStats.gamesWon + 1 } });                                                                    
             }
+        } else if (overtime) {            
+            await statsCollection.updateOne(findTeam, { $set: { gamesPlayed: teamStats.gamesPlayed + 1,
+                                                                overtimeGames: teamStats.overtimeGames + 1 } });
         } else {
-            if (overtime) {
-                await statsCollection.updateOne(findTeam, { $set: { gamesPlayed: teamStats.gamesPlayed + 1,
-                                                                    overtimeGames: teamStats.overtimeGames + 1 } });
-            } else {
-                await statsCollection.updateOne(findTeam, { $set: { gamesPlayed: teamStats.gamesPlayed + 1 } });
-            }
+            await statsCollection.updateOne(findTeam, { $set: { gamesPlayed: teamStats.gamesPlayed + 1 } });
         }
     });
 
@@ -3556,13 +3553,11 @@ async function updatePlayedStats(victoryLine, rostersCollection, statsCollection
                 await statsCollection.updateOne(findPlayer, { $set: { gamesPlayed: playerStats.gamesPlayed + 1,
                                                                       gamesWon: playerStats.gamesWon + 1 } });                                                                    
             }
+        } else if (overtime) {
+            await statsCollection.updateOne(findPlayer, { $set: { gamesPlayed: playerStats.gamesPlayed + 1,
+                                                                  overtimeGames: playerStats.overtimeGames + 1 } });
         } else {
-            if (overtime) {
-                await statsCollection.updateOne(findPlayer, { $set: { gamesPlayed: playerStats.gamesPlayed + 1,
-                                                                      overtimeGames: playerStats.overtimeGames + 1 } });
-            } else {
-                await statsCollection.updateOne(findPlayer, { $set: { gamesPlayed: playerStats.gamesPlayed + 1 } });
-            }
+            await statsCollection.updateOne(findPlayer, { $set: { gamesPlayed: playerStats.gamesPlayed + 1 } });
         }
     });    
 }
