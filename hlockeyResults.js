@@ -2366,7 +2366,7 @@ async function getFightRecord(statsCollection, season, playoffStats, sortQuery, 
             return reject(getNotEnoughRecordsMessage('fight records', count, teamName));
         }
 
-        let statReturn = `\nFight Record (W-L-D)\n`;
+        let statReturn = `\n**Fight Record** (W-L-D)\n`;
 
         do {
             let name = '';
@@ -2409,7 +2409,7 @@ async function getFightPercentageRecord(statsCollection, season, playoffStats, s
             return reject(getNotEnoughRecordsMessage('fight percentage records', count, teamName));
         }
 
-        let statReturn = `\nFight Percentage Record (W%-L%-D%)\n`;
+        let statReturn = `\n**Fight Percentage Record** (W%-L%-D%)\n`;
 
         do {
             let name = '';
