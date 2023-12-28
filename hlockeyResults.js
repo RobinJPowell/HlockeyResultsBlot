@@ -10,8 +10,8 @@ const Axios = require('axios');
 const Cheerio = require('cheerio');
 const NodeDir = require('node-dir');
 
-const GamesUrl = 'https://hlockey.onrender.com/league/games';
-const StandingsUrl = 'https://hlockey.onrender.com/league/standings';
+const GamesUrl = 'https://hlockey.gay/league/games';
+const StandingsUrl = 'https://hlockey.gay/league/standings';
 const GamesPerSeason = 111;
 const SleepyGifs = Fs.readFileSync('./sleepyGifs.txt').toString().split('|');
 const Sponsors = Fs.readFileSync('./sponsors.txt').toString().split('|');
