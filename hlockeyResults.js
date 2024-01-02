@@ -2,7 +2,7 @@
 const Discord = require('discord.io');
 const GatewayIntentBits = require('discord.io');
 const Partials = require('discord.io');
-const Logger = require('winston');
+const Winston = require('winston');
 const Fs = require('fs');
 const MongoDB = require('mongodb').MongoClient;
 const Auth = require('./auth.json');
@@ -32,11 +32,20 @@ const Teams = ['Antalya Pirates', 'Baden Hallucinations', 'Kópavogur Seals', 'L
 let StatsUpdateInProgress = false;
 
 // Configure Logger settings
-Logger.remove(Logger.transports.Console);
-Logger.add(new Logger.transports.Console, {
-    colorize: true
+const { combine, timestamp, printf, colorize, align } = Winston.format;
+
+const Logger = Winston.createLogger({
+	level:  'debug',
+	format: combine(
+		colorize({ all: true }),
+		timestamp({
+			format: 'YYYY-MM-DD HH:mm:ss.SSS',
+		}),
+		align(),
+		printf((info) => `[${info.timestamp}] ${info.level}: ${info.message}`)
+	),
+	transports: [new Winston.transports.Console()],
 });
-Logger.level = 'debug';
 
 // Initialize Discord Bot
 const bot = new Discord.Client({
