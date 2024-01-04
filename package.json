@@ -19,7 +19,7 @@
   "dependencies": {
     "axios": "^1.4.0",
     "cheerio": "^1.0.0-rc.12",
-    "discord.io": "https://github.com/woor/discord.io/tarball/gateway_v6",
+    "discord.js": "^14.14.1",
     "fs": "^0.0.1-security",
     "mongodb": "^5.7.0",
     "node-dir": "^0.1.17",

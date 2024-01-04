@@ -1,7 +1,5 @@
 //Global Variables
-const Discord = require('discord.io');
-const GatewayIntentBits = require('discord.io');
-const Partials = require('discord.io');
+const Discord = require('discord.js');
 const Winston = require('winston');
 const Fs = require('fs');
 const MongoDB = require('mongodb').MongoClient;
@@ -18,10 +16,10 @@ const Sponsors = Fs.readFileSync('./sponsors.txt').toString().split('|');
 
 const AdminUser = Fs.readFileSync('./adminUser.txt').toString();
 const TeamEmoji = new Map([]);
-const TeamChannel = new Map([]);
 const WhitespaceRegex = /\s\s+/g;
-const WatchChannel = '987112252412923914';
-const StatsChannel = '1136393010817536041'
+const WatchChannelID = '707250380483854340';
+const StatsChannelID = '707250380483854340';
+let WatchChannel = null;
 
 const Teams = ['Antalya Pirates', 'Baden Hallucinations', 'Kópavogur Seals', 'Lagos Soup', 'Pica Acid',
                'Dawson City Impostors', 'Erlangen Ohms', 'Pompei Eruptions', 'Rio de Janeiro Directors', 'Wyrzysk Rockets',
@@ -48,64 +46,56 @@ const Logger = Winston.createLogger({
 });
 
 // Initialize Discord Bot
-const bot = new Discord.Client({
-    token: Auth.token,
-    autorun: true,
-    intents: [
-        GatewayIntentBits.DirectMessages,
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildBans,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent
-      ],
-    partials: [
-        Partials.Channel,
-        Partials.Message
-    ]
-});
+const bot = new Discord.Client({intents: 37377});
+bot.login(Auth.token);
 
 // Connect to database
 const MongoClient = new MongoDB('mongodb://127.0.0.1:27017', { family: 4 });
-const Database = MongoClient.db('hlockey');
+let Database = null;
 
 setInterval(statsGatherer, 60000);
 
-bot.on('ready', function (evt) {
+bot.on('ready', async function (evt) {
     setEmoji();
-    setTeamChannels();
+    WatchChannel = bot.channels.cache.get(WatchChannelID);
+    await MongoClient.connect().then(() => {
+        Database = MongoClient.db('hlockey');
+    }).catch((reject) => {
+        Logger.error(reject);
+    });
     Logger.info('Connected');
-    Logger.info(bot.username + ' - (' + bot.id + ')');
+    Logger.info(bot.user.id + ' - (' + bot.user.displayName + ')');
 });
-bot.on('message', function (user, userID, channelID, message, evt) {
+bot.on('messageCreate', function(message) {
     // Bot listens for messages that start with `!`
-    if (message.startsWith('!')) {
-        Logger.debug('Command ' + message + ' from ' + userID + ' in channel ' + channelID);
+    if (message.content.startsWith('!')) {
+        Logger.debug('Command ' + message.content + ' from ' + message.author.id + '(' + message.author.displayName + ')' + ' in channel ' + message.channelId + '(' + message.channel.name + ')');
 
         let command = '';
         let parameters = '';
 
-        if (message.indexOf(' ') > 0) {
-            command = message.substring(0,message.indexOf(' '));
-            parameters = message.substring(message.indexOf(' ') + 1);
+        if (message.content.indexOf(' ') > 0) {
+            command = message.content.substring(0,message.content.indexOf(' '));
+            parameters = message.content.substring(message.content.indexOf(' ') + 1);
         } else {
-            command = message;
+            command = message.content;
         }
 
         switch (command.toLowerCase()) {
             case '!results':
             case '!standings':
             case '!playoffs':
-                inSeasonCommands(command.toLowerCase(), channelID);
+                inSeasonCommands(command.toLowerCase(), message.channel);
                 break;
             case '!team':
             case '!stats':
             case '!stat':
-                anytimeCommands(command.toLowerCase(), parameters.toLowerCase(), channelID);
+                anytimeCommands(command.toLowerCase(), parameters.toLowerCase(), message.channel);
                 break;
             case '!loadstats':
             case '!populaterosters':
             case '!recalculatestats':
-                if (userID == AdminUser) {
+                if (message.author.id == AdminUser) {
                     adminCommands(command.toLowerCase(), parameters.toLowerCase());
                 }
                 break;
@@ -113,45 +103,39 @@ bot.on('message', function (user, userID, channelID, message, evt) {
     }
 });
 
-function inSeasonCommands(command, channelID) {
+function inSeasonCommands(command, channel) {
     isOffSeason((result) => {
         if (result) {
-            sleeping(channelID);
+            sleeping(channel);
         } else {
             switch (command) {
                 case '!results':
-                    getResults(channelID);
+                    getResults(channel);
                     break;
                 case '!standings':
-                    getStandings(channelID, false);
+                    getStandings(channel, false);
                     break;
                 case '!playoffs':
-                    playoffPicture(channelID);
+                    playoffPicture(channel);
                     break;
             }
         }
     });
 }
 
-function anytimeCommands(command, parameters, channelID) {
+function anytimeCommands(command, parameters, channel) {
     switch(command) {
         case '!team':
-                findTeam(channelID, parameters);
+                findTeam(channel, parameters);
                 break;
             case '!stats':
             case '!stat':
                 if (StatsUpdateInProgress) {
-                    bot.sendMessage({
-                        to: channelID,
-                        message: 'I am currently updating my notes, please try again later'
-                    }); 
-                } else if (channelID == StatsChannel) {
-                    returnStats(parameters)                    
+                    channel.send('I am currently updating my notes, please try again later');
+                } else if (channel.id == StatsChannelID) {
+                    returnStats(parameters, channel)                    
                 } else {
-                    bot.sendMessage({
-                        to: channelID,
-                        message: `Please use <#${StatsChannel}> for !stats`
-                    }); 
+                    channel.send(`Please use <#${StatsChannelID}> for !stats`);
                 }
                 break;
     }
@@ -195,29 +179,6 @@ function setEmoji() {
     TeamEmoji.set(Teams[20], ':sleeping_accommodation:');
 }
 
-function setTeamChannels() {
-    TeamChannel.set('987173855737024522', Teams[0]);
-    TeamChannel.set('987174495687147540', Teams[1]);
-    TeamChannel.set('987175832902586389', Teams[2]);
-    TeamChannel.set('987176850927276032', Teams[3]);
-    TeamChannel.set('987177076249468988', Teams[4]);
-    TeamChannel.set('987177378667167765', Teams[5]);
-    TeamChannel.set('987178525406687262', Teams[6]);
-    TeamChannel.set('987178627051434038', Teams[7]);
-    TeamChannel.set('987178803992354846', Teams[8]);
-    TeamChannel.set('987178965057830972', Teams[9]);
-    TeamChannel.set('987179092992462898', Teams[10]);
-    TeamChannel.set('987179214677639228', Teams[11]);
-    TeamChannel.set('987179372781928469', Teams[12]);
-    TeamChannel.set('987179504659202058', Teams[13]);
-    TeamChannel.set('987179678479552532', Teams[14]);
-    TeamChannel.set('987180068008759357', Teams[15]);
-    TeamChannel.set('987180244488290354', Teams[16]);
-    TeamChannel.set('987180425254408242', Teams[17]);
-    TeamChannel.set('987180600073019422', Teams[18]);
-    TeamChannel.set('987180723196805200', Teams[19]);
-}
-
 async function isOffSeason(result) {
     await Axios.get(GamesUrl).then((resolve) => {
         const $ = Cheerio.load(resolve.data);
@@ -229,14 +190,11 @@ async function isOffSeason(result) {
     });
 }
 
-function sleeping(channelID) {
-    bot.sendMessage({
-        to: channelID,
-        message: `It's the offseason. Shhhhhh, James is getting some sleep\n${SleepyGifs[Math.floor(Math.random()*SleepyGifs.length)]}`
-    });    
+function sleeping(channel) {
+    channel.send(`It's the offseason. Shhhhhh, James is getting some sleep\n${SleepyGifs[Math.floor(Math.random()*SleepyGifs.length)]}`);  
 }
 
-async function getResults(channelID) {
+async function getResults(channel) {
     await Axios.get(GamesUrl).then((resolve) => {
         let results = '';
         let gamesProcessed = 0;
@@ -266,25 +224,18 @@ async function getResults(channelID) {
             gamesProcessed ++;
 
             if (gamesProcessed == totalGames) {
-                bot.sendMessage({
-                    to: channelID,
-                    message: `${results.trim()}`
-                });
+                channel.send(`${results.trim()}`);
 
-                Logger.debug('Results returned to channel ' + channelID);
+            Logger.debug('Results returned to channel ' + channel.id + '(' + channel.name + ')');
             }
         });         
     }).catch((reject) => {
-        bot.sendMessage({
-            to: channelID,
-            message: 'I\'m too tired to get the results right now'
-        });
-
+        channel.send('I\'m too tired to get the results right now');
         Logger.error(`Error obtaining results: ${reject}`);
     });
 };
 
-async function getStandings(channelID, playoffsOnly) {
+async function getStandings(channel, playoffsOnly) {
     await Axios.get(StandingsUrl).then((resolve) => {
         let divisionsArray = [];
         let counter = 0;
@@ -304,12 +255,8 @@ async function getStandings(channelID, playoffsOnly) {
                 if (playoffsOnly) {
                     divisionsArray.length = index + 1;
 
-                    bot.sendMessage({
-                        to: channelID,
-                        message: `${standings.trim()}`
-                    });
-    
-                    Logger.debug('Playoff standings returned to channel ' + channelID);
+                    channel.send(`${standings.trim()}`);    
+                    Logger.debug('Playoff standings returned to channel ' + channel.id + '(' + channel.name + ')');
                 } else {
                     standings += `\n\n**${element}:**`;
                 }
@@ -327,25 +274,17 @@ async function getStandings(channelID, playoffsOnly) {
                 standings += `\n> ${TeamEmoji.get(element)} ${element}`;
             } else {
                 // Final element of the split array is always blank
-                bot.sendMessage({
-                    to: channelID,
-                    message: `${standings.trim()}`
-                });
-
-                Logger.debug('Standings returned to channel ' + channelID);
+                channel.send(`${standings.trim()}`);
+                Logger.debug('Standings returned to channel ' + channel.id + '(' + channel.name + ')');
             }
         })                
     }).catch((reject) => {
-        bot.sendMessage({
-            to: channelID,
-            message: 'I\'m too tired to get the standings right now'
-        });
-
+        channel.send('I\'m too tired to get the standings right now');
         Logger.error(`Error obtaining standings: ${reject}`);
     });
 };
 
-async function playoffPicture(channelID) {
+async function playoffPicture(channel) {
     await Axios.get(StandingsUrl).then((resolve) => {
         let teams = [];
         let wins = [];
@@ -364,7 +303,7 @@ async function playoffPicture(channelID) {
 
         // Playoffs in progress, don't work out the playoff picture, get standings instead
         if ($('#content').text().includes('Playoffs')) {
-            getStandings(channelID, true);
+            getStandings(channel, true);
         } else {
             const divisionsArray = $('#content').find('.divisions').text().split(WhitespaceRegex);
             
@@ -428,24 +367,17 @@ async function playoffPicture(channelID) {
                         eliminatedTeams += `> ${value}\n`;
                     });
 
-                    bot.sendMessage({
-                        to: channelID,
-                        message: `The Playoff Picture with ${remainingGames} Games Remaining:`
+                    channel.send(`The Playoff Picture with ${remainingGames} Games Remaining:`
                                 + `${(qualifiedTeams != '') ? '\n\n**Clinched:**\n' : ''}${qualifiedTeams.trim()}`
                                 + `${(contentionTeams != '') ? '\n\n**In Contention:**\n' : ''}${contentionTeams.trim()}`
-                                + `${(eliminatedTeams != '') ? '\n\n**Party Time <:partypuck:1129421806260981842>:**\n' : ''}${eliminatedTeams.trim()}`
-                    });
+                                + `${(eliminatedTeams != '') ? '\n\n**Party Time <:partypuck:1129421806260981842>:**\n' : ''}${eliminatedTeams.trim()}`);
 
-                    Logger.debug('Playoff picture returned to channel ' + channelID);
+                    Logger.debug('Playoff picture returned to channel ' + channel.id + '(' + channel.name + ')');
                 }
             })
         }                
     }).catch((reject) => {
-        bot.sendMessage({
-            to: channelID,
-            message: 'I\'m too tired to get the playoff picture right now'
-        });
-
+        channel.send('I\'m too tired to get the playoff picture right now');
         Logger.error(`Error obtaining Playoff picture: ${reject}`);
     });
 };
@@ -539,23 +471,17 @@ function bestOfTheRestCalculator(contentionTeamsMap, qualifiedTeamsMap, eliminat
     });
 }
 
-function findTeam(channelID, teamName) {
-    const teamChannel = isTeamChannel(channelID);
+function findTeam(channel, teamName) {
+    const teamChannel = isTeamChannel(channel);
 
     if (teamName == '' && teamChannel[0]) {
         teamName = teamChannel[1].toLowerCase();
     }
 
     if (teamName == '') {    
-        bot.sendMessage({
-            to: channelID,
-            message: 'You need to give me a team name'
-        });
+        channel.send('You need to give me a team name');
     } else if (teamName == 'sleepers') {
-        bot.sendMessage({
-            to: channelID,
-            message: 'Who are they?'
-        });
+        channel.send('Who are they?');
     } else {
         let i = 0;
         let teamFound = false;
@@ -564,55 +490,26 @@ function findTeam(channelID, teamName) {
             if (!teamFound && key != "Sleepers") {
                 if (key.toLowerCase().includes(teamName)) {
                     teamFound = true;
-                    getTeam(channelID, i, key, teamChannel[0]);
+                    getTeam(channel, i, key, teamChannel[0]);
                 }
                 i++
             }
         })
 
         if (!teamFound) {
-            bot.sendMessage({
-                to: channelID,
-                message: `I don't know which team ${teamName} refers to`
-            });    
+            channel.send(`I don't know which team ${teamName} refers to`);    
         }
     }    
 }
 
-function isTeamChannel(channelID) {
-    // You really should be able to do this a better way, but I can't work it out.
-    // bot.channels.get(channelID) doesn't work, says it isn't a valid function despite all the doumentation saying it is.
-    // Everything on Stack Overflow suggests this is because the bot doesn't have permissions to see the channels,
-    // but then why does bot.channels return an object with all the channels in it?
-    // Can't work out how to do anything with the returned object, you can print out the contents fine with console.log
-    // and it looks very much like a JSON, but nothing you'd usually be able to do with a JSON works.
-    // Except for stringify, tried it on a whim and that works for some reason.
-    // Just parse it as text for now, maybe some nice person will look at this comment on GitHub and say, "You silly donkey,
-    // it's so easy, you just do this", and that will make me very happy.
+function isTeamChannel(channel) {
     let teamName = '';
-    const channels = JSON.stringify(bot.channels);
-    const thisChannel = channels.substring(channels.indexOf(channelID));
-    const parentChannelIndex = thisChannel.indexOf('"parent_id":') + 13;
     
-    if (parentChannelIndex > 13) {
-        const parentChannelID = thisChannel.substring(parentChannelIndex,parentChannelIndex + 19);
-        const parentChannel = channels.substring(channels.indexOf(parentChannelID));        
-        const parentChannelNameStart = parentChannel.substring(parentChannel.indexOf('"name":"') + 8);
-        const parentChannelName = parentChannelNameStart.substring(0,parentChannelNameStart.indexOf('"'));
-        
-        TeamEmoji.forEach((value, key) => {
-            if (teamName == '' && parentChannelName.match(key)) {
-                teamName = key;
-            }
-        })
-    }
-
-    // Certain team emojis cause the channel names to not return properly from bot.channels
-    // Only happens on the live system in AWS, not when I run locally to test
-    // Backstop with hard-coded channel IDs while I try and work out what's going on
-    if (teamName == '') {
-        teamName = TeamChannel.get(channelID);
-    }
+    TeamEmoji.forEach((value, key) => {
+        if (teamName == '' && channel.parent.name.match(key)) {
+            teamName = key;
+        }
+    });
 
     if (teamName > '') {
         return [true, teamName];
@@ -621,7 +518,7 @@ function isTeamChannel(channelID) {
     }
 }
 
-async function getTeam(channelID, i, team, teamChannel) {
+async function getTeam(channel, i, team, teamChannel) {
     await Axios.get(`${StandingsUrl}/${i.toString()}`).then((resolve) => {
         const $ = Cheerio.load(resolve.data);
         let playerList = `${TeamEmoji.get(team)} **${team}**\n\n`;
@@ -689,16 +586,9 @@ async function getTeam(channelID, i, team, teamChannel) {
             playerList += `> Best Player: ${electionStats[0][0]} - **${electionStats[0][1].toFixed(2)}**\n> Worst Player: ${electionStats[1][0]} - **${electionStats[1][1].toFixed(2)}**\n> Worst Stat: ${electionStats[2][0]}, ${electionStats[2][1]} - **${electionStats[2][2].toFixed(2)}**\n> Best Offence: ${electionStats[3][0]} - **${electionStats[3][1].toFixed(2)}**\n> Best Defence: ${electionStats[4][0]} - **${electionStats[4][1].toFixed(2)}**`;
         }
 
-        bot.sendMessage({
-            to: channelID,
-            message: `${playerList.trim()}`
-        });
+        channel.send(`${playerList.trim()}`);
     }).catch((reject) => {
-        bot.sendMessage({
-            to: channelID,
-            message: 'I\'m too tired to get that team right now'
-        });
-
+        channel.send('I\'m too tired to get that team right now');
         Logger.error(`Error obtaining team: ${reject}`);
     });
 };
@@ -753,7 +643,7 @@ function calculateElectionStats(player, offence, defence, agility, electionStats
 }
 
 // Return requested season stats to the stats channel
-function returnStats(parameters) {
+function returnStats(parameters, channel) {
     getStats(parameters.toLowerCase()).then((resolve) => {
         let statsReturn = '';
         resolve.forEach((element, index) => {
@@ -771,27 +661,19 @@ function returnStats(parameters) {
                             statsReturn += `${element}\n`                                            
 
                             if ((index % 25) == 0 || statsReturnArray.length == (index + 1)) {                                                
-                                bot.sendMessage({
-                                    to: StatsChannel,
-                                    message: statsReturn.trim()
-                                });
+                                channel.send(statsReturn.trim());
                                 statsReturn = '';
                             }
                         }, 100 * index);
                     })
                 } else {
-                    bot.sendMessage({
-                        to: StatsChannel,
-                        message: statsReturn.trim()
-                    });
+                    channel.send(statsReturn.trim());
                 }
             }
         });
     }).catch((reject) => {
-        bot.sendMessage({
-            to: StatsChannel,
-            message: reject
-        });
+        Logger.error(reject);
+        channel.send(reject.message);
     });
 }
 
@@ -2939,19 +2821,13 @@ async function finishStatsUpdate(weatherReportArray, miscCollection, statsCollec
                             weatherReport += `${element}\n`                                            
 
                             if ((index % 15) == 0 || weatherReportArray.length == (index + 1)) {                                                
-                                bot.sendMessage({
-                                    to: WatchChannel,
-                                    message: `${weatherReport.trim()}`
-                                }); 
+                                WatchChannel.send(`${weatherReport.trim()}`); 
                                 weatherReport = '';
                             }
                         }, 100 * index);
                     })
                 } else {
-                    bot.sendMessage({
-                        to: WatchChannel,
-                        message: `${weatherReport.trim()}`
-                    });  
+                    WatchChannel.send(`${weatherReport.trim()}`);
                 }                             
             }
         });
