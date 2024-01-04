@@ -17,8 +17,8 @@ const Sponsors = Fs.readFileSync('./sponsors.txt').toString().split('|');
 const AdminUser = Fs.readFileSync('./adminUser.txt').toString();
 const TeamEmoji = new Map([]);
 const WhitespaceRegex = /\s\s+/g;
-const WatchChannelID = '707250380483854340';
-const StatsChannelID = '707250380483854340';
+const WatchChannelID = '987112252412923914';
+const StatsChannelID = '1136393010817536041';
 let WatchChannel = null;
 
 const Teams = ['Antalya Pirates', 'Baden Hallucinations', 'Kópavogur Seals', 'Lagos Soup', 'Pica Acid',
@@ -2683,9 +2683,9 @@ async function statsGatherer () {
         // and there are no errors. Restarting fixes this. The bot runs from a batch file which automatically
         // restarts it if it encounters an unexpected error or shuts down for any reason, so exiting every hour
         // will force that restart and prevent me having to manually restart it all the time.
-        if (now.getMinutes() == 14) {
-            process.exit();
-        }
+        //if (now.getMinutes() == 14) {
+        //    process.exit();
+        //}
         
         if (lastStatsHourRecord) {
             lastStatsHour = lastStatsHourRecord.hour;
