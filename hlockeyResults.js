@@ -28,6 +28,7 @@ const Teams = ['Antalya Pirates', 'Baden Hallucinations', 'Kópavogur Seals', 'L
                'Sleepersz'];
 
 let StatsUpdateInProgress = false;
+let LastWeatherSponsor = '';
 
 // Configure Logger settings
 const { combine, timestamp, printf, colorize, align } = Winston.format;
@@ -2787,7 +2788,14 @@ async function finishStatsUpdate(weatherReportArray, miscCollection, statsCollec
     await miscCollection.updateOne({ name: 'walCarineGamesWithoutAFight' }, { $set: { games: walCarineGamesWithoutAFight } });
 
     if (weatherReportArray.length > 0) {
-        let weatherReport = `Greetings splorts fans! With all games concluded it's time for the Hlockey Weather Report, brought to you by ${Sponsors[Math.floor(Math.random()*Sponsors.length)]}\n`;
+        let weatherSponsor = '';
+
+        while (weatherSponsor == '' || weatherSponsor == LastWeatherSponsor) {
+            weatherSponsor = Sponsors[Math.floor(Math.random()*Sponsors.length)];
+        }
+        
+        let weatherReport = `Greetings splorts fans! With all games concluded it's time for the Hlockey Weather Report, brought to you by ${weatherSponsor}\n`;
+        LastWeatherSponsor = weatherSponsor;
 
         weatherReportArray.forEach(async (element, index) => {
             weatherReport += `\n${element}`;
