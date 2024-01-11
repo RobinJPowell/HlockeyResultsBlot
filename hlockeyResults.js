@@ -2829,14 +2829,15 @@ async function finishStatsUpdate(weatherReportArray, miscCollection, statsCollec
                 
 
                 if (walCarineGamesWithoutAFight > 0) {
-                    weatherReport += `\nIt has been ${walCarineGamesWithoutAFight} games since Wal Carine has claimed a victim`;
+                    weatherReport += `\nIt has been ${walCarineGamesWithoutAFight} game${(walCarineGamesWithoutAFight > 1) ? 's' : ''} since Wal Carine has claimed a victim`;
                 } else {
                     weatherReport += '\nWal Carine\'s bloodlust has been sated';
                 }
                 if (thuLolyGamesWithoutAFight > 0) {
-                    weatherReport += `\nIt has been ${thuLolyGamesWithoutAFight} games since Thu Loly directed a fight scene`;
+                    weatherReport += `\nIt has been ${thuLolyGamesWithoutAFight} game${(thuLolyGamesWithoutAFight > 1) ? 's' : ''} since Thu Loly directed a fight scene`;
                 } else {
-                    weatherReport += `\nThu Loly directed ${thuLolyStats.fights - thuLolyFights} fight scenes during the last game`;
+                    const thuLolyFightsThisGame = thuLolyStats.fights - thuLolyFights;
+                    weatherReport += `\nThu Loly directed ${thuLolyFightsThisGame} fight scene${(thuLolyFightsThisGame > 1) ? 's' : ''} during the last game`;
                 }               
                     
                 // Discord limits messages to 2000 characters, so need to split this up
