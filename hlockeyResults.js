@@ -2732,6 +2732,14 @@ async function statsGatherer () {
                         walCarineFights = walCarineStats.fights;
                     }
 
+                    const findThuLoly = { name: 'Thu Loly', season: seasonNumber, playoffs: playoffStats };
+                    let thuLolyStats = await statsCollection.findOne(findThuLoly);
+                    let thuLolyFights = 0;
+
+                    if (thuLolyStats) {
+                        thuLolyFights = thuLolyStats.fights;
+                    }
+
                     let gamesParsed = 0;
                     
                     games.each(async (index, element) => {
@@ -2746,14 +2754,14 @@ async function statsGatherer () {
                             parseGameLog(gameLog, seasonNumber, playoffStats, teamsArray, weatherReportArray).then(async () => {
                                 gamesParsed++;
                                 if (games.length == gamesParsed) {
-                                    finishStatsUpdate(weatherReportArray, miscCollection, statsCollection, walCarineFights, findWalCarine);
+                                    finishStatsUpdate(weatherReportArray, miscCollection, statsCollection, walCarineFights, findWalCarine, thuLolyFights, findThuLoly);
                                 }
                             }).catch((reject) => {
                                 gamesParsed++;
                                 Logger.error(`Error parsing stats for ${teamsArray[0]} vs ${teamsArray[1]}: ${reject}`);
                                 
                                 if (games.length == gamesParsed) {
-                                    finishStatsUpdate(weatherReportArray, miscCollection, statsCollection, walCarineFights, findWalCarine);
+                                    finishStatsUpdate(weatherReportArray, miscCollection, statsCollection, walCarineFights, findWalCarine, thuLolyFights, findThuLoly);
                                 }
                             });
                         });
@@ -2769,7 +2777,7 @@ async function statsGatherer () {
     }
 }
 
-async function finishStatsUpdate(weatherReportArray, miscCollection, statsCollection, walCarineFights, findWalCarine) {
+async function finishStatsUpdate(weatherReportArray, miscCollection, statsCollection, walCarineFights, findWalCarine, thuLolyFights, findThuLoly) {
     StatsUpdateInProgress = false;
     
     let walCarineStats = await statsCollection.findOne(findWalCarine); 
@@ -2786,6 +2794,21 @@ async function finishStatsUpdate(weatherReportArray, miscCollection, statsCollec
     }
 
     await miscCollection.updateOne({ name: 'walCarineGamesWithoutAFight' }, { $set: { games: walCarineGamesWithoutAFight } });
+
+    let thuLolyStats = await statsCollection.findOne(findThuLoly); 
+    let thuLolyGamesWithoutAFightRecord = await miscCollection.findOne({ name: 'thuLolyGamesWithoutAFight' });
+    let thuLolyGamesWithoutAFight = 0;
+
+    if (!thuLolyGamesWithoutAFightRecord) {
+        await miscCollection.insertOne({ name: 'thuLolyGamesWithoutAFight',  games: 0 });
+        thuLolyGamesWithoutAFightRecord = await miscCollection.findOne({ name: 'thuLolyGamesWithoutAFight' });
+    }
+                                            
+    if (!thuLolyStats || thuLolyStats.fights == thuLolyFights) {
+        thuLolyGamesWithoutAFight = thuLolyGamesWithoutAFightRecord.games + 1;
+    }
+
+    await miscCollection.updateOne({ name: 'thuLolyGamesWithoutAFight' }, { $set: { games: thuLolyGamesWithoutAFight } });
 
     if (weatherReportArray.length > 0) {
         let weatherSponsor = '';
@@ -2804,9 +2827,14 @@ async function finishStatsUpdate(weatherReportArray, miscCollection, statsCollec
                 
 
                 if (walCarineGamesWithoutAFight > 0) {
-                    weatherReport += `\nIt has been ${walCarineGamesWithoutAFight} games since Wal Carine has had a fight`;
+                    weatherReport += `\nIt has been ${walCarineGamesWithoutAFight} games since Wal Carine has claimed a victim`;
                 } else {
                     weatherReport += '\nWal Carine\'s bloodlust has been sated';
+                }
+                if (thuLolyGamesWithoutAFight > 0) {
+                    weatherReport += `\nIt has been ${thuLolyGamesWithoutAFight} games since Thu Loly directed a fight scene`;
+                } else {
+                    weatherReport + `\nThu Loly directed ${thuLolyStats.fights - thuLolyFights} fight scenes during the last game`;
                 }               
                     
                 // Discord limits messages to 2000 characters, so need to split this up
