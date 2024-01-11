@@ -2836,7 +2836,7 @@ async function finishStatsUpdate(weatherReportArray, miscCollection, statsCollec
                 if (thuLolyGamesWithoutAFight > 0) {
                     weatherReport += `\nIt has been ${thuLolyGamesWithoutAFight} games since Thu Loly directed a fight scene`;
                 } else {
-                    weatherReport + `\nThu Loly directed ${thuLolyStats.fights - thuLolyFights} fight scenes during the last game`;
+                    weatherReport += `\nThu Loly directed ${thuLolyStats.fights - thuLolyFights} fight scenes during the last game`;
                 }               
                     
                 // Discord limits messages to 2000 characters, so need to split this up
