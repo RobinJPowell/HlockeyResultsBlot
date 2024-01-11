@@ -70,7 +70,7 @@ bot.on('ready', async function (evt) {
 bot.on('messageCreate', function(message) {
     // Bot listens for messages that start with `!`
     if (message.content.startsWith('!')) {
-        Logger.debug('Command ' + message.content + ' from ' + message.author.id + '(' + message.author.displayName + ')' + ' in channel ' + message.channelId + '(' + message.channel.name + ')');
+        Logger.debug('Command ' + message.content + ' from ' + message.author.id + ' (' + message.author.displayName + ')' + ' in channel ' + message.channelId + ' (' + message.channel.name + ')');
 
         let command = '';
         let parameters = '';
@@ -309,7 +309,7 @@ async function playoffPicture(channel) {
             const divisionsArray = $('#content').find('.divisions').text().split(WhitespaceRegex);
             
             divisionsArray.forEach((element, index) => {
-                if (element.includes('Wet') || element.includes('Dry') || element.includes('Sleepy')) {
+                if (element.includes('Wet') || element.includes('Dry')) {
                     if (teams != []) {
                         divisionLeadersCalculator(teams, wins, losses, qualifiedLeadersMap, contentionLeadersMap, contentionTeamsMap, potentialDivisionWinnersArray);
 
@@ -335,6 +335,8 @@ async function playoffPicture(channel) {
                     teams.push(`${element}`);
                 } else if (index != 0) {
                     // Final element of the split array is always blank
+                    divisionLeadersCalculator(teams, wins, losses, qualifiedLeadersMap, contentionLeadersMap, contentionTeamsMap, potentialDivisionWinnersArray);
+                    
                     // Sort the contenders by their key (wins)
                     contentionLeadersMap = new Map([...contentionLeadersMap.entries()].sort((a, b) => b[0] - a[0])); 
                     contentionTeamsMap = new Map([...contentionTeamsMap.entries()].sort((a, b) => b[0] - a[0]));
