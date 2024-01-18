@@ -96,6 +96,7 @@ bot.on('messageCreate', function(message) {
             case '!loadstats':
             case '!populaterosters':
             case '!recalculatestats':
+            case '!recreatealltimestats':
                 if (message.author.id == AdminUser) {
                     adminCommands(command.toLowerCase(), parameters.toLowerCase());
                 }
@@ -150,8 +151,11 @@ function adminCommands(command, parameters) {
         case '!populaterosters':
             populateRosters();
             break;
-         case '!recalculatestats':
+        case '!recalculatestats':
             recalculateStats(parameters);
+            break;
+        case '!recreatealltimestats':
+            recreateAllTimeStats();
             break;
     }
 }
@@ -2686,6 +2690,94 @@ async function recalculateStats(parameters) {
     });
 }
 
+// Admin function to delete and recreate all-time stats
+async function recreateAllTimeStats () {
+    const statsCollection = Database.collection('stats');
+    await statsCollection.deleteMany({ season: '0' });
+
+    const allPlayerStatsArray = await statsCollection.find({ team: { $ne: '' } }).toArray();
+    const allTeamStatsArray = await statsCollection.find({ team: '' }).toArray();
+
+    allPlayerStatsArray.forEach(async (element) => {
+        const findAllTimePlayerStats = { name: element.name, season: '0', playoffs: element.playoffs };
+        let allTimePlayerStats = await statsCollection.find(findAllTimePlayerStats);
+
+        if (!allTimePlayerStats) {
+            createPlayerStats(element.name, statsCollection, '0', element.playoffs);
+            allTimePlayerStats = await statsCollection.find(findAllTimePlayerStats);
+        }
+
+        statsCollection.updateOne(findAllTimePlayerStats, { $set: { gamesPlayed: allTimePlayerStats.gamesPlayed + element.gamesPlayed,
+                                                                    gamesWon: allTimePlayerStats.gamesWon + element.gamesWon,
+                                                                    overtimeGames: allTimePlayerStats.overtimeGames + element.overtimeGames,
+                                                                    overtimeGamesWon: allTimePlayerStats.overtimeGamesWon + element.overtimeGamesWon,
+                                                                    faceoffsTaken: allTimePlayerStats.faceoffsTaken + element.faceoffsTaken,
+                                                                    faceoffsWon: allTimePlayerStats.faceoffsWon + element.faceoffsWon,
+                                                                    passesAttempted: allTimePlayerStats.passesAttempted + element.passesAttempted,
+                                                                    passesCompleted: allTimePlayerStats.passesCompleted + element.passesCompleted,
+                                                                    interceptions: allTimePlayerStats.interceptions + element.interceptions,
+                                                                    hits: allTimePlayerStats.hits + element.hits,
+                                                                    takeaways: allTimePlayerStats.takeaways + element.takeaways,
+                                                                    hitsTaken: allTimePlayerStats.hitsTaken + element.hitsTaken,
+                                                                    pucksLost: allTimePlayerStats.pucksLost + element.pucksLost,
+                                                                    goalsScored: allTimePlayerStats.goalsScored + element.goalsScored,
+                                                                    shotsTaken: allTimePlayerStats.shotsTaken + element.shotsTaken,
+                                                                    goalsConceded: allTimePlayerStats.goalsConceded + element.goalsConceded,
+                                                                    shotsFaced: allTimePlayerStats.shotsFaced + element.shotsFaced,
+                                                                    shotsBlockedGoalie: allTimePlayerStats.shotsBlockedGoalie + element.shotsBlockedGoalie,
+                                                                    shotsBlockedDefence: allTimePlayerStats.shotsBlockedDefence + element.shotsBlockedDefence,
+                                                                    fights: allTimePlayerStats.fights + element.fights,
+                                                                    fightsWon: allTimePlayerStats.fightsWon + element.fightsWon,
+                                                                    fightsDrawn: allTimePlayerStats.fightsDrawn + element.fightsDrawn,
+                                                                    fightsLost: allTimePlayerStats.fightsLost + element.fightsLost,
+                                                                    punchesThrown: allTimePlayerStats.punchesThrown + element.punchesThrown,
+                                                                    punchesLanded: allTimePlayerStats.punchesLanded + element.punchesLanded,
+                                                                    punchesTaken: allTimePlayerStats.punchesTaken + element.punchesTaken,
+                                                                    punchesBlocked: allTimePlayerStats.punchesBlocked + element.punchesBlocked,
+                                                                    timesSweptAway: allTimePlayerStats.timesSweptAway + element.timesSweptAway,
+                                                                    timesChickenedOut: allTimePlayerStats.timesChickenedOut + element.timesChickenedOut,
+                                                                    parties: allTimePlayerStats.parties + element.parties } });
+    });
+
+    allTeamStatsArray.forEach(async (element) => {
+        const findAllTimeTeamStats = { name: element.name, season: '0', playoffs: element.playoffs };
+        let allTimeTeamStats = await statsCollection.find(findAllTimeTeamStats);
+
+        if (!allTimeTeamStats) {
+            createPlayerStats(element.name, statsCollection, '0', element.playoffs);
+            allTimeTeamStats = await statsCollection.find(findAllTimeTeamStats);
+        }
+
+        statsCollection.updateOne(findAllTimeTeamStats, { $set: { gamesPlayed: allTimeTeamStats.gamesPlayed + element.gamesPlayed,
+                                                                  gamesWon: allTimeTeamStats.gamesWon + element.gamesWon,
+                                                                  overtimeGames: allTimeTeamStats.overtimeGames + element.overtimeGames,
+                                                                  overtimeGamesWon: allTimeTeamStats.overtimeGamesWon + element.overtimeGamesWon,
+                                                                  faceoffsTaken: allTimeTeamStats.faceoffsTaken + element.faceoffsTaken,
+                                                                  faceoffsWon: allTimeTeamStats.faceoffsWon + element.faceoffsWon,
+                                                                  passesAttempted: allTimeTeamStats.passesAttempted + element.passesAttempted,
+                                                                  passesCompleted: allTimeTeamStats.passesCompleted + element.passesCompleted,
+                                                                  interceptions: allTimeTeamStats.interceptions + element.interceptions,
+                                                                  hits: allTimeTeamStats.hits + element.hits,
+                                                                  takeaways: allTimeTeamStats.takeaways + element.takeaways,
+                                                                  hitsTaken: allTimeTeamStats.hitsTaken + element.hitsTaken,
+                                                                  pucksLost: allTimeTeamStats.pucksLost + element.pucksLost,
+                                                                  goalsScored: allTimeTeamStats.goalsScored + element.goalsScored,
+                                                                  shotsTaken: allTimeTeamStats.shotsTaken + element.shotsTaken,
+                                                                  goalsConceded: allTimeTeamStats.goalsConceded + element.goalsConceded,
+                                                                  shotsFaced: allTimeTeamStats.shotsFaced + element.shotsFaced,
+                                                                  shotsBlocked: allTimeTeamStats.shotsBlocked + element.shotsBlocked,
+                                                                  fights: allTimeTeamStats.fights + element.fights,
+                                                                  fightsWon: allTimeTeamStats.fightsWon + element.fightsWon,
+                                                                  fightsDrawn: allTimeTeamStats.fightsDrawn + element.fightsDrawn,
+                                                                  fightsLost: allTimeTeamStats.fightsLost + element.fightsLost,
+                                                                  punchesThrown: allTimeTeamStats.punchesThrown + element.punchesThrown,
+                                                                  punchesLanded: allTimeTeamStats.punchesLanded + element.punchesLanded,
+                                                                  punchesTaken: allTimeTeamStats.punchesTaken + element.punchesTaken,
+                                                                  punchesBlocked: allTimeTeamStats.punchesBlocked + element.punchesBlocked,
+                                                                  parties: allTimeTeamStats.parties + element.parties } });
+    });
+}
+
 // Once per hour once all games are finished, parse the game logs to gather stats
 async function statsGatherer () {
     const miscCollection = Database.collection('misc');
@@ -3029,6 +3121,8 @@ async function updateFaceoffStats (gameLogLineArray, rostersCollection, statsCol
 
     await statsCollection.updateOne(findWinningPlayer, { $set: { faceoffsTaken : winningPlayerStats.faceoffsTaken + 1,
                                                                  faceoffsWon: winningPlayerStats.faceoffsWon + 1 }});
+    updateAllTimeStats('faceoffsTaken', winningPlayer, playoffStats);
+    updateAllTimeStats('faceoffsWon', winningPlayer, playoffStats);
 
     if (!playersArray.includes(winningPlayer)) {
         playersArray.push(winningPlayer);
@@ -3062,6 +3156,7 @@ async function updateFaceoffStats (gameLogLineArray, rostersCollection, statsCol
     }    
 
     await statsCollection.updateOne(findLosingPlayer, { $set: { faceoffsTaken : losingPlayerStats.faceoffsTaken + 1 }});
+    updateAllTimeStats('faceoffsTaken', losingPlayerRoster.name, playoffStats);
     
     if (!playersArray.includes(losingPlayerRoster.name)) {
         playersArray.push(losingPlayerRoster.name);
@@ -3102,11 +3197,12 @@ async function updatePassingStats(gameLogLineArray, interceptionArray, rostersCo
         await statsCollection.updateOne(findPassingPlayer, { $set: { passesAttempted: passingPlayerStats.passesAttempted + 1,
                                                                      passesCompleted: passingPlayerStats.passesCompleted + 1 } });
         await statsCollection.updateOne(findPassingTeam, { $set: { passesAttempted: passingTeamStats.passesAttempted + 1,
-                                                                   passesCompleted: passingTeamStats.passesCompleted + 1 } });        
+                                                                   passesCompleted: passingTeamStats.passesCompleted + 1 } });
+        updateAllTimeStats('passesCompleted', passingPlayer, playoffStats);        
     } else {
-        const inteceptingPlayer = `${interceptionArray[interceptionArray.length - 2]} ${interceptionArray[interceptionArray.length - 1]}`;
-        const interceptingPlayerRoster = await rostersCollection.findOne({ name: inteceptingPlayer });
-        const findInterceptingPlayer = { name: inteceptingPlayer, season: seasonNumber, playoffs: playoffStats };
+        const interceptingPlayer = `${interceptionArray[interceptionArray.length - 2]} ${interceptionArray[interceptionArray.length - 1]}`;
+        const interceptingPlayerRoster = await rostersCollection.findOne({ name: interceptingPlayer });
+        const findInterceptingPlayer = { name: interceptingPlayer, season: seasonNumber, playoffs: playoffStats };
         const findInterceptingTeam = { name: interceptingPlayerRoster.team, season: seasonNumber, playoffs: playoffStats };
         const interceptingTeamStats = await statsCollection.findOne(findInterceptingTeam);
         let interceptingPlayerStats = await statsCollection.findOne(findInterceptingPlayer);
@@ -3120,11 +3216,14 @@ async function updatePassingStats(gameLogLineArray, interceptionArray, rostersCo
         await statsCollection.updateOne(findPassingTeam, { $set: { passesAttempted: passingTeamStats.passesAttempted + 1} });
         await statsCollection.updateOne(findInterceptingPlayer, { $set: { interceptions: interceptingPlayerStats.interceptions + 1} });
         await statsCollection.updateOne(findInterceptingTeam, { $set: { interceptions: interceptingTeamStats.interceptions + 1} });
+        updateAllTimeStats('interceptions', interceptingPlayer, playoffStats);
 
-        if (!playersArray.includes(inteceptingPlayer)) {
-            playersArray.push(inteceptingPlayer);
+        if (!playersArray.includes(interceptingPlayer)) {
+            playersArray.push(interceptingPlayer);
         }
     }
+
+    updateAllTimeStats('passesAttempted', passingPlayer, playoffStats);
 
     if (!playersArray.includes(passingPlayer)) {
         playersArray.push(passingPlayer);
@@ -3165,12 +3264,17 @@ async function updateHitStats(gameLogLineArray, rostersCollection, statsCollecti
                                                                  pucksLost: hitPlayerStats.pucksLost + 1 } });
         await statsCollection.updateOne(findHitTeam, { $set: { hitsTaken: hitTeamStats.hitsTaken + 1,
                                                                pucksLost: hitTeamStats.pucksLost + 1 } });
+        updateAllTimeStats('takeaways', hittingPlayer, playoffStats);
+        updateAllTimeStats('pucksLost', hitPlayer, playoffStats);
     } else {
         await statsCollection.updateOne(findHittingPlayer, { $set: { hits: hittingPlayerStats.hits + 1 } });
         await statsCollection.updateOne(findHittingTeam, { $set: { hits: hittingTeamStats.hits + 1 } });
         await statsCollection.updateOne(findHitPlayer, { $set: { hitsTaken: hitPlayerStats.hitsTaken + 1 } });
         await statsCollection.updateOne(findHitTeam, { $set: { hitsTaken: hitTeamStats.hitsTaken + 1 } });
     }
+
+    updateAllTimeStats('hits', hittingPlayer, playoffStats);
+    updateAllTimeStats('hitsTaken', hitPlayer, playoffStats);
 
     if (!playersArray.includes(hittingPlayer)) {
         playersArray.push(hittingPlayer);
@@ -3231,6 +3335,10 @@ async function updateShootingStats(gameLogLineArray, blockedArray, rostersCollec
                                                                        shotsFaced: concedingPlayerStats.shotsFaced + 1 } });
         await statsCollection.updateOne(findConcedingTeam, { $set: { goalsConceded: concedingTeamStats.goalsConceded + 1,
                                                                      shotsFaced: concedingTeamStats.shotsFaced + 1 } });
+        updateAllTimeStats('goalsScored', shootingPlayer, playoffStats);
+        updateAllTimeStats('shotsTaken', shootingPlayer, playoffStats);
+        updateAllTimeStats('goalsConceded', concedingPlayerRoster.name, playoffStats);
+        updateAllTimeStats('shotsFaced', concedingPlayerRoster.name, playoffStats);
 
         if (!playersArray.includes(concedingPlayerRoster.name)) {
             playersArray.push(concedingPlayerRoster.name);
@@ -3257,8 +3365,10 @@ async function updateShootingStats(gameLogLineArray, blockedArray, rostersCollec
         if (blockingPlayerRoster.position == 'Goalie') {
             blockingStatsUpdate = { shotsFaced: blockingPlayerStats.shotsFaced + 1,
                                     shotsBlockedGoalie: blockingPlayerStats.shotsBlockedGoalie + 1 };
+            updateAllTimeStats('shotsBlockedGoalie', 'shotsBlocked', blockingPlayer, playoffStats);
         } else {
             blockingStatsUpdate = { shotsBlockedDefence: blockingPlayerStats.shotsBlockedDefence + 1 };
+            updateAllTimeStats('shotsBlockedDefence', 'shotsBlocked', blockingPlayer, playoffStats);
         }
 
         await statsCollection.updateOne(findShootingPlayer, { $set: { shotsTaken: shootingPlayerStats.shotsTaken + 1 } });
@@ -3266,6 +3376,8 @@ async function updateShootingStats(gameLogLineArray, blockedArray, rostersCollec
         await statsCollection.updateOne(findBlockingPlayer, { $set: blockingStatsUpdate });
         await statsCollection.updateOne(findBlockingTeam, { $set: { shotsFaced: blockingTeamStats.shotsFaced + 1,
                                                                     shotsBlocked: blockingTeamStats.shotsBlocked + 1 } });
+        updateAllTimeStats('shotsTaken', shootingPlayer, playoffStats);
+        updateAllTimeStats('shotsFaced', blockingPlayer, playoffStats);
     }
 
     if (!playersArray.includes(shootingPlayer)) {
@@ -3364,14 +3476,19 @@ async function updateFightingStats(fightArray, rostersCollection, statsCollectio
                                                                                  punchesBlocked: punchedPlayerStats.punchesBlocked + 1 } });
                     await statsCollection.updateOne(findPunchedTeam, { $set: { punchesTaken: punchedTeamStats.punchesTaken + 1,
                                                                                punchesBlocked: punchedTeamStats.punchesBlocked + 1 } });
+                    updateAllTimeStats('punchesBlocked', punchedPlayer, playoffStats);
                 } else {
                     await statsCollection.updateOne(findPunchingPlayer, { $set: { punchesThrown: punchingPlayerStats.punchesThrown + 1,
                                                                                   punchesLanded: punchingPlayerStats.punchesLanded + 1 } });
                     await statsCollection.updateOne(findPunchingTeam, { $set: { punchesThrown: punchingTeamStats.punchesThrown + 1,
                                                                                 punchesLanded: punchingTeamStats.punchesLanded + 1 } });
                     await statsCollection.updateOne(findPunchedPlayer, { $set: { punchesTaken: punchedPlayerStats.punchesTaken + 1 } });
-                    await statsCollection.updateOne(findPunchedTeam, { $set: { punchesTaken: punchedTeamStats.punchesTaken + 1 } });    
+                    await statsCollection.updateOne(findPunchedTeam, { $set: { punchesTaken: punchedTeamStats.punchesTaken + 1 } });
+                    updateAllTimeStats('punchesLanded', punchingPlayer, playoffStats);
                 }
+
+                updateAllTimeStats('punchesThrown', punchingPlayer, playoffStats);
+                updateAllTimeStats('punchesTaken', punchedPlayer, playoffStats);
             } else if (element.toLowerCase().includes('ended')) {
                 let teamName = '';
                 let winningTeam = '';
@@ -3408,14 +3525,19 @@ async function updateFightingStats(fightArray, rostersCollection, statsCollectio
                     if (winningTeam == '') {
                         await statsCollection.updateOne(findPlayer, { $set: { fights: playerStats.fights + 1,
                                                                               fightsDrawn: playerStats.fightsDrawn + 1 } });
+                        updateAllTimeStats('fightsDrawn', element, playerStats);
                     }
                     else if (playerRoster.team == winningTeam) {
                         await statsCollection.updateOne(findPlayer, { $set: { fights: playerStats.fights + 1,
                                                                               fightsWon: playerStats.fightsWon + 1 } });
+                        updateAllTimeStats('fightsWon', element, playerStats);
                     } else {
                         await statsCollection.updateOne(findPlayer, { $set: { fights: playerStats.fights + 1,
                                                                               fightsLost: playerStats.fightsLost + 1 } });
+                        updateAllTimeStats('fightsLost', element, playerStats);
                     }
+
+                    updateAllTimeStats('fights', element, playerStats);
                 })
 
                 teamsArray.forEach(async (element) => {
@@ -3472,6 +3594,7 @@ async function updateGameRosterChanges(gameLogLineArray, swappedPlayerLineArray,
         await statsCollection.updateOne(findLeavingPlayer, { $set: { timesSweptAway: leavingPlayerStats.timesSweptAway + 1 } });
         await rostersCollection.updateOne({ name: arrivingPlayer }, { $set: { position: leavingPlayerRoster.position } });
         await rostersCollection.updateOne({ name: leavingPlayer }, { $set: { position: 'Shadows' } });
+        updateAllTimeStats('timesSweptAway', leavingPlayer, playoffStats);
 
         if (gameWeatherArray[teamIndex] == '') {
             gameWeatherArray[teamIndex] = `${TeamEmoji.get(leavingPlayerRoster.team)}**${leavingPlayerRoster.team}**\n:white_sun_rain_cloud:**Waves**\n\n`
@@ -3481,7 +3604,7 @@ async function updateGameRosterChanges(gameLogLineArray, swappedPlayerLineArray,
         gameWeatherArray[teamIndex] += `> ${arrivingPlayer} emerged from the Shadows to take ${leavingPlayerRoster.position}\n`
     } else {
         await statsCollection.updateOne(findLeavingPlayer, { $set: { timesChickenedOut: leavingPlayerStats.timesChickenedOut + 1 } });
-        
+        updateAllTimeStats('timesChickenedOut', leavingPlayer, playoffStats);
 
         if (leavingPlayerRoster.position == 'Goalie') {
             temporaryGoalies[teamIndex] = arrivingPlayer;
@@ -3506,6 +3629,7 @@ async function updateParties(gameLogLineArray, rostersCollection, statsCollectio
 
     await statsCollection.updateOne(findPartyingPlayer, { $set: { hits: partyingPlayerStats.parties + 1 } });
     await statsCollection.updateOne(findPartyingTeam, { $set: { hits: partyingTeamStats.parties + 1 } });
+    updateAllTimeStats('parties', partyingPlayer, playoffStats);
 
     if (!playersArray.includes(findPartyingPlayer)) {
         playersArray.push(findPartyingPlayer);
@@ -3549,17 +3673,50 @@ async function updatePlayedStats(victoryLine, rostersCollection, statsCollection
                                                                       gamesWon: playerStats.gamesWon + 1,
                                                                       overtimeGames: playerStats.overtimeGames + 1,
                                                                       overtimeGamesWon: playerStats.overtimeGamesWon + 1 } });
+
+                updateAllTimeStats('overtimeGames', element, playoffStats);
+                updateAllTimeStats('overtimeGamesWon', element, playoffStats);
             } else {
                 await statsCollection.updateOne(findPlayer, { $set: { gamesPlayed: playerStats.gamesPlayed + 1,
                                                                       gamesWon: playerStats.gamesWon + 1 } });                                                                    
             }
+
+            updateAllTimeStats('gamesWon', element, playoffStats);
         } else if (overtime) {
             await statsCollection.updateOne(findPlayer, { $set: { gamesPlayed: playerStats.gamesPlayed + 1,
                                                                   overtimeGames: playerStats.overtimeGames + 1 } });
+
+            updateAllTimeStats('overtimeGames', element, playoffStats);
         } else {
             await statsCollection.updateOne(findPlayer, { $set: { gamesPlayed: playerStats.gamesPlayed + 1 } });
         }
+
+        updateAllTimeStats('gamesPlayed', element, playoffStats);
     });    
+}
+
+async function updateAllTimeStats(playerStat, player, playoffStats) {
+    updateAllTimeStats(playerStat, playerStat, player, playoffStats);
+}
+
+async function updateAllTimeStats(playerStat, teamStat, player, playoffStats) {
+    const playerRoster = await rostersCollection.findOne({ name: player });
+    const findPlayer = { name: player, season: '0', playoffs: playoffStats };
+    const findTeam = { name: playerRoster.team, season: '0', playoffs: playoffStats };    
+    let playerStats = await statsCollection.findOne(findPlayer);
+    let teamStats = await statsCollection.findOne(findTeam);
+    
+    if (!playerStats) {
+        await createPlayerStats(playerRoster, statsCollection, '0', playoffStats);
+        playerStats = await statsCollection.findOne(findPlayer);
+    }
+    if (!teamStats) {
+        await createTeamStats(playerRoster.team, statsCollection, '0', playoffStats);
+        teamStats = await statsCollection.findOne(findPlayer);
+    }
+
+    await statsCollection.updateOne(findPlayer, { $set: { [playerStat]: playerStats[playerStat] + 1 } });
+    await statsCollection.updateOne(findTeam, { $set: { [teamStat]: teamStats[teamStat] + 1 } });
 }
 
 async function updateCalculatedStats(statsCollection, teamsArray, playersArray, seasonNumber, playoffStats) {
@@ -3863,7 +4020,7 @@ async function createPlayerStats(player, statsCollection, seasonNumber, playoffS
                                       savePercentage: 0.00,
                                       shotsFacedPerGame: 0.00,
                                       savesPerGame: 0.00,
-                                      shotsBlockedDefence: 0.00,
+                                      shotsBlockedDefence: 0,
                                       shotsBlockedPerGame: 0.00,
                                       goalsConcededPerGame: 0.00,
                                       fights: 0,
