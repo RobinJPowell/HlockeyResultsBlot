@@ -1452,6 +1452,14 @@ async function getStats(parameters) {
                             });
                         }
                         break;
+                    case 'parties':
+                        await getStat(statsCollection, season, playoffStats, { parties: sort }, count, teamName,
+                            'parties', '**Parties**').then((resolve) => {
+                            stats.push(resolve);
+                        }).catch((reject) => {
+                            return Promise.reject(reject);
+                        });
+                        break;
                     default:
                         stats.push('I\'m sorry, I have no idea what you want from me');                        
                 }
@@ -2905,10 +2913,14 @@ function parseGameLog(gameLog, seasonNumber, playoffStats, teamsArray, weatherRe
                         updateFaceoffStats(elementArray, rostersCollection, statsCollection, teamsArray, playersArray, seasonNumber, playoffStats, temporaryCenters);
                     } else if (element.toLowerCase().includes('passes')) {
                         let interceptionArray = [];
+                        let i = 1;
 
-                        // Interceptions will be on the next line
-                        if (gameLog[index + 1].toLowerCase().includes('intercepted')) {
-                            const interceptionLine = gameLog[index + 1].replace(/[.!]/g,'');
+                        // Interceptions will be on the next line, unless someone is partying
+                        if (gameLog[index + i].toLowerCase().includes('partying')) {
+                            i++;
+                        }
+                        if (gameLog[index + i].toLowerCase().includes('intercepted')) {
+                            const interceptionLine = gameLog[index + i].replace(/[.!]/g,'');
                             interceptionArray = interceptionLine.split(' ');
                         }
 
@@ -2917,10 +2929,14 @@ function parseGameLog(gameLog, seasonNumber, playoffStats, teamsArray, weatherRe
                         updateHitStats(elementArray, rostersCollection, statsCollection, playersArray, seasonNumber, playoffStats);
                     } else if (element.toLowerCase().includes('takes a shot')) {
                         let blockedArray = [];
+                        let i = 1;
 
-                        // Blocked shots will be on the next line
+                        // Blocked shots will be on the next line, unless someone is partying
+                        if (gameLog[index + i].toLowerCase().includes('partying')) {
+                            i++;
+                        }
                         if (gameLog[index + 1].toLowerCase().includes('blocks')) {
-                            const blockedLine = gameLog[index + 1].replace(/[.!]/g,'');
+                            const blockedLine = gameLog[index + i].replace(/[.!]/g,'');
                             blockedArray = blockedLine.split(' ');
                         }
 
@@ -2929,7 +2945,7 @@ function parseGameLog(gameLog, seasonNumber, playoffStats, teamsArray, weatherRe
                         let fightArray = [element];
                         let i = 1;
 
-                        // Get the whole fight, weather can occur mid-fight
+                        // Get the whole fight, weather and parties can occur mid-fight
                         do {
                             fightArray.push(gameLog[index + i].replace(/[.!]/g,''));
                             i++
@@ -2940,7 +2956,8 @@ function parseGameLog(gameLog, seasonNumber, playoffStats, teamsArray, weatherRe
                                 || gameLog[index + i].toLowerCase().includes('replaces')
                                 || gameLog[index + i].toLowerCase().includes('audacious')
                                 || gameLog[index + i].toLowerCase().includes('blocks')
-                                || gameLog[index + i].toLowerCase().includes('scoring'));
+                                || gameLog[index + i].toLowerCase().includes('scoring')
+                                || gameLog[index + i].toLowerCase().includes('partying'));
 
                         // After the fight is over we get morale changes for each team
                         fightArray.push(gameLog[index + i + 1].replace(/[.!]/g,''));
@@ -2952,6 +2969,8 @@ function parseGameLog(gameLog, seasonNumber, playoffStats, teamsArray, weatherRe
                         const swappedLineArray = swappedLine.split(' ');
                         
                         updateGameRosterChanges(elementArray, swappedLineArray, rostersCollection, statsCollection, teamsArray, playersArray, gameWeatherArray, temporaryCenters, temporaryGoalies, seasonNumber, playoffStats);
+                    } else if (element.toLowerCase().includes('partying')) {
+                        updateParties(elementArray, rostersCollection, statsCollection, playersArray, seasonNumber, playoffStats);
                     } else if (element.toLowerCase().includes('game over')) {
                         const victoryLine = gameLog[index + 1];
                         gameOver = true;
@@ -3460,6 +3479,27 @@ async function updateGameRosterChanges(gameLogLineArray, swappedPlayerLineArray,
     }    
 }
 
+async function updateParties(gameLogLineArray, rostersCollection, statsCollection, playersArray, seasonNumber, playoffStats) {
+    const partyingPlayer = `${gameLogLineArray[0]} ${gameLogLineArray[1]}`;
+    const partyingPlayerRoster = await rostersCollection.findOne({ name: partyingPlayer });
+    const findPartyingPlayer = { name: partyingPlayer, season: seasonNumber, playoffs: playoffStats };
+    const findPartyingTeam = { name: partyingPlayerRoster.team, season: seasonNumber, playoffs: playoffStats };
+    const partyingTeamStats = await statsCollection.findOne(findPartyingTeam);
+    let partyingPlayerStats = await statsCollection.findOne(findPartyingPlayer);
+    
+    if (!partyingPlayerStats) {
+        await createPlayerStats(partyingPlayerRoster, statsCollection, seasonNumber, playoffStats);
+        partyingPlayerStats = await statsCollection.findOne(findPartyingPlayer);
+    }
+
+    await statsCollection.updateOne(findPartyingPlayer, { $set: { hits: partyingPlayerStats.parties + 1 } });
+    await statsCollection.updateOne(findPartyingTeam, { $set: { hits: partyingTeamStats.parties + 1 } });
+
+    if (!playersArray.includes(findPartyingPlayer)) {
+        playersArray.push(findPartyingPlayer);
+    }
+}
+
 async function updatePlayedStats(victoryLine, rostersCollection, statsCollection, teamsArray, playersArray, seasonNumber, playoffStats, overtime) {
     // 2 separate replace operations as lines from the log file may have !, and lines from the website won't
     const winningTeam = victoryLine.replace(' win','').replace('!','');
@@ -3833,7 +3873,8 @@ async function createPlayerStats(player, statsCollection, seasonNumber, playoffS
                                       punchesTakenPerGame: 0.00,
                                       punchesBlockedPerGame: 0.00,
                                       timesSweptAway: 0,
-                                      timesChickenedOut: 0 });
+                                      timesChickenedOut: 0,
+                                      parties: 0 });
 }
 
 async function createTeamStats(team, statsCollection, seasonNumber, playoffStats) {
@@ -3900,5 +3941,6 @@ async function createTeamStats(team, statsCollection, seasonNumber, playoffStats
                                       punchesBlocked: 0,
                                       punchBlockedPercentage: 0.00,
                                       punchesTakenPerGame: 0.00,
-                                      punchesBlockedPerGame: 0.00 });
+                                      punchesBlockedPerGame: 0.00,
+                                      parties: 0 });
 }
