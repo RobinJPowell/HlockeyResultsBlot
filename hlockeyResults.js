@@ -1454,11 +1454,23 @@ async function getStats(parameters) {
                         break;
                     case 'parties':
                         await getStat(statsCollection, season, playoffStats, { parties: sort }, count, teamName,
-                            'parties', '**Parties**').then((resolve) => {
+                                     'parties', '**Parties**').then((resolve) => {
                             stats.push(resolve);
                         }).catch((reject) => {
                             return Promise.reject(reject);
                         });
+                        break;
+                    case 'goaldifference':
+                        if (teamName == 'teams') {
+                            await getStat(statsCollection, season, playoffStats, { goalDifference: sort }, count, teamName,
+                                'goalDifference', '**Goal Difference**').then((resolve) => {
+                                stats.push(resolve);
+                            }).catch((reject) => {
+                                return Promise.reject(reject);
+                            });
+                        } else {
+                            stats.push('That stat is only available for teams');
+                        }
                         break;
                     default:
                         stats.push('I\'m sorry, I have no idea what you want from me');                        
@@ -3588,6 +3600,7 @@ async function updateCalculatedStats(statsCollection, teamsArray, playersArray, 
         let fightLossPercentage = 0.00;
         let punchLandedPercentage = 0.00;
         let punchBlockedPercentage = 0.00;
+        let goalDifference = 0;
         
         if (teamStats.gamesPlayed > 0) {
             winPercentage = (teamStats.gamesWon / teamStats.gamesPlayed) * 100;
@@ -3612,6 +3625,7 @@ async function updateCalculatedStats(statsCollection, teamsArray, playersArray, 
             punchesLandedPerGame = teamStats.punchesLanded / teamStats.gamesPlayed;
             punchesTakenPerGame = teamStats.punchesTaken / teamStats.gamesPlayed;
             punchesBlockedPerGame = teamStats.punchesBlocked / teamStats.gamesPlayed;
+            goalDifference = teamStats.goalsScored - teamStats.goalsConceded;
         }
         if (teamStats.overtimeGames > 0) {
             overtimeWinPercentage = (teamStats.overtimeGamesWon / teamStats.overtimeGames) * 100;
@@ -3679,7 +3693,8 @@ async function updateCalculatedStats(statsCollection, teamsArray, playersArray, 
                                                             fightDrawPercentage: fightDrawPercentage,
                                                             fightLossPercentage: fightLossPercentage,
                                                             punchLandedPercentage: punchLandedPercentage,
-                                                            punchBlockedPercentage: punchBlockedPercentage } });
+                                                            punchBlockedPercentage: punchBlockedPercentage,
+                                                            goalDifference: goalDifference } });
     });
 
     playersArray.forEach(async (element) => {
@@ -3942,5 +3957,6 @@ async function createTeamStats(team, statsCollection, seasonNumber, playoffStats
                                       punchBlockedPercentage: 0.00,
                                       punchesTakenPerGame: 0.00,
                                       punchesBlockedPerGame: 0.00,
-                                      parties: 0 });
+                                      parties: 0,
+                                      goalDifference: 0 });
 }
