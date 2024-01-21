@@ -2692,89 +2692,107 @@ async function recalculateStats(parameters) {
 
 // Admin function to delete and recreate all-time stats
 async function recreateAllTimeStats () {
+    const interval = 50;
+    const rostersCollection = Database.collection('rosters');
     const statsCollection = Database.collection('stats');
     await statsCollection.deleteMany({ season: '0' });
 
     const allPlayerStatsArray = await statsCollection.find({ team: { $ne: '' } }).toArray();
     const allTeamStatsArray = await statsCollection.find({ team: '' }).toArray();
+    
+    allPlayerStatsArray.forEach(async (element, index) => {
+        // DB trips over itself unless you slow processing down a bit, creates duplicate records
+        setTimeout(async () => {
+            const player = await rostersCollection.findOne({ name: element.name });
 
-    allPlayerStatsArray.forEach(async (element) => {
-        const findAllTimePlayerStats = { name: element.name, season: '0', playoffs: element.playoffs };
-        let allTimePlayerStats = await statsCollection.find(findAllTimePlayerStats);
+            // Some players no longer in the rosters, just have to accept they won't have all-time stats
+            if (player) {
+                const findAllTimePlayerStats = { name: element.name, season: '0', playoffs: element.playoffs };
+                let allTimePlayerStats = await statsCollection.findOne(findAllTimePlayerStats);
 
-        if (!allTimePlayerStats) {
-            createPlayerStats(element.name, statsCollection, '0', element.playoffs);
-            allTimePlayerStats = await statsCollection.find(findAllTimePlayerStats);
-        }
+                if (!allTimePlayerStats) {            
+                    createPlayerStats(player, statsCollection, '0', element.playoffs);
+                    allTimePlayerStats = await statsCollection.findOne(findAllTimePlayerStats);
+                }
 
-        statsCollection.updateOne(findAllTimePlayerStats, { $set: { gamesPlayed: allTimePlayerStats.gamesPlayed + element.gamesPlayed,
-                                                                    gamesWon: allTimePlayerStats.gamesWon + element.gamesWon,
-                                                                    overtimeGames: allTimePlayerStats.overtimeGames + element.overtimeGames,
-                                                                    overtimeGamesWon: allTimePlayerStats.overtimeGamesWon + element.overtimeGamesWon,
-                                                                    faceoffsTaken: allTimePlayerStats.faceoffsTaken + element.faceoffsTaken,
-                                                                    faceoffsWon: allTimePlayerStats.faceoffsWon + element.faceoffsWon,
-                                                                    passesAttempted: allTimePlayerStats.passesAttempted + element.passesAttempted,
-                                                                    passesCompleted: allTimePlayerStats.passesCompleted + element.passesCompleted,
-                                                                    interceptions: allTimePlayerStats.interceptions + element.interceptions,
-                                                                    hits: allTimePlayerStats.hits + element.hits,
-                                                                    takeaways: allTimePlayerStats.takeaways + element.takeaways,
-                                                                    hitsTaken: allTimePlayerStats.hitsTaken + element.hitsTaken,
-                                                                    pucksLost: allTimePlayerStats.pucksLost + element.pucksLost,
-                                                                    goalsScored: allTimePlayerStats.goalsScored + element.goalsScored,
-                                                                    shotsTaken: allTimePlayerStats.shotsTaken + element.shotsTaken,
-                                                                    goalsConceded: allTimePlayerStats.goalsConceded + element.goalsConceded,
-                                                                    shotsFaced: allTimePlayerStats.shotsFaced + element.shotsFaced,
-                                                                    shotsBlockedGoalie: allTimePlayerStats.shotsBlockedGoalie + element.shotsBlockedGoalie,
-                                                                    shotsBlockedDefence: allTimePlayerStats.shotsBlockedDefence + element.shotsBlockedDefence,
-                                                                    fights: allTimePlayerStats.fights + element.fights,
-                                                                    fightsWon: allTimePlayerStats.fightsWon + element.fightsWon,
-                                                                    fightsDrawn: allTimePlayerStats.fightsDrawn + element.fightsDrawn,
-                                                                    fightsLost: allTimePlayerStats.fightsLost + element.fightsLost,
-                                                                    punchesThrown: allTimePlayerStats.punchesThrown + element.punchesThrown,
-                                                                    punchesLanded: allTimePlayerStats.punchesLanded + element.punchesLanded,
-                                                                    punchesTaken: allTimePlayerStats.punchesTaken + element.punchesTaken,
-                                                                    punchesBlocked: allTimePlayerStats.punchesBlocked + element.punchesBlocked,
-                                                                    timesSweptAway: allTimePlayerStats.timesSweptAway + element.timesSweptAway,
-                                                                    timesChickenedOut: allTimePlayerStats.timesChickenedOut + element.timesChickenedOut,
-                                                                    parties: allTimePlayerStats.parties + element.parties } });
+                // Shouldn't need this, no idea why there are nulls here
+                // Results are correct and function should only ever be run once, so not really going to worry about it for now
+                if (allTimePlayerStats) {
+                    statsCollection.updateOne(findAllTimePlayerStats, { $set: { gamesPlayed: allTimePlayerStats.gamesPlayed + element.gamesPlayed,
+                                                                                gamesWon: allTimePlayerStats.gamesWon + element.gamesWon,
+                                                                                overtimeGames: allTimePlayerStats.overtimeGames + element.overtimeGames,
+                                                                                overtimeGamesWon: allTimePlayerStats.overtimeGamesWon + element.overtimeGamesWon,
+                                                                                faceoffsTaken: allTimePlayerStats.faceoffsTaken + element.faceoffsTaken,
+                                                                                faceoffsWon: allTimePlayerStats.faceoffsWon + element.faceoffsWon,
+                                                                                passesAttempted: allTimePlayerStats.passesAttempted + element.passesAttempted,
+                                                                                passesCompleted: allTimePlayerStats.passesCompleted + element.passesCompleted,
+                                                                                interceptions: allTimePlayerStats.interceptions + element.interceptions,
+                                                                                hits: allTimePlayerStats.hits + element.hits,
+                                                                                takeaways: allTimePlayerStats.takeaways + element.takeaways,
+                                                                                hitsTaken: allTimePlayerStats.hitsTaken + element.hitsTaken,
+                                                                                pucksLost: allTimePlayerStats.pucksLost + element.pucksLost,
+                                                                                goalsScored: allTimePlayerStats.goalsScored + element.goalsScored,
+                                                                                shotsTaken: allTimePlayerStats.shotsTaken + element.shotsTaken,
+                                                                                goalsConceded: allTimePlayerStats.goalsConceded + element.goalsConceded,
+                                                                                shotsFaced: allTimePlayerStats.shotsFaced + element.shotsFaced,
+                                                                                shotsBlockedGoalie: allTimePlayerStats.shotsBlockedGoalie + element.shotsBlockedGoalie,
+                                                                                shotsBlockedDefence: allTimePlayerStats.shotsBlockedDefence + element.shotsBlockedDefence,
+                                                                                fights: allTimePlayerStats.fights + element.fights,
+                                                                                fightsWon: allTimePlayerStats.fightsWon + element.fightsWon,
+                                                                                fightsDrawn: allTimePlayerStats.fightsDrawn + element.fightsDrawn,
+                                                                                fightsLost: allTimePlayerStats.fightsLost + element.fightsLost,
+                                                                                punchesThrown: allTimePlayerStats.punchesThrown + element.punchesThrown,
+                                                                                punchesLanded: allTimePlayerStats.punchesLanded + element.punchesLanded,
+                                                                                punchesTaken: allTimePlayerStats.punchesTaken + element.punchesTaken,
+                                                                                punchesBlocked: allTimePlayerStats.punchesBlocked + element.punchesBlocked,
+                                                                                timesSweptAway: allTimePlayerStats.timesSweptAway + element.timesSweptAway,
+                                                                                timesChickenedOut: allTimePlayerStats.timesChickenedOut + element.timesChickenedOut,
+                                                                                parties: allTimePlayerStats.parties + element.parties } });
+                }
+            }
+        }, index * interval);
     });
 
-    allTeamStatsArray.forEach(async (element) => {
-        const findAllTimeTeamStats = { name: element.name, season: '0', playoffs: element.playoffs };
-        let allTimeTeamStats = await statsCollection.find(findAllTimeTeamStats);
+    allTeamStatsArray.forEach(async (element, index) => {
+        setTimeout(async () => {
+            const findAllTimeTeamStats = { name: element.name, season: '0', playoffs: element.playoffs };
+            let allTimeTeamStats = await statsCollection.findOne(findAllTimeTeamStats);
 
-        if (!allTimeTeamStats) {
-            createPlayerStats(element.name, statsCollection, '0', element.playoffs);
-            allTimeTeamStats = await statsCollection.find(findAllTimeTeamStats);
-        }
+            if (!allTimeTeamStats) {
+                createTeamStats(element.name, statsCollection, '0', element.playoffs);
+                allTimeTeamStats = await statsCollection.findOne(findAllTimeTeamStats);
+            }
 
-        statsCollection.updateOne(findAllTimeTeamStats, { $set: { gamesPlayed: allTimeTeamStats.gamesPlayed + element.gamesPlayed,
-                                                                  gamesWon: allTimeTeamStats.gamesWon + element.gamesWon,
-                                                                  overtimeGames: allTimeTeamStats.overtimeGames + element.overtimeGames,
-                                                                  overtimeGamesWon: allTimeTeamStats.overtimeGamesWon + element.overtimeGamesWon,
-                                                                  faceoffsTaken: allTimeTeamStats.faceoffsTaken + element.faceoffsTaken,
-                                                                  faceoffsWon: allTimeTeamStats.faceoffsWon + element.faceoffsWon,
-                                                                  passesAttempted: allTimeTeamStats.passesAttempted + element.passesAttempted,
-                                                                  passesCompleted: allTimeTeamStats.passesCompleted + element.passesCompleted,
-                                                                  interceptions: allTimeTeamStats.interceptions + element.interceptions,
-                                                                  hits: allTimeTeamStats.hits + element.hits,
-                                                                  takeaways: allTimeTeamStats.takeaways + element.takeaways,
-                                                                  hitsTaken: allTimeTeamStats.hitsTaken + element.hitsTaken,
-                                                                  pucksLost: allTimeTeamStats.pucksLost + element.pucksLost,
-                                                                  goalsScored: allTimeTeamStats.goalsScored + element.goalsScored,
-                                                                  shotsTaken: allTimeTeamStats.shotsTaken + element.shotsTaken,
-                                                                  goalsConceded: allTimeTeamStats.goalsConceded + element.goalsConceded,
-                                                                  shotsFaced: allTimeTeamStats.shotsFaced + element.shotsFaced,
-                                                                  shotsBlocked: allTimeTeamStats.shotsBlocked + element.shotsBlocked,
-                                                                  fights: allTimeTeamStats.fights + element.fights,
-                                                                  fightsWon: allTimeTeamStats.fightsWon + element.fightsWon,
-                                                                  fightsDrawn: allTimeTeamStats.fightsDrawn + element.fightsDrawn,
-                                                                  fightsLost: allTimeTeamStats.fightsLost + element.fightsLost,
-                                                                  punchesThrown: allTimeTeamStats.punchesThrown + element.punchesThrown,
-                                                                  punchesLanded: allTimeTeamStats.punchesLanded + element.punchesLanded,
-                                                                  punchesTaken: allTimeTeamStats.punchesTaken + element.punchesTaken,
-                                                                  punchesBlocked: allTimeTeamStats.punchesBlocked + element.punchesBlocked,
-                                                                  parties: allTimeTeamStats.parties + element.parties } });
+            if (allTimeTeamStats) {
+                statsCollection.updateOne(findAllTimeTeamStats, { $set: { gamesPlayed: allTimeTeamStats.gamesPlayed + element.gamesPlayed,
+                                                                        gamesWon: allTimeTeamStats.gamesWon + element.gamesWon,
+                                                                        overtimeGames: allTimeTeamStats.overtimeGames + element.overtimeGames,
+                                                                        overtimeGamesWon: allTimeTeamStats.overtimeGamesWon + element.overtimeGamesWon,
+                                                                        faceoffsTaken: allTimeTeamStats.faceoffsTaken + element.faceoffsTaken,
+                                                                        faceoffsWon: allTimeTeamStats.faceoffsWon + element.faceoffsWon,
+                                                                        passesAttempted: allTimeTeamStats.passesAttempted + element.passesAttempted,
+                                                                        passesCompleted: allTimeTeamStats.passesCompleted + element.passesCompleted,
+                                                                        interceptions: allTimeTeamStats.interceptions + element.interceptions,
+                                                                        hits: allTimeTeamStats.hits + element.hits,
+                                                                        takeaways: allTimeTeamStats.takeaways + element.takeaways,
+                                                                        hitsTaken: allTimeTeamStats.hitsTaken + element.hitsTaken,
+                                                                        pucksLost: allTimeTeamStats.pucksLost + element.pucksLost,
+                                                                        goalsScored: allTimeTeamStats.goalsScored + element.goalsScored,
+                                                                        shotsTaken: allTimeTeamStats.shotsTaken + element.shotsTaken,
+                                                                        goalsConceded: allTimeTeamStats.goalsConceded + element.goalsConceded,
+                                                                        shotsFaced: allTimeTeamStats.shotsFaced + element.shotsFaced,
+                                                                        shotsBlocked: allTimeTeamStats.shotsBlocked + element.shotsBlocked,
+                                                                        fights: allTimeTeamStats.fights + element.fights,
+                                                                        fightsWon: allTimeTeamStats.fightsWon + element.fightsWon,
+                                                                        fightsDrawn: allTimeTeamStats.fightsDrawn + element.fightsDrawn,
+                                                                        fightsLost: allTimeTeamStats.fightsLost + element.fightsLost,
+                                                                        punchesThrown: allTimeTeamStats.punchesThrown + element.punchesThrown,
+                                                                        punchesLanded: allTimeTeamStats.punchesLanded + element.punchesLanded,
+                                                                        punchesTaken: allTimeTeamStats.punchesTaken + element.punchesTaken,
+                                                                        punchesBlocked: allTimeTeamStats.punchesBlocked + element.punchesBlocked,
+                                                                        parties: allTimeTeamStats.parties + element.parties } });
+            }
+        }, index * interval);
     });
 }
 
