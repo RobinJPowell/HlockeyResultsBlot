@@ -2673,8 +2673,8 @@ async function loadStats(parameters) {
 async function recalculateStats(parameters) {
     const parametersArray = parameters.split(' ');
     const statsCollection = Database.collection('stats');
-    const teamStatsArray = await statsCollection.find({ team: { $ne: '' }, season: parametersArray[0], playoffs: (parametersArray[1] == 'true') }).toArray();
-    const playerStatsArray = await statsCollection.find({ team: '', season: parametersArray[0], playoffs: (parametersArray[1] == 'true') }).toArray();
+    const playerStatsArray = await statsCollection.find({ team: { $ne: '' }, season: parametersArray[0], playoffs: (parametersArray[1] == 'true') }).toArray();
+    const teamStatsArray = await statsCollection.find({ team: '', season: parametersArray[0], playoffs: (parametersArray[1] == 'true') }).toArray();
     const teamNameArray = [];
     const playerNameArray = [];    
 
