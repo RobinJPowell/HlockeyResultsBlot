@@ -3104,6 +3104,7 @@ function parseGameLog(gameLog, seasonNumber, playoffStats, teamsArray, weatherRe
 
                     if (lineCount == gameLog.length) {
                         updateCalculatedStats(statsCollection, teamsArray, playersArray, seasonNumber, playoffStats);
+                        updateCalculatedStats(statsCollection, teamsArray, playersArray, '0', playoffStats);
 
                         if (gameWeatherArray.length == 0) {
                             return resolve();
@@ -3139,8 +3140,9 @@ async function updateFaceoffStats (gameLogLineArray, rostersCollection, statsCol
 
     await statsCollection.updateOne(findWinningPlayer, { $set: { faceoffsTaken : winningPlayerStats.faceoffsTaken + 1,
                                                                  faceoffsWon: winningPlayerStats.faceoffsWon + 1 }});
-    updateAllTimeSingleStat(rostersCollection, statsCollection, 'faceoffsTaken', winningPlayer, playoffStats);
-    updateAllTimeSingleStat(rostersCollection, statsCollection, 'faceoffsWon', winningPlayer, playoffStats);
+    updateAllTimeSingleStat(rostersCollection, statsCollection, 'faceoffsTaken', winningPlayer, playoffStats);    
+    // DB gets upset if multiple updates to the same player happen too close together
+    setTimeout(() => { updateAllTimeSingleStat(rostersCollection, statsCollection, 'faceoffsWon', winningPlayer, playoffStats); },50) ;
 
     if (!playersArray.includes(winningPlayer)) {
         playersArray.push(winningPlayer);
@@ -3241,7 +3243,8 @@ async function updatePassingStats(gameLogLineArray, interceptionArray, rostersCo
         }
     }
 
-    updateAllTimeSingleStat(rostersCollection, statsCollection, 'passesAttempted', passingPlayer, playoffStats);
+    // DB gets upset if multiple updates to the same player happen too close together
+    setTimeout(() => { updateAllTimeSingleStat(rostersCollection, statsCollection, 'passesAttempted', passingPlayer, playoffStats); }, 50); 
 
     if (!playersArray.includes(passingPlayer)) {
         playersArray.push(passingPlayer);
@@ -3291,8 +3294,12 @@ async function updateHitStats(gameLogLineArray, rostersCollection, statsCollecti
         await statsCollection.updateOne(findHitTeam, { $set: { hitsTaken: hitTeamStats.hitsTaken + 1 } });
     }
 
-    updateAllTimeSingleStat(rostersCollection, statsCollection, 'hits', hittingPlayer, playoffStats);
-    updateAllTimeSingleStat(rostersCollection, statsCollection, 'hitsTaken', hitPlayer, playoffStats);
+    // DB gets upset if multiple updates to the same player happen too close together
+    setTimeout(() => {
+        updateAllTimeSingleStat(rostersCollection, statsCollection, 'hits', hittingPlayer, playoffStats);
+        updateAllTimeSingleStat(rostersCollection, statsCollection, 'hitsTaken', hitPlayer, playoffStats);
+    },50);
+    
 
     if (!playersArray.includes(hittingPlayer)) {
         playersArray.push(hittingPlayer);
@@ -3353,10 +3360,13 @@ async function updateShootingStats(gameLogLineArray, blockedArray, rostersCollec
                                                                        shotsFaced: concedingPlayerStats.shotsFaced + 1 } });
         await statsCollection.updateOne(findConcedingTeam, { $set: { goalsConceded: concedingTeamStats.goalsConceded + 1,
                                                                      shotsFaced: concedingTeamStats.shotsFaced + 1 } });
-        updateAllTimeSingleStat(rostersCollection, statsCollection, 'goalsScored', shootingPlayer, playoffStats);
-        updateAllTimeSingleStat(rostersCollection, statsCollection, 'shotsTaken', shootingPlayer, playoffStats);
-        updateAllTimeSingleStat(rostersCollection, statsCollection, 'goalsConceded', concedingPlayerRoster.name, playoffStats);
-        updateAllTimeSingleStat(rostersCollection, statsCollection, 'shotsFaced', concedingPlayerRoster.name, playoffStats);
+        updateAllTimeSingleStat(rostersCollection, statsCollection, 'goalsScored', shootingPlayer, playoffStats);        
+        updateAllTimeSingleStat(rostersCollection, statsCollection, 'goalsConceded', concedingPlayerRoster.name, playoffStats);        
+        // DB gets upset if multiple updates to the same player happen too close together
+        setTimeout(() => {
+            updateAllTimeSingleStat(rostersCollection, statsCollection, 'shotsTaken', shootingPlayer, playoffStats);
+            updateAllTimeSingleStat(rostersCollection, statsCollection, 'shotsFaced', concedingPlayerRoster.name, playoffStats);
+        },50);
 
         if (!playersArray.includes(concedingPlayerRoster.name)) {
             playersArray.push(concedingPlayerRoster.name);
@@ -3395,7 +3405,8 @@ async function updateShootingStats(gameLogLineArray, blockedArray, rostersCollec
         await statsCollection.updateOne(findBlockingTeam, { $set: { shotsFaced: blockingTeamStats.shotsFaced + 1,
                                                                     shotsBlocked: blockingTeamStats.shotsBlocked + 1 } });
         updateAllTimeSingleStat(rostersCollection, statsCollection, 'shotsTaken', shootingPlayer, playoffStats);
-        updateAllTimeSingleStat(rostersCollection, statsCollection, 'shotsFaced', blockingPlayer, playoffStats);
+        // DB gets upset if multiple updates to the same player happen too close together
+        setTimeout(() => { updateAllTimeSingleStat(rostersCollection, statsCollection, 'shotsFaced', blockingPlayer, playoffStats); },50);
     }
 
     if (!playersArray.includes(shootingPlayer)) {
@@ -3505,8 +3516,11 @@ async function updateFightingStats(fightArray, rostersCollection, statsCollectio
                     updateAllTimeSingleStat(rostersCollection, statsCollection, 'punchesLanded', punchingPlayer, playoffStats);
                 }
 
-                updateAllTimeSingleStat(rostersCollection, statsCollection, 'punchesThrown', punchingPlayer, playoffStats);
-                updateAllTimeSingleStat(rostersCollection, statsCollection, 'punchesTaken', punchedPlayer, playoffStats);
+                // DB gets upset if multiple updates to the same player happen too close together
+                setTimeout(() => {
+                    updateAllTimeSingleStat(rostersCollection, statsCollection, 'punchesThrown', punchingPlayer, playoffStats);
+                    updateAllTimeSingleStat(rostersCollection, statsCollection, 'punchesTaken', punchedPlayer, playoffStats);
+                },30);                
             } else if (element.toLowerCase().includes('ended')) {
                 let teamName = '';
                 let winningTeam = '';
@@ -3543,19 +3557,20 @@ async function updateFightingStats(fightArray, rostersCollection, statsCollectio
                     if (winningTeam == '') {
                         await statsCollection.updateOne(findPlayer, { $set: { fights: playerStats.fights + 1,
                                                                               fightsDrawn: playerStats.fightsDrawn + 1 } });
-                        updateAllTimeSingleStat(rostersCollection, statsCollection, 'fightsDrawn', element, playerStats);
+                        updateAllTimeTwoStats(rostersCollection, statsCollection, 'fightsDrawn', '', element, playoffStats);
                     }
                     else if (playerRoster.team == winningTeam) {
                         await statsCollection.updateOne(findPlayer, { $set: { fights: playerStats.fights + 1,
                                                                               fightsWon: playerStats.fightsWon + 1 } });
-                        updateAllTimeSingleStat(rostersCollection, statsCollection, 'fightsWon', element, playerStats);
+                        updateAllTimeTwoStats(rostersCollection, statsCollection, 'fightsWon', '', element, playoffStats);
                     } else {
                         await statsCollection.updateOne(findPlayer, { $set: { fights: playerStats.fights + 1,
                                                                               fightsLost: playerStats.fightsLost + 1 } });
-                        updateAllTimeSingleStat(rostersCollection, statsCollection, 'fightsLost', element, playerStats);
+                        updateAllTimeTwoStats(rostersCollection, statsCollection, 'fightsLost', '', element, playoffStats);
                     }
 
-                    updateAllTimeSingleStat(rostersCollection, statsCollection, 'fights', element, playerStats);
+                    // DB gets upset if multiple updates to the same player happen too close together
+                    setTimeout(() => { updateAllTimeTwoStats(rostersCollection, statsCollection, 'fights', '', element, playoffStats); },50);
                 })
 
                 teamsArray.forEach(async (element) => {
@@ -3565,14 +3580,20 @@ async function updateFightingStats(fightArray, rostersCollection, statsCollectio
                     if (winningTeam == '') {
                         await statsCollection.updateOne(findTeam, { $set: { fights: teamStats.fights + 1,
                                                                             fightsDrawn: teamStats.fightsDrawn + 1 } });
+                        updateAllTimeTeamStat(statsCollection,'fightsDrawn', element, playoffStats);
                     }
                     else if (element == winningTeam) {
                         await statsCollection.updateOne(findTeam, { $set: { fights: teamStats.fights + 1,
-                                                                            fightsWon: teamStats.fightsWon + 1 } }); 
+                                                                            fightsWon: teamStats.fightsWon + 1 } });
+                        updateAllTimeTeamStat(statsCollection,'fightsWon', element, playoffStats); 
                     } else {
                         await statsCollection.updateOne(findTeam, { $set: { fights: teamStats.fights + 1,
                                                                             fightsLost: teamStats.fightsLost + 1 } });
+                        updateAllTimeTeamStat(statsCollection,'fightsLost', element, playoffStats);
                     }
+
+                    // DB gets upset if multiple updates to the same team happen too close together
+                    setTimeout(() => { updateAllTimeTeamStat(statsCollection,'fights', element, playoffStats); }),50;
                 });
             }
         }, index * interval);
@@ -3668,16 +3689,24 @@ async function updatePlayedStats(victoryLine, rostersCollection, statsCollection
                                                                     gamesWon: teamStats.gamesWon + 1,
                                                                     overtimeGames: teamStats.overtimeGames + 1,
                                                                     overtimeGamesWon: teamStats.overtimeGamesWon + 1 } });
+                updateAllTimeTeamStat(statsCollection, 'overtimeGames', element, playoffStats);
+                // DB gets upset if multiple updates to the same team happen too close together
+                setTimeout(() => { updateAllTimeTeamStat(statsCollection, 'overtimeGamesWon', element, playoffStats); },50);
             } else {
                 await statsCollection.updateOne(findTeam, { $set: { gamesPlayed: teamStats.gamesPlayed + 1,
-                                                                    gamesWon: teamStats.gamesWon + 1 } });                                                                    
+                                                                    gamesWon: teamStats.gamesWon + 1 } });                                                                                    
             }
+
+            setTimeout(() => { updateAllTimeTeamStat(statsCollection, 'gamesWon', element, playoffStats); },100);
         } else if (overtime) {            
             await statsCollection.updateOne(findTeam, { $set: { gamesPlayed: teamStats.gamesPlayed + 1,
                                                                 overtimeGames: teamStats.overtimeGames + 1 } });
+            updateAllTimeTeamStat(statsCollection, 'overtimeGames', element, playoffStats);
         } else {
             await statsCollection.updateOne(findTeam, { $set: { gamesPlayed: teamStats.gamesPlayed + 1 } });
         }
+
+        setTimeout(() => { updateAllTimeTeamStat(statsCollection, 'gamesPlayed', element, playoffStats); },150);
     });
 
     playersArray.forEach(async (element) => {
@@ -3692,24 +3721,25 @@ async function updatePlayedStats(victoryLine, rostersCollection, statsCollection
                                                                       overtimeGames: playerStats.overtimeGames + 1,
                                                                       overtimeGamesWon: playerStats.overtimeGamesWon + 1 } });
 
-                updateAllTimeSingleStat(rostersCollection, statsCollection, 'overtimeGames', element, playoffStats);
-                updateAllTimeSingleStat(rostersCollection, statsCollection, 'overtimeGamesWon', element, playoffStats);
+                updateAllTimeTwoStats(rostersCollection, statsCollection, 'overtimeGames', '', element, playoffStats);
+                // DB gets upset if multiple updates to the same player happen too close together
+                setTimeout(() => { updateAllTimeTwoStats(rostersCollection, statsCollection, 'overtimeGamesWon', '', element, playoffStats); },50);
             } else {
                 await statsCollection.updateOne(findPlayer, { $set: { gamesPlayed: playerStats.gamesPlayed + 1,
                                                                       gamesWon: playerStats.gamesWon + 1 } });                                                                    
             }
 
-            updateAllTimeSingleStat(rostersCollection, statsCollection, 'gamesWon', element, playoffStats);
+            setTimeout(() => { updateAllTimeTwoStats(rostersCollection, statsCollection, 'gamesWon', '', element, playoffStats); },100);
         } else if (overtime) {
             await statsCollection.updateOne(findPlayer, { $set: { gamesPlayed: playerStats.gamesPlayed + 1,
                                                                   overtimeGames: playerStats.overtimeGames + 1 } });
 
-            updateAllTimeSingleStat(rostersCollection, statsCollection, 'overtimeGames', element, playoffStats);
+            updateAllTimeTwoStats(rostersCollection, statsCollection, 'overtimeGames', '', element, playoffStats);
         } else {
             await statsCollection.updateOne(findPlayer, { $set: { gamesPlayed: playerStats.gamesPlayed + 1 } });
         }
-
-        updateAllTimeSingleStat(rostersCollection, statsCollection, 'gamesPlayed', element, playoffStats);
+        
+        setTimeout(() => { updateAllTimeTwoStats(rostersCollection, statsCollection, 'gamesPlayed', '', element, playoffStats); },150);
     });    
 }
 
@@ -3719,22 +3749,31 @@ async function updateAllTimeSingleStat(rostersCollection, statsCollection, playe
 
 async function updateAllTimeTwoStats(rostersCollection, statsCollection, playerStat, teamStat, player, playoffStats) {
     const playerRoster = await rostersCollection.findOne({ name: player });
-    const findPlayer = { name: player, season: '0', playoffs: playoffStats };
-    const findTeam = { name: playerRoster.team, season: '0', playoffs: playoffStats };    
-    let playerStats = await statsCollection.findOne(findPlayer);
-    let teamStats = await statsCollection.findOne(findTeam);
+    const findPlayer = { name: player, season: '0', playoffs: playoffStats };       
+    let playerStats = await statsCollection.findOne(findPlayer);    
     
     if (!playerStats) {
         await createPlayerStats(playerRoster, statsCollection, '0', playoffStats);
         playerStats = await statsCollection.findOne(findPlayer);
     }
-    if (!teamStats) {
-        await createTeamStats(playerRoster.team, statsCollection, '0', playoffStats);
-        teamStats = await statsCollection.findOne(findPlayer);
-    }
 
     await statsCollection.updateOne(findPlayer, { $set: { [playerStat]: playerStats[playerStat] + 1 } });
-    await statsCollection.updateOne(findTeam, { $set: { [teamStat]: teamStats[teamStat] + 1 } });
+    
+    if (teamStat != '') {
+        updateAllTimeTeamStat(statsCollection, teamStat, playerRoster.team, playoffStats);
+    }
+}
+
+async function updateAllTimeTeamStat(statsCollection, stat, team, playoffStats) {
+    const findTeam = { name: team, season: '0', playoffs: playoffStats }; 
+    let teamStats = await statsCollection.findOne(findTeam);
+
+    if (!teamStats) {
+        await createTeamStats(team, statsCollection, '0', playoffStats);
+        teamStats = await statsCollection.findOne(findTeam);
+    }
+        
+    await statsCollection.updateOne(findTeam, { $set: { [stat]: teamStats[stat] + 1 } });
 }
 
 async function updateCalculatedStats(statsCollection, teamsArray, playersArray, seasonNumber, playoffStats) {
