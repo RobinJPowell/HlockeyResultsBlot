@@ -2622,6 +2622,10 @@ async function populateRosters () {
 
 // Admin function to manually load a log.txt file
 async function loadStats(parameters) {
+    const parametersArray = parameters.split(' ');
+    const seasonNumber = parametersArray[0];
+    const playoffStats = (parametersArray[1] == 'true');
+
     NodeDir.files('gameLogs', function (error, files) {
         let runNo = 0;
         
@@ -2639,10 +2643,14 @@ async function loadStats(parameters) {
                                 if (foundLogs) {                        
                                     setTimeout (() => {
                                         Logger.debug(`loadStats parsing Day ${String(dayNo).padStart(2,'0')} Round ${String(roundNo)}`);
+
+                                        if (seasonNumber == "6") {
+                                            correctSeason6Rosters(dayNo, roundNo);
+                                        }                                        
+
                                         files.forEach(async (element) => {
                                             if (element.includes(`Day ${String(dayNo).padStart(2,'0')}`) && element.includes(`Round ${String(roundNo)}`) && element.includes('\\log.txt')) {
-                                                const gameLog = Fs.readFileSync(element).toString().split(/\n/g);
-                                                const parametersArray = parameters.split(' ');
+                                                const gameLog = Fs.readFileSync(element).toString().split(/\n/g);                                                
                                                 let teamsArray = [];
                                                 let weatherReportArray = [];
                         
@@ -2653,7 +2661,7 @@ async function loadStats(parameters) {
                                                     teamsArray = matchup.split(' vs ');
                                                 }
                         
-                                                await parseGameLog(gameLog, parametersArray[0], (parametersArray[1] == 'true'), teamsArray, weatherReportArray);
+                                                await parseGameLog(gameLog, seasonNumber, playoffStats, teamsArray, weatherReportArray);
                                             }
                                         });
                                     }, 300000 * runNo);
@@ -2667,6 +2675,87 @@ async function loadStats(parameters) {
             }, 600 * dayNo);
         }
     });
+}
+
+// Season 6 introduced player mods which can cause them to move positions between games without
+// any lines in the game log to indicate it has happened
+// This function puts everyone where they're supposed to be
+function correctSeason6Rosters(dayNo, roundNo) {
+    const rostersCollection = Database.collection('rosters');
+    
+    if (dayNo == 2 && roundNo == 1) {
+        rostersCollection.updateOne({ name: 'Shancilesi Lucie' }, { $set: { position: 'Goalie' } });
+        rostersCollection.updateOne({ name: 'Kalianeraf Edge' }, { $set: { position: 'Shadows' } });
+        rostersCollection.updateOne({ name: 'Eil Glim' }, { $set: { position: 'Right wing' } });
+        rostersCollection.updateOne({ name: 'Marmil Eilarema' }, { $set: { position: 'Shadows' } });
+    } else if (dayNo == 3 && roundNo == 1) {
+        rostersCollection.updateOne({ name: 'Kalianeraf Edge' }, { $set: { position: 'Left defender' } });
+        rostersCollection.updateOne({ name: 'Tonse Chryane' }, { $set: { position: 'Shadows' } });
+    } else if (dayNo == 3 && roundNo == 2) {
+        rostersCollection.updateOne({ name: 'Gena Ilenbel' }, { $set: { position: 'Left wing' } });
+        rostersCollection.updateOne({ name: 'Ilenbelder Baca' }, { $set: { position: 'Shadows' } });
+    } else if (dayNo == 4 && roundNo == 1) {
+        rostersCollection.updateOne({ name: 'Merry Nate' }, { $set: { position: 'Shadows' } });
+        rostersCollection.updateOne({ name: 'Shancilesi Lucie' }, { $set: { position: 'Goalie' } });
+        rostersCollection.updateOne({ name: 'Marmil Eilarema' }, { $set: { position: 'Center' } });
+        rostersCollection.updateOne({ name: 'Eddie Cle' }, { $set: { position: 'Shadows' } });
+        rostersCollection.updateOne({ name: 'Beany Genella' }, { $set: { position: 'Goalie' } });
+    } else if (dayNo == 8 && roundNo == 3) {
+        rostersCollection.updateOne({ name: 'Don Sta' }, { $set: { position: 'Shadows' } });
+        rostersCollection.updateOne({ name: 'Eddie Cle' }, { $set: { position: 'Center' } });
+        rostersCollection.updateOne({ name: 'Beany Genella' }, { $set: { position: 'Goalie' } });
+    } else if (dayNo == 10 && roundNo == 3) {
+        rostersCollection.updateOne({ name: 'Ton Mitelvelli' }, { $set: { position: 'Center' } });
+        rostersCollection.updateOne({ name: 'Sillia Lina' }, { $set: { position: 'Shadows' } });
+        rostersCollection.updateOne({ name: 'Ilenbelder Baca' }, { $set: { position: 'Shadows' } });
+        rostersCollection.updateOne({ name: 'Eil Glim' }, { $set: { position: 'Left wing' } });
+    } else if (dayNo == 13 && roundNo == 1) {
+        rostersCollection.updateOne({ name: 'Marmil Eilarema' }, { $set: { position: 'Left wing' } });
+        rostersCollection.updateOne({ name: 'Hayetinevo Sance' }, { $set: { position: 'Center' } });
+    } else if (dayNo == 15 && roundNo == 1) {
+        rostersCollection.updateOne({ name: 'Ton Mitelvelli' }, { $set: { position: 'Center' } });
+        rostersCollection.updateOne({ name: 'Fcomeria Been' }, { $set: { position: 'Shadows' } });
+        rostersCollection.updateOne({ name: 'Bargelean Kathonespi' }, { $set: { position: 'Goalie' } });
+    } else if (dayNo == 19 && roundNo == 1) {
+        rostersCollection.updateOne({ name: 'Kalianeraf Edge' }, { $set: { position: 'Shadows' } });
+        rostersCollection.updateOne({ name: 'Marmil Eilarema' }, { $set: { position: 'Shadows' } });
+        rostersCollection.updateOne({ name: 'Eil Glim' }, { $set: { position: 'Left defender' } });
+        rostersCollection.updateOne({ name: 'Hayetinevo Sance' }, { $set: { position: 'Left wing' } });
+    } else if (dayNo == 20 && roundNo == 1) {
+        rostersCollection.updateOne({ name: 'Kalianeraf Edge' }, { $set: { position: 'Left wing' } });
+        rostersCollection.updateOne({ name: 'Marmil Eilarema' }, { $set: { position: 'Right wing' } });
+        rostersCollection.updateOne({ name: 'Hayetinevo Sance' }, { $set: { position: 'Shadows' } });
+        rostersCollection.updateOne({ name: 'Tonse Chryane' }, { $set: { position: 'Shadows' } });
+    } else if (dayNo == 23 && roundNo == 1) {
+        rostersCollection.updateOne({ name: 'Marmil Eilarema' }, { $set: { position: 'Shadows' } });
+        rostersCollection.updateOne({ name: 'Eil Glim' }, { $set: { position: 'Right wing' } });
+    } else if (dayNo == 25 && roundNo == 1) {
+        rostersCollection.updateOne({ name: 'Marmil Eilarema' }, { $set: { position: 'Goalie' } });
+        rostersCollection.updateOne({ name: 'Eil Glim' }, { $set: { position: 'Right wing' } });
+        rostersCollection.updateOne({ name: 'Gena Ilenbel' }, { $set: { position: 'Shadows' } });
+    } else if (dayNo == 26 && roundNo == 1) {
+        rostersCollection.updateOne({ name: 'Ton Mitelvelli' }, { $set: { position: 'Right wing' } });
+        rostersCollection.updateOne({ name: 'Ene Marlaura' }, { $set: { position: 'Shadows' } });
+        rostersCollection.updateOne({ name: 'Jhem Caille' }, { $set: { position: 'Right defender' } });
+    } else if (dayNo == 34 && roundNo == 3) {
+        rostersCollection.updateOne({ name: 'Ilenbelder Baca' }, { $set: { position: 'Shadows' } });
+        rostersCollection.updateOne({ name: 'Kalianeraf Edge' }, { $set: { position: 'Center' } });
+        rostersCollection.updateOne({ name: 'Eil Glim' }, { $set: { position: 'Left defender' } });
+    } else if (dayNo == 35 && roundNo == 2) {
+        rostersCollection.updateOne({ name: 'Ilenbelder Baca' }, { $set: { position: 'Center' } });
+        rostersCollection.updateOne({ name: 'Merry Nate' }, { $set: { position: 'Shadows' } });
+        rostersCollection.updateOne({ name: 'Kalianeraf Edge' }, { $set: { position: 'Left wing' } });
+    } else if (dayNo == 36 && roundNo == 2) {
+        rostersCollection.updateOne({ name: 'Ilenbelder Baca' }, { $set: { position: 'Center' } });
+        rostersCollection.updateOne({ name: 'Merry Nate' }, { $set: { position: 'Shadows' } });
+        rostersCollection.updateOne({ name: 'Marmil Eilarema' }, { $set: { position: 'Left wing' } });
+        rostersCollection.updateOne({ name: 'Kalianeraf Edge' }, { $set: { position: 'Left defender' } });
+        rostersCollection.updateOne({ name: 'Eil Glim' }, { $set: { position: 'Shadows' } });
+        rostersCollection.updateOne({ name: 'Shancilesi Lucie' }, { $set: { position: 'Goalie' } });
+    } else if (dayNo == 38 && roundNo == 1) {
+        rostersCollection.updateOne({ name: 'Jon Loura' }, { $set: { position: 'Shadows' } });
+        rostersCollection.updateOne({ name: 'Dhaltis Fco' }, { $set: { position: 'Right defender' } });
+    }
 }
 
 // Admin function to force re-calculation of all calculatedstats
