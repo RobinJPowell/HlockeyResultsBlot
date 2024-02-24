@@ -3553,7 +3553,7 @@ async function updateFightingStats(fightArray, rostersCollection, statsCollectio
                     const playerRoster = await rostersCollection.findOne({ name: element });
                     const findPlayer = { name: element, season: seasonNumber, playoffs: playoffStats };
                     const playerStats = await statsCollection.findOne(findPlayer);
-
+                    
                     if (winningTeam == '') {
                         await statsCollection.updateOne(findPlayer, { $set: { fights: playerStats.fights + 1,
                                                                               fightsDrawn: playerStats.fightsDrawn + 1 } });
@@ -3571,7 +3571,7 @@ async function updateFightingStats(fightArray, rostersCollection, statsCollectio
 
                     // DB gets upset if multiple updates to the same player happen too close together
                     setTimeout(() => { updateAllTimeTwoStats(rostersCollection, statsCollection, 'fights', '', element, playoffStats); },50);
-                })
+                });
 
                 teamsArray.forEach(async (element) => {
                     const findTeam = { name: element, season: seasonNumber, playoffs: playoffStats }; 
@@ -3632,7 +3632,7 @@ async function updateGameRosterChanges(gameLogLineArray, swappedPlayerLineArray,
     if (waves) {
         await statsCollection.updateOne(findLeavingPlayer, { $set: { timesSweptAway: leavingPlayerStats.timesSweptAway + 1 } });
         await rostersCollection.updateOne({ name: arrivingPlayer }, { $set: { position: leavingPlayerRoster.position } });
-        await rostersCollection.updateOne({ name: leavingPlayer }, { $set: { position: 'Shadows' } });
+        await rostersCollection.updateOne({ name: leavingPlayer }, { $set: { position: arrivingPlayerRoster.position } });
         updateAllTimeSingleStat(rostersCollection, statsCollection, 'timesSweptAway', leavingPlayer, playoffStats);
 
         if (gameWeatherArray[teamIndex] == '') {
@@ -3645,12 +3645,12 @@ async function updateGameRosterChanges(gameLogLineArray, swappedPlayerLineArray,
         await statsCollection.updateOne(findLeavingPlayer, { $set: { timesChickenedOut: leavingPlayerStats.timesChickenedOut + 1 } });
         updateAllTimeSingleStat(rostersCollection, statsCollection, 'timesChickenedOut', leavingPlayer, playoffStats);
 
-        if (leavingPlayerRoster.position == 'Goalie') {
+        if ((temporaryGoalies[teamIndex] == '' && leavingPlayerRoster.position == 'Goalie') || temporaryGoalies[teamIndex] == leavingPlayerRoster.name) {
             temporaryGoalies[teamIndex] = arrivingPlayer;
-        } else if (leavingPlayerRoster.position == 'Center') {
+        } else if ((temporaryCenters[teamIndex] == '' && leavingPlayerRoster.position == 'Center') || temporaryCenters[teamIndex] == leavingPlayerRoster.name) {
             temporaryCenters[teamIndex] = arrivingPlayer;
         }
-    }    
+    }
 }
 
 async function updateParties(gameLogLineArray, rostersCollection, statsCollection, playersArray, seasonNumber, playoffStats) {
