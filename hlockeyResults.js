@@ -3670,8 +3670,8 @@ async function updateParties(gameLogLineArray, rostersCollection, statsCollectio
     await statsCollection.updateOne(findPartyingTeam, { $set: { hits: partyingTeamStats.parties + 1 } });
     updateAllTimeSingleStat(rostersCollection, statsCollection, 'parties', partyingPlayer, playoffStats);
 
-    if (!playersArray.includes(findPartyingPlayer)) {
-        playersArray.push(findPartyingPlayer);
+    if (!playersArray.includes(partyingPlayer)) {
+        playersArray.push(partyingPlayer);
     }
 }
 
