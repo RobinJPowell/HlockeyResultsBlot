@@ -101,6 +101,7 @@ Or how many punches the players of the Sydney Thinkers have thrown:
 - shotsBlockedPercentage - Returns the percentage of faced shots blocked by players in any position, with the number of shots faced alongside it.  This stat is only available for teams.
 - shotsBlockedPerGame - Returns the number of shots blocked per game played, with the number of shots blocked alongside it.  For players this only counts shots blocked while playing in a position other than Goalie, while for teams all shots blocked by any position are counted.
 - goalsConcededPerGame - Returns the number of goals conceded per game played, with the number of games played alongside it, with lower numbers considered better.  Only the Goalie position is considered able to concede a goal, and a player must have faced at least 10 shots for their goals conceded per game to be counted.
+- goalDifference - Returns the difference between goals scored and goals conceded.  This stat is only available for teams.
 - fights - Returns the number of fights joined.
 - fightsWon - Returns the number of fights won, with the percentage of fights won alongside it.
 - fightsDrawn - Returns the number of fights which were a draw, with the percentage of fights drawn alongside it.
@@ -126,6 +127,7 @@ Or how many punches the players of the Sydney Thinkers have thrown:
 - punchesBlockedPerGame - Returns the number of punches blocked per game, with the number of games played alongside it.
 - timesSweptAway - Returns the number of times a player has been swept away by the waves.  This stat is only available for players.
 - timesChickenedOut - Returns the number of times a player has chickened out and left a game.  This stats is only available for players.
+- parties - Returns the number of times players have partied.
 
 ## Admin Only Commands
 
