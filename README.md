@@ -133,6 +133,7 @@ Or how many punches the players of the Sydney Thinkers have thrown:
 
 These commands can only be executed by users who have been added to the list of admin user IDs.
 
+- !addtoalltimestats [seasonNumber] [playoffs] - Adds the stats for the supplied season into the all time stats records.
 - !loadstats [seasonNumber] [playoffs] - Loads log.txt game log files from the gameLogs directory into the stats table for the supplied season number.  The log files must be in the folder structure used by the season archive zip file available from the Hlockey Discord.  If the games are from the playoffs supply "true", otherwise "false".
 - !populaterosters - Deletes all team rosters from the database and replaces them with whatever is present on the Hlockey website.  Should be run at the start of every season as offseason roster changes cannot be tracked by the bot, and if rosters in the database get out of line with the site for any reason.
 - !recalculatestats [seasonNumber] [playoffs] - Recalculates calculated stats for the supplied season number. If you need to recalculate playoff stats supply "true", otherwise "false".  Should be run if any of the percentage stats go wonky.
