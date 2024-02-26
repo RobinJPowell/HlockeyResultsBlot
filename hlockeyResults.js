@@ -188,7 +188,7 @@ async function isOffSeason(result) {
     await Axios.get(GamesUrl).then((resolve) => {
         const $ = Cheerio.load(resolve.data);
 
-        result($('#content').text().includes('no games right now. it is the offseason.'));         
+        result($('#content').text().includes('Season ? day'));         
     }).catch((reject) => {
         Logger.error(`Error checking for offseason: ${reject}`);
         result(false);
