@@ -103,7 +103,7 @@ bot.on('messageCreate', function(message) {
                 break;
         }
     } else if (message.author.id == "261864192879886336" && message.content.toLowerCase().includes("good morning")) {
-        if (Math.floor((Math.random() * 50))) {
+        if (Math.floor((Math.random() * 50)) == 25) {
             message.channel.send("Good morning Soupy");
         }
     }
