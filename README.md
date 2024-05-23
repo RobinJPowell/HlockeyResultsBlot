@@ -22,7 +22,7 @@ By default the stats returned are for players.  If you want to see the stats for
 
 By default the stats returned are a top 5.  You can have as many results returned as you like, and can also see the worst performers as well as the best, by using "topX" or "bottomX".  So if you wanted a top 10, simply supply "top10", or a bottom 13, "bottom13".  If you ask for more records than are available, you will get an error back.  "top123456" will never work, if you just want everything use "all" instead.  Be warned, "all" has the potential to return a lot of data.
 
-By default the stats returned are for the current season.  If you wish to see stats for a different season, just supply the season number.  Currently stats are only available from season 4 onwards.
+By default the stats returned are for the current season.  If you wish to see stats for a different season, just supply the season number.  Asking for season 0 returns all-time stats.  Currently stats are only available from season 4 onwards.
 
 By default the stats returned are for the regular season.  To see stats for the playoffs, just supply the word "playoffs".
 
@@ -47,7 +47,7 @@ Or how many punches the players of the Sydney Thinkers have thrown:
 - faceoffs - Returns faceoffsTaken, faceoffsWon and faceoffWinPercentage.
 - passing - Returns passesAttempted, passesCompleted, passCompletionPercentage, passesAttemptedPerGame and passesCompletedPerGame.
 - intercepting - Returns interceptions and interceptionsPerGame
-- hitting - Returns hits, takeaways, takeawayPercentage, hitsPerGame and TakeawaysPerGame.
+- hitting - Returns hits, takeaways, takeawayPercentage, hitsPerGame and takeawaysPerGame.
 - retention - Returns hitsTaken, pucksLost, puckLossPercentage, hitsTakenPerGame and pucksLostPerGame.
 - scoring - Returns shotsTaken, goalsScored, scoringPercentage, goalsPerGame and shotsPerGame.
 - saves - Returns goalsConceded, shotsFaced, shotsBlockedGoalie, savePercentage, shotsFacedPerGame, savesPerGame and goalsConcededPerGame.  This collection is only available for players, not teams.
