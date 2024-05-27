@@ -3134,19 +3134,17 @@ function parseGameLog(gameLog, seasonNumber, playoffStats, teamsArray, weatherRe
                     } else if (element.toLowerCase().includes('hits')) {
                         updateHitStats(elementArray, rostersCollection, statsCollection, playersArray, seasonNumber, playoffStats);
                     } else if (element.toLowerCase().includes('takes a shot')) {
-                        let blockedArray = [];
                         let i = 1;
 
-                        // Blocked shots will be on the next line, unless someone is partying
+                        // Shot results will be on the next line, unless someone is partying
                         if (gameLog[index + i].toLowerCase().includes('partying')) {
                             i++;
                         }
-                        if (gameLog[index + 1].toLowerCase().includes('blocks')) {
-                            const blockedLine = gameLog[index + i].replace(/[.!]/g,'');
-                            blockedArray = blockedLine.split(' ');
-                        }
 
-                        updateShootingStats(elementArray, blockedArray, rostersCollection, statsCollection, teamsArray, playersArray, seasonNumber, playoffStats, temporaryGoalies);
+                        const resultLine = gameLog[index + i].replace(/[.!]/g,'');
+                        const resultArray = resultLine.split(' ');
+                        
+                        updateShootingStats(elementArray, resultArray, rostersCollection, statsCollection, teamsArray, playersArray, seasonNumber, playoffStats, temporaryGoalies);
                     } else if (element.toLowerCase().includes('fighting')) {
                         let fightArray = [element];
                         let i = 1;
@@ -3393,7 +3391,7 @@ async function updateHitStats(gameLogLineArray, rostersCollection, statsCollecti
     }
 }
 
-async function updateShootingStats(gameLogLineArray, blockedArray, rostersCollection, statsCollection, teamsArray, playersArray, seasonNumber, playoffStats, temporaryGoalies) {
+async function updateShootingStats(gameLogLineArray, resultArray, rostersCollection, statsCollection, teamsArray, playersArray, seasonNumber, playoffStats, temporaryGoalies) {
     const shootingPlayer = `${gameLogLineArray[0]} ${gameLogLineArray[1]}`;
     const shootingPlayerRoster = await rostersCollection.findOne({ name: shootingPlayer });
     const findShootingPlayer = { name: shootingPlayer, season: seasonNumber, playoffs: playoffStats };
@@ -3405,8 +3403,8 @@ async function updateShootingStats(gameLogLineArray, blockedArray, rostersCollec
         await createPlayerStats(shootingPlayerRoster, statsCollection, seasonNumber, playoffStats);
         shootingPlayerStats = await statsCollection.findOne(findShootingPlayer);
     }
-
-    if (gameLogLineArray[gameLogLineArray.length - 1].toLowerCase() == 'scores') {
+    
+    if (resultArray[2].toLowerCase() == 'scores') {
         const scoringTeamIndex = teamsArray.indexOf(shootingPlayerRoster.team);
         let concedingTeam = '';
         let temporaryGoalie = '';
@@ -3456,7 +3454,7 @@ async function updateShootingStats(gameLogLineArray, blockedArray, rostersCollec
             playersArray.push(concedingPlayerRoster.name);
         }
     } else {
-        const blockingPlayer = `${blockedArray[0]} ${blockedArray[1]}`;
+        const blockingPlayer = `${resultArray[0]} ${resultArray[1]}`;
         const blockingPlayerRoster = await rostersCollection.findOne({ name: blockingPlayer });
         const findBlockingPlayer = { name: blockingPlayer, season: seasonNumber, playoffs: playoffStats };
         const findBlockingTeam = { name: blockingPlayerRoster.team, season: seasonNumber, playoffs: playoffStats };
@@ -3550,15 +3548,20 @@ async function updateFightingStats(fightArray, rostersCollection, statsCollectio
                 if (!fightingPlayerStats) {
                     await createPlayerStats(fightingPlayerRoster, statsCollection, seasonNumber, playoffStats);
                 }
-            } else if (element.toLowerCase().includes('punches')) {
-                let blocked = false;
-
-                if (fightArray[index + 1] !== undefined) {
-                    blocked = fightArray[index + 1].toLowerCase().includes('blocks');
-                }
+            } else if (element.toLowerCase().includes('going for a punch') && fightArray[index + 1] !== undefined) {
+                let punchedPlayer = '';
 
                 const punchingPlayer = `${fightLineArray[0]} ${fightLineArray[1]}`;
-                const punchedPlayer = `${fightLineArray[3]} ${fightLineArray[4]}`;
+                const resultLineArray = fightArray[index + 1].split(' ');
+                // Split blocks and dodges into separate stats, needs to be done in offseason
+                const blocked = resultLineArray.includes('blocks') || resultLineArray.includes('dodges');
+                
+                if (blocked) {
+                    punchedPlayer = `${resultLineArray[0]} ${resultLineArray[1]}`;
+                } else {
+                    punchedPlayer = `${resultLineArray[5]} ${resultLineArray[6]}`;
+                }
+                
                 const punchingPlayerRoster = await rostersCollection.findOne({ name: punchingPlayer });
                 const punchedPlayerRoster = await rostersCollection.findOne({ name: punchedPlayer });
                 const findPunchingPlayer = { name: punchingPlayer, season: seasonNumber, playoffs: playoffStats };
@@ -3686,7 +3689,7 @@ async function updateFightingStats(fightArray, rostersCollection, statsCollectio
 
 async function updateGameRosterChanges(gameLogLineArray, swappedPlayerLineArray, rostersCollection, statsCollection, teamsArray, playersArray, gameWeatherArray, temporaryCenters, temporaryGoalies, seasonNumber, playoffStats) {
     const leavingPlayer = `${gameLogLineArray[0]} ${gameLogLineArray[1]}`;
-    const arrivingPlayer = `${swappedPlayerLineArray[0]} ${swappedPlayerLineArray[1]}`;
+    const arrivingPlayer = `${swappedPlayerLineArray[2]} ${swappedPlayerLineArray[3]}`;
     const leavingPlayerRoster = await rostersCollection.findOne({ name: leavingPlayer });
     const arrivingPlayerRoster = await rostersCollection.findOne({ name: arrivingPlayer });
     const findLeavingPlayer = { name: leavingPlayer, season: seasonNumber, playoffs: playoffStats };
