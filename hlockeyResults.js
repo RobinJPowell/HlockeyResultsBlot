@@ -3133,7 +3133,7 @@ function parseGameLog(gameLog, seasonNumber, playoffStats, teamsArray, weatherRe
                         updatePassingStats(elementArray, interceptionArray, rostersCollection, statsCollection, playersArray, seasonNumber, playoffStats);
                     } else if (element.toLowerCase().includes('hits')) {
                         updateHitStats(elementArray, rostersCollection, statsCollection, playersArray, seasonNumber, playoffStats);
-                    } else if (element.toLowerCase().includes('takes a shot')) {
+                    } else if (element.toLowerCase().includes('takes a shot') || element.toLowerCase().includes('takes an audacious shot')) {
                         let i = 1;
 
                         // Shot results will be on the next line, unless someone is partying
