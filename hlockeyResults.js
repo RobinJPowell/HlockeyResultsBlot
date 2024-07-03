@@ -983,7 +983,7 @@ async function getStats(parameters) {
                         });
                         break;
                     case 'passcompletionpercentage':
-                        await getFloatStatWithSecondaryStatAndFilter(statsCollection, season, playoffStats, { passCompletionPercentage: sort, passesAttempted: sort }, { passesAttempted: { $gte: 10 } }, count, teamName,
+                        await getFloatStatWithSecondaryStatAndFilter(statsCollection, season, playoffStats, { passCompletionPercentage: sort, passesAttempted: sort }, { passesAttempted: { $gte: 50 } }, count, teamName,
                                                                      'passCompletionPercentage', 'passesAttempted', '**Pass Completion Percentage** (Passes Attempted)').then((resolve) => {
                             stats.push(resolve);
                         }).catch((reject) => {
@@ -2251,7 +2251,7 @@ async function getGoalsConceded(statsCollection, season, playoffStats, sort, cou
 
             title += ' Percentage)';
 
-            await getStatWithSecondaryFloatStatAndFilter(statsCollection, season, playoffStats, sortQuery, { shotsFaced: { $gte: 10 } }, count, teamName,
+            await getStatWithSecondaryFloatStatAndFilter(statsCollection, season, playoffStats, sortQuery, { shotsFaced: { $gte: 50 } }, count, teamName,
                                                         'goalsConceded', secondaryStat, title).then((resolve) => {
                 stats.push(resolve);
             }).catch((reject) => {
