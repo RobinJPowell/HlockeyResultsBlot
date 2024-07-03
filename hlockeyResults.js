@@ -3132,7 +3132,8 @@ function parseGameLog(gameLog, seasonNumber, playoffStats, teamsArray, weatherRe
 
                         updatePassingStats(elementArray, interceptionArray, rostersCollection, statsCollection, playersArray, seasonNumber, playoffStats);
                     } else if (element.toLowerCase().includes('hits')) {
-                        updateHitStats(elementArray, rostersCollection, statsCollection, playersArray, seasonNumber, playoffStats);
+                        const takeawayLine = gameLog[index + 1].replace(/[.!]/g,'');
+                        updateHitStats(elementArray, takeawayLine, rostersCollection, statsCollection, playersArray, seasonNumber, playoffStats);
                     } else if (element.toLowerCase().includes('takes a shot') || element.toLowerCase().includes('takes an audacious shot')) {
                         let i = 1;
 
@@ -3333,7 +3334,7 @@ async function updatePassingStats(gameLogLineArray, interceptionArray, rostersCo
     }
 }
 
-async function updateHitStats(gameLogLineArray, rostersCollection, statsCollection, playersArray, seasonNumber, playoffStats) {
+async function updateHitStats(gameLogLineArray, takeawayLine, rostersCollection, statsCollection, playersArray, seasonNumber, playoffStats) {
     const hittingPlayer = `${gameLogLineArray[0]} ${gameLogLineArray[1]}`;
     const hittingPlayerRoster = await rostersCollection.findOne({ name: hittingPlayer });
     const findHittingPlayer = { name: hittingPlayer, season: seasonNumber, playoffs: playoffStats };
@@ -3358,7 +3359,7 @@ async function updateHitStats(gameLogLineArray, rostersCollection, statsCollecti
         hitPlayerStats = await statsCollection.findOne(findHitPlayer);
     }
 
-    if (gameLogLineArray[gameLogLineArray.length - 1].toLowerCase() == 'puck') {
+    if (takeawayLine.toLowerCase().includes('takes the puck')) {
         await statsCollection.updateOne(findHittingPlayer, { $set: { hits: hittingPlayerStats.hits + 1,
                                                                      takeaways: hittingPlayerStats.takeaways + 1 } });
         await statsCollection.updateOne(findHittingTeam, { $set: { hits: hittingTeamStats.hits + 1,
