@@ -4031,6 +4031,8 @@ async function updateCalculatedStats(statsCollection, teamsArray, playersArray, 
         let scoringPercentage = 0.00;
         let savePercentage = 0.00;
         let fightWinPercentage = 0.00;
+        let fightDrawPercentage = 0.00;
+        let fightLossPercentage = 0.00;
         let punchLandedPercentage = 0.00;
         let punchBlockedPercentage = 0.00;
         
@@ -4080,6 +4082,8 @@ async function updateCalculatedStats(statsCollection, teamsArray, playersArray, 
         }
         if (playerStats.fights > 0) {
             fightWinPercentage = (playerStats.fightsWon / playerStats.fights) * 100;
+            fightDrawPercentage = (playerStats.fightsDrawn / playerStats.fights) * 100;
+            fightLossPercentage = (playerStats.fightsLost / playerStats.fights) * 100;
         }
         if (playerStats.punchesThrown > 0) {
             punchLandedPercentage = (playerStats.punchesLanded / playerStats.punchesThrown) * 100;
@@ -4117,6 +4121,8 @@ async function updateCalculatedStats(statsCollection, teamsArray, playersArray, 
                                                             scoringPercentage: scoringPercentage,
                                                             savePercentage: savePercentage,
                                                             fightWinPercentage: fightWinPercentage,
+                                                            fightDrawPercentage: fightDrawPercentage,
+                                                            fightLossPercentage: fightLossPercentage,
                                                             punchLandedPercentage: punchLandedPercentage,
                                                             punchBlockedPercentage: punchBlockedPercentage } });
     });
